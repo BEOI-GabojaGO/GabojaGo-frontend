@@ -1,0 +1,2 @@
+# GabojaGo-frontend
+frontend repository
