@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import { FormField } from "@/components/auth/form-field";
 import { readErrorMessage } from "@/lib/auth-client";
@@ -9,15 +10,14 @@ type LoginFormProps = {
 };
 
 export function LoginForm({ registered = false }: LoginFormProps) {
+  const router = useRouter();
   const [pending, setPending] = useState(false);
   const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setPending(true);
     setError("");
-    setSuccess("");
 
     const formData = new FormData(event.currentTarget);
 
@@ -36,7 +36,8 @@ export function LoginForm({ registered = false }: LoginFormProps) {
         return;
       }
 
-      setSuccess("로그인에 성공했습니다.");
+      router.replace("/account");
+      router.refresh();
     } catch {
       setError("서버에 연결할 수 없습니다. 백엔드 서버 상태를 확인해 주세요.");
     } finally {
@@ -76,12 +77,6 @@ export function LoginForm({ registered = false }: LoginFormProps) {
           {error}
         </p>
       )}
-      {success && (
-        <p role="status" className="rounded-xl bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
-          {success}
-        </p>
-      )}
-
       <button
         type="submit"
         disabled={pending}

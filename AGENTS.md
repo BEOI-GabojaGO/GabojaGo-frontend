@@ -94,8 +94,10 @@ BACKEND_API_URL=http://54.116.170.25
 |---|---|---|---|---|
 | 회원가입 | POST | `/api/auth/signup` | `/api/auth/signup` | `{ email, password, nickname }` |
 | 로그인 | POST | `/api/auth/login` | `/api/auth/login` | `{ email, password }` |
+| 내 정보 | GET | `/api/users/me` | `/api/users/me` | 없음 |
+| 로그아웃 | POST | `/api/auth/logout` | 없음 | 없음 |
 
-인증 방식과 최종 응답 DTO는 백엔드 구현 후 확정한다. 현재 프록시는 백엔드의 상태 코드, 응답 본문, 인증 쿠키와 `Authorization` 헤더를 전달한다.
+백엔드 로그인 응답은 `{ accessToken, tokenType: "Bearer", expiresIn }`이다. 프론트 Route Handler는 액세스 토큰을 응답 본문으로 브라우저 JavaScript에 노출하지 않고 `HttpOnly`, `SameSite=Lax` 쿠키에 저장한다. 보호 API 프록시는 이 쿠키를 읽어 백엔드 요청의 `Authorization: Bearer <token>` 헤더로 변환한다. 현재 백엔드에는 refresh token과 로그아웃 API가 없으므로 만료 시 재로그인이 필요하며, 프론트 로그아웃은 액세스 토큰 쿠키를 삭제한다.
 
 ## Commands
 
@@ -132,8 +134,9 @@ GitHub Actions도 Pull Request와 `main` push에서 `npm ci`, lint, build를 실
 - 팀 공용 HTTP API 주소는 `.env.development`와 `.env.example`에 기록할 수 있다.
 - 외부에서는 Nginx의 80 포트만 사용하고 Spring Boot 8080과 MySQL 3306은 공개하지 않는다.
 - 현재 개발 API는 HTTP이므로 실제 서비스용 비밀번호나 민감한 사용자 정보를 사용하지 않는다.
-- 인증 토큰의 브라우저 저장 방식을 임의로 정하지 않는다. 백엔드 인증 방식이 확정된 후 적용한다.
+- 액세스 토큰은 `HttpOnly` 쿠키에만 저장하고 Client Component, `localStorage`, `sessionStorage`에 노출하지 않는다.
+- 보호된 백엔드 API는 브라우저가 직접 호출하지 않고 Route Handler가 쿠키를 Bearer 헤더로 변환해 중계한다.
 
 ## Current Scope
 
-현재 구현된 범위는 로그인·회원가입 화면, 인증 요청 폼, Next.js 인증 프록시 및 프론트엔드 CI다. 로그인 상태 유지, 사용자 조회, 로그아웃, 보호된 페이지와 로그인 후 이동 경로는 백엔드 인증 계약 확정 후 구현한다.
+현재 구현된 범위는 로그인·회원가입 화면, JWT 액세스 토큰의 `HttpOnly` 쿠키 세션, 사용자 조회, 로그아웃, 계정 화면, Next.js 인증 프록시 및 프론트엔드 CI다. refresh token은 백엔드가 지원한 뒤 추가한다.
