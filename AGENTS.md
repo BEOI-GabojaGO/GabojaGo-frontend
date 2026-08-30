@@ -71,21 +71,21 @@ src/
 
 ## Backend Connection
 
-로컬 브라우저가 EC2에 직접 접근하지 않고 Next.js Route Handler가 백엔드 요청을 중계한다.
+로컬 브라우저가 EC2에 직접 요청하지 않고 Next.js Route Handler가 공개 개발 백엔드로 요청을 중계한다.
 
 ```text
 Browser
   -> Next.js /api/auth/*
   -> Route Handler
-  -> BACKEND_API_URL=http://127.0.0.1:18080
-  -> SSH tunnel
+  -> BACKEND_API_URL=http://54.116.170.25
+  -> EC2 Nginx :80
   -> EC2 backend 127.0.0.1:8080
 ```
 
-로컬 환경변수는 프로젝트 루트의 `.env.local`에 둔다.
+팀 공용 개발 주소는 `.env.development`에 들어 있어 별도 SSH 터널 없이 `npm run dev`로 연결된다. 개인별 덮어쓰기가 필요할 때만 프로젝트 루트의 `.env.local`을 사용한다.
 
 ```dotenv
-BACKEND_API_URL=http://127.0.0.1:18080
+BACKEND_API_URL=http://54.116.170.25
 ```
 
 백엔드 API 기준은 다음과 같다.
@@ -128,9 +128,10 @@ GitHub Actions도 Pull Request와 `main` push에서 `npm ci`, lint, build를 실
 ## Security Rules
 
 - `.env.local`, `.env.*.local`, `*.pem` 파일을 커밋하지 않는다.
-- 실제 EC2 주소, SSH 키 경로, 비밀번호, 토큰을 코드나 README에 넣지 않는다.
-- 공유 가능한 환경변수 이름과 로컬 기본값만 `.env.example`에 기록한다.
-- 백엔드 8080 포트를 외부에 공개하지 않는다. 로컬 개발에서는 SSH 터널을 사용한다.
+- SSH 키 경로, 비밀번호, 토큰을 코드나 README에 넣지 않는다.
+- 팀 공용 HTTP API 주소는 `.env.development`와 `.env.example`에 기록할 수 있다.
+- 외부에서는 Nginx의 80 포트만 사용하고 Spring Boot 8080과 MySQL 3306은 공개하지 않는다.
+- 현재 개발 API는 HTTP이므로 실제 서비스용 비밀번호나 민감한 사용자 정보를 사용하지 않는다.
 - 인증 토큰의 브라우저 저장 방식을 임의로 정하지 않는다. 백엔드 인증 방식이 확정된 후 적용한다.
 
 ## Current Scope

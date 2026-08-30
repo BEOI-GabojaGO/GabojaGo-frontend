@@ -43,7 +43,7 @@ export function SignupForm() {
 
       router.push("/login?registered=1");
     } catch {
-      setError("서버에 연결할 수 없습니다. SSH 터널과 백엔드 상태를 확인해 주세요.");
+      setError("서버에 연결할 수 없습니다. 백엔드 서버 상태를 확인해 주세요.");
     } finally {
       setPending(false);
     }
