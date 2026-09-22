@@ -3,6 +3,12 @@ import { FlightShell } from "@/components/flight/flight-shell";
 
 const FLOWS = [
   {
+    href: "/chat",
+    title: "대화로 여행 조건 정하기",
+    description: "메시지를 주고받으며 항공권 검색 조건을 모아보는 화면 데모입니다.",
+    ready: true,
+  },
+  {
     href: "/flights/round-trip/step",
     title: "왕복 · 단계별 조회",
     description: "가는편을 고르고, 이어지는 오는편을 고른 뒤 예약 옵션을 확인합니다.",
