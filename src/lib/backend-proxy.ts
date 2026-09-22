@@ -2,18 +2,25 @@ import "server-only";
 
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
+import type { CommonResponse, ErrorResponse } from "@/lib/api-types";
 
 const ACCESS_TOKEN_COOKIE_NAME = "gabojago_access_token";
 
 type BackendEndpoint =
   | "/api/auth/login"
   | "/api/auth/signup"
-  | "/api/users/me";
+  | "/api/users/me"
+  | `/api/v1/${string}`;
 
 type TokenResponse = {
   accessToken: string;
   tokenType: "Bearer";
   expiresIn: number;
+};
+
+type AuthState = {
+  authenticated: boolean;
+  expiresIn?: number;
 };
 
 export async function proxyAuthRequest(
@@ -37,15 +44,16 @@ export async function proxyLoginRequest(request: Request) {
   const token = parseTokenResponse(responseBody);
 
   if (!token) {
-    return Response.json(
-      { message: "백엔드 로그인 응답 형식이 올바르지 않습니다." },
-      { status: 502 },
+    return errorResponse(
+      502,
+      "BAD_GATEWAY",
+      "백엔드 로그인 응답 형식이 올바르지 않습니다.",
     );
   }
 
-  const response = NextResponse.json({
-    authenticated: true,
-    expiresIn: token.expiresIn,
+  const response = NextResponse.json<CommonResponse<AuthState>>({
+    success: true,
+    data: { authenticated: true, expiresIn: token.expiresIn },
   });
 
   response.cookies.set(ACCESS_TOKEN_COOKIE_NAME, token.accessToken, {
@@ -64,10 +72,7 @@ export async function proxyCurrentUserRequest() {
   const accessToken = (await cookies()).get(ACCESS_TOKEN_COOKIE_NAME)?.value;
 
   if (!accessToken) {
-    return Response.json(
-      { code: "UNAUTHORIZED", message: "로그인이 필요합니다." },
-      { status: 401 },
-    );
+    return errorResponse(401, "UNAUTHORIZED", "로그인이 필요합니다.");
   }
 
   const upstream = await fetchBackend("/api/users/me", {
@@ -84,8 +89,32 @@ export async function proxyCurrentUserRequest() {
   return response;
 }
 
+export async function proxyPostRequest(
+  request: Request,
+  endpoint: `/api/v1/${string}`,
+) {
+  const upstream = await requestBackend(request, endpoint);
+
+  return forwardResponse(upstream);
+}
+
+export async function proxyGetRequest(
+  request: Request,
+  endpoint: `/api/v1/${string}`,
+) {
+  const { search } = new URL(request.url);
+  const upstream = await fetchBackend(`${endpoint}${search}` as BackendEndpoint, {
+    method: "GET",
+  });
+
+  return forwardResponse(upstream);
+}
+
 export function createLogoutResponse() {
-  const response = NextResponse.json({ authenticated: false });
+  const response = NextResponse.json<CommonResponse<AuthState>>({
+    success: true,
+    data: { authenticated: false },
+  });
   response.cookies.delete(ACCESS_TOKEN_COOKIE_NAME);
   response.headers.set("cache-control", "no-store");
 
@@ -104,9 +133,10 @@ async function fetchBackend(endpoint: BackendEndpoint, init: RequestInit) {
   const backendUrl = process.env.BACKEND_API_URL;
 
   if (!backendUrl) {
-    return Response.json(
-      { message: "백엔드 주소가 설정되지 않았습니다." },
-      { status: 503 },
+    return errorResponse(
+      503,
+      "BACKEND_NOT_CONFIGURED",
+      "백엔드 주소가 설정되지 않았습니다.",
     );
   }
 
@@ -116,11 +146,18 @@ async function fetchBackend(endpoint: BackendEndpoint, init: RequestInit) {
       cache: "no-store",
     });
   } catch {
-    return Response.json(
-      { message: "백엔드 서버에 연결할 수 없습니다." },
-      { status: 502 },
+    return errorResponse(
+      502,
+      "BACKEND_UNREACHABLE",
+      "백엔드 서버에 연결할 수 없습니다.",
     );
   }
+}
+
+function errorResponse(status: number, code: string, message: string) {
+  return Response.json({ success: false, code, message } satisfies ErrorResponse, {
+    status,
+  });
 }
 
 function forwardResponse(upstream: Response, body?: BodyInit) {
@@ -143,7 +180,12 @@ function forwardResponse(upstream: Response, body?: BodyInit) {
 function parseTokenResponse(value: string): TokenResponse | null {
   try {
     const body = JSON.parse(value) as Record<string, unknown>;
-    const { accessToken, tokenType, expiresIn } = body;
+
+    if (body.success !== true || typeof body.data !== "object" || body.data === null) {
+      return null;
+    }
+
+    const { accessToken, tokenType, expiresIn } = body.data as Record<string, unknown>;
 
     if (
       typeof accessToken !== "string" ||

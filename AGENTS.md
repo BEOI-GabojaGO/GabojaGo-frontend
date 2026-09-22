@@ -97,7 +97,9 @@ BACKEND_API_URL=http://54.116.170.25
 | 내 정보 | GET | `/api/users/me` | `/api/users/me` | 없음 |
 | 로그아웃 | POST | `/api/auth/logout` | 없음 | 없음 |
 
-백엔드 로그인 응답은 `{ accessToken, tokenType: "Bearer", expiresIn }`이다. 프론트 Route Handler는 액세스 토큰을 응답 본문으로 브라우저 JavaScript에 노출하지 않고 `HttpOnly`, `SameSite=Lax` 쿠키에 저장한다. 보호 API 프록시는 이 쿠키를 읽어 백엔드 요청의 `Authorization: Bearer <token>` 헤더로 변환한다. 현재 백엔드에는 refresh token과 로그아웃 API가 없으므로 만료 시 재로그인이 필요하며, 프론트 로그아웃은 액세스 토큰 쿠키를 삭제한다.
+백엔드 응답은 공통 봉투를 사용한다. 성공은 `{ success: true, data: T }`(`CommonResponse<T>`), 실패는 `{ success: false, code, message }`(`ErrorResponse`)이며, 프론트 타입은 `src/lib/api-types.ts`에 있다. Next.js Route Handler가 직접 만드는 응답(로그인 성공, 로그아웃, 프록시 오류)도 같은 봉투를 따른다.
+
+백엔드 로그인 응답의 `data`는 `{ accessToken, tokenType: "Bearer", expiresIn }`이다. 프론트 Route Handler는 액세스 토큰을 응답 본문으로 브라우저 JavaScript에 노출하지 않고 `HttpOnly`, `SameSite=Lax` 쿠키에 저장한다. 보호 API 프록시는 이 쿠키를 읽어 백엔드 요청의 `Authorization: Bearer <token>` 헤더로 변환한다. 현재 백엔드에는 refresh token과 로그아웃 API가 없으므로 만료 시 재로그인이 필요하며, 프론트 로그아웃은 액세스 토큰 쿠키를 삭제한다.
 
 ## Commands
 
