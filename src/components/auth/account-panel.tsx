@@ -1,7 +1,9 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import type { CommonResponse } from "@/lib/api-types";
 import { readErrorMessage } from "@/lib/auth-client";
 
 type User = {
@@ -37,7 +39,8 @@ export function AccountPanel() {
           return;
         }
 
-        setUser((await response.json()) as User);
+        const body = (await response.json()) as CommonResponse<User>;
+        setUser(body.data);
       } catch (cause) {
         if (cause instanceof DOMException && cause.name === "AbortError") return;
         setError("사용자 정보를 불러오지 못했습니다.");
@@ -107,6 +110,13 @@ export function AccountPanel() {
                 <dd className="font-semibold text-slate-800">{user.id}</dd>
               </div>
             </dl>
+
+            <Link
+              href="/flights"
+              className="mt-7 flex h-12 w-full items-center justify-center rounded-xl bg-blue-600 text-sm font-bold text-white shadow-sm transition hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-200"
+            >
+              항공권 검색하러 가기
+            </Link>
 
             <button
               type="button"
