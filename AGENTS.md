@@ -49,7 +49,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 | Infrastructure | AWS EC2, EBS, Docker Hub |
 | CI/CD | GitHub Actions, AWS IAM OIDC, AWS Systems Manager |
 
-챗봇의 AI 모델과 자연어 조건 추출 방식은 아직 확정되지 않았다. 확정 전 특정 모델이나 API를 코드 구조에 고정하지 않는다.
+별도 FastAPI AI 서버가 Groq으로 자연어 조건을 추출한다. 프론트엔드는 AI 서버를 직접 호출하지 않고, 향후 Spring Boot 채팅 API를 통해 연동한다. 현재 `/chat`은 브라우저 안에서만 동작하는 화면 데모다.
 
 ## Project Structure
 
@@ -141,4 +141,4 @@ GitHub Actions도 Pull Request와 `main` push에서 `npm ci`, lint, build를 실
 
 ## Current Scope
 
-현재 구현된 범위는 로그인·회원가입 화면, JWT 액세스 토큰의 `HttpOnly` 쿠키 세션, 사용자 조회, 로그아웃, 계정 화면, Next.js 인증 프록시 및 프론트엔드 CI다. refresh token은 백엔드가 지원한 뒤 추가한다.
+현재 구현된 범위는 로그인·회원가입 화면, JWT 액세스 토큰의 `HttpOnly` 쿠키 세션, 사용자 조회, 로그아웃, 계정 화면, 항공권 조회 화면, `/chat` 화면 데모, Next.js API 프록시 및 프론트엔드 CI다. 채팅 화면은 아직 AI·백엔드와 연결되지 않았고 refresh token은 백엔드가 지원한 뒤 추가한다.
