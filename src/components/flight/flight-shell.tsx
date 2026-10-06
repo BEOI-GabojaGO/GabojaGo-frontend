@@ -24,12 +24,14 @@ export function FlightShell({ title, description, children }: FlightShellProps) 
             </span>
             가보자GO
           </Link>
-          <Link
-            href="/account"
-            className="text-sm font-semibold text-slate-500 hover:text-blue-700 hover:underline"
-          >
-            내 계정
-          </Link>
+          <nav className="flex items-center gap-4 text-sm font-semibold text-slate-500">
+            <Link href="/wishlist" className="hover:text-blue-700 hover:underline">
+              위시리스트
+            </Link>
+            <Link href="/account" className="hover:text-blue-700 hover:underline">
+              내 계정
+            </Link>
+          </nav>
         </div>
 
         <header className="mb-8">

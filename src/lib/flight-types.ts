@@ -194,6 +194,34 @@ export type HandoffRequest = ItineraryRequest & {
   leg: HandoffLeg;
 };
 
+type Passengers = Pick<
+  FlightSearchRequest,
+  "adults" | "children" | "infantsInSeat" | "infantsOnLap" | "travelClass"
+>;
+
+/** 위시리스트 저장 요청. 화면의 항공편을 그대로 보낸다. 편도면 inbound를 생략한다. */
+export type FlightWishlistRequest = Passengers & {
+  /** 왕복은 오는편 price(확정 왕복 총액), 편도는 항공편 price. 가는편 price(최저 가능가)는 쓰지 않는다. */
+  price: number;
+  stayMinutes?: number | null;
+  sameAirline?: boolean | null;
+  outbound: FlightOption;
+  inbound?: FlightOption;
+};
+
+/** 위시리스트 항목. 담을 당시의 스냅샷이며 실시간으로 갱신되지 않는다. */
+export type FlightWishlistItem = Passengers & {
+  wishlistId: number;
+  tripType: "ROUND_TRIP" | "ONE_WAY";
+  savedPrice: number;
+  currency: string;
+  stayMinutes: number | null;
+  sameAirline: boolean | null;
+  /** 검색 세션 한정 id는 저장하지 않아 항상 null이다. */
+  outbound: Omit<FlightOption, "id">;
+  inbound: Omit<FlightOption, "id"> | null;
+};
+
 export type HandoffResponse = {
   handoffId: string;
   sellerName: string | null;

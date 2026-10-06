@@ -16,6 +16,7 @@ import {
   readFlightSearchForm,
   SearchConditionFields,
 } from "@/components/flight/search-condition-fields";
+import { passengersOf, WishlistButton } from "@/components/flight/wishlist-button";
 import { FLIGHT_SEARCH_NOT_FOUND, postJson, requestJson } from "@/lib/flight-client";
 import type {
   FlightOption,
@@ -95,6 +96,8 @@ export function RoundTripStepFlow() {
     setPending(false);
 
     if (!result.ok) {
+      // 가는편 목록에 머물러 다시 고를 수 있게 한다. 빈 오는편 단계로 넘어간 것처럼 보이지 않도록.
+      setOutbound(null);
       setExpired(result.code === FLIGHT_SEARCH_NOT_FOUND);
       setError(result.message);
       return;
@@ -202,6 +205,13 @@ export function RoundTripStepFlow() {
               <SecondaryButton onClick={() => setInbound(null)}>오는편 다시 선택</SecondaryButton>
             </div>
             <FlightOptionCard option={inbound} priceLabel="왕복 총액" />
+            {request && (
+              <WishlistButton
+                key={`${outbound.id}-${inbound.id}`}
+                // 오는편 price가 이 가는편과 짝지은 확정 왕복 총액이다.
+                request={{ ...passengersOf(request), price: inbound.price, outbound, inbound }}
+              />
+            )}
           </section>
 
           <section className="space-y-3">

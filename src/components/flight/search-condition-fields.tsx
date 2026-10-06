@@ -10,7 +10,7 @@ import type {
   TravelClass,
 } from "@/lib/flight-types";
 
-const TRAVEL_CLASS_OPTIONS = [
+export const TRAVEL_CLASS_OPTIONS = [
   { value: 1, label: "이코노미" },
   { value: 2, label: "프리미엄 이코노미" },
   { value: 3, label: "비즈니스" },

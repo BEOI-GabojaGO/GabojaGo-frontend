@@ -118,6 +118,13 @@ export function AccountPanel() {
               항공권 검색하러 가기
             </Link>
 
+            <Link
+              href="/wishlist"
+              className="mt-3 flex h-12 w-full items-center justify-center rounded-xl border border-blue-200 bg-white text-sm font-bold text-blue-700 transition hover:bg-blue-50 focus:outline-none focus:ring-4 focus:ring-blue-100"
+            >
+              위시리스트 보기
+            </Link>
+
             <button
               type="button"
               onClick={logout}
