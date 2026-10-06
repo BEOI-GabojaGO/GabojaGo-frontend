@@ -68,16 +68,29 @@ export async function proxyLoginRequest(request: Request) {
   return response;
 }
 
-export async function proxyCurrentUserRequest() {
+export async function proxyCurrentUserRequest(request: Request) {
+  return proxyAuthorizedRequest(request, "/api/users/me");
+}
+
+/** 쿠키의 토큰을 `Authorization: Bearer`로 바꿔 보호 API를 호출한다. POST만 본문을 전달한다. */
+export async function proxyAuthorizedRequest(
+  request: Request,
+  endpoint: BackendEndpoint,
+) {
   const accessToken = (await cookies()).get(ACCESS_TOKEN_COOKIE_NAME)?.value;
 
   if (!accessToken) {
     return errorResponse(401, "UNAUTHORIZED", "로그인이 필요합니다.");
   }
 
-  const upstream = await fetchBackend("/api/users/me", {
-    method: "GET",
-    headers: { Authorization: `Bearer ${accessToken}` },
+  const hasBody = request.method === "POST";
+  const upstream = await fetchBackend(endpoint, {
+    method: request.method,
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      ...(hasBody && { "Content-Type": "application/json" }),
+    },
+    body: hasBody ? await request.text() : undefined,
   });
 
   const response = forwardResponse(upstream);

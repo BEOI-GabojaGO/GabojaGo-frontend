@@ -41,7 +41,13 @@ export function FlightOptionCard({
 }
 
 /** 항공사·편명, 출발→도착 공항과 현지시각, 소요시간 요약. 가격은 문맥마다 의미가 달라 포함하지 않는다. */
-export function FlightRouteSummary({ option, label }: { option: FlightOption; label?: string }) {
+export function FlightRouteSummary({
+  option,
+  label,
+}: {
+  option: Omit<FlightOption, "id">;
+  label?: string;
+}) {
   const first = option.segments[0];
   const last = option.segments[option.segments.length - 1];
   const airlines = [...new Set(option.segments.map((segment) => segment.airline).filter(Boolean))];

@@ -16,6 +16,7 @@ import {
   readOneWaySearchForm,
   SearchConditionFields,
 } from "@/components/flight/search-condition-fields";
+import { passengersOf, WishlistButton } from "@/components/flight/wishlist-button";
 import { postJson } from "@/lib/flight-client";
 import type {
   FlightOption,
@@ -125,6 +126,12 @@ export function OneWayFlow() {
               <SecondaryButton onClick={() => setSelected(null)}>항공편 다시 선택</SecondaryButton>
             </div>
             <FlightOptionCard option={selected} priceLabel="편도 요금" />
+            {request && (
+              <WishlistButton
+                key={selected.id}
+                request={{ ...passengersOf(request), price: selected.price, outbound: selected }}
+              />
+            )}
           </section>
 
           <section className="space-y-3">
