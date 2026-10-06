@@ -8,16 +8,18 @@ const FLOWS = [
     description: "메시지를 주고받으며 항공권 검색 조건을 모아보는 화면 데모입니다.",
     ready: true,
   },
+  // 왕복 조건 검색은 단계별(가는편 → 오는편)이 메인이다(2026-10-05 팀 결정).
+  // 일괄 조회는 AI 검색 등에서 재사용할 수 있어 보조 조회 방식으로 유지한다.
   {
     href: "/flights/round-trip/step",
-    title: "왕복 · 단계별 조회",
+    title: "왕복 항공권 조회",
     description: "가는편을 고르고, 이어지는 오는편을 고른 뒤 예약 옵션을 확인합니다.",
     ready: true,
   },
   {
     href: "/flights/round-trip",
     title: "왕복 · 일정 한 번에 조회",
-    description: "왕복 일정을 한 번에 입력하고 가는편·오는편 조합을 비교합니다.",
+    description: "가는편·오는편 조합을 한 번에 비교합니다. (보조 조회 방식)",
     ready: true,
   },
   {
