@@ -16,6 +16,9 @@ export async function readErrorMessage(response: Response): Promise<string> {
     }
   }
 
+  // 서버 오류 페이지(HTML)를 그대로 보여 주지 않는다.
+  if (contentType.includes("text/html")) return fallback;
+
   const text = await response.text();
   return text.trim() || fallback;
 }
