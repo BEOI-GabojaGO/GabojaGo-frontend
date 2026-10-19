@@ -1,0 +1,225 @@
+/* 메인 디자인(가보자GO-메인-디자인/styles.css) 이식본. 전역 CSS는 라우트 이동 후에도 남으므로 .main-page 아래로 스코프한다. */
+.main-page{--pink:#d70552;--ink:#333;--muted:#888;--surface:#f6f6f6;--content:1440px;--page-padding:30px;--section-gap:80px;--card-gap:24px;min-height:100vh;background:#fff;color:var(--ink);font-family:var(--font-noto-kr),sans-serif;font-size:14px;line-height:1.2}
+body.login-open,body.picker-open{overflow:hidden}
+@keyframes login-fade-in{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
+@keyframes login-fade-out{from{opacity:1;transform:translateY(0)}to{opacity:0;transform:translateY(24px)}}
+@keyframes login-backdrop-in{from{opacity:0}to{opacity:1}}
+@keyframes login-backdrop-out{from{opacity:1}to{opacity:0}}
+.main-page{
+*{box-sizing:border-box}button,input{font:inherit}button{border:0;background:none;padding:0;cursor:pointer;color:inherit}button:disabled{cursor:default}a{color:inherit;text-decoration:none}p,h1,h2,h3{margin:0}img{display:block}button:focus-visible,a:focus-visible,input:focus-visible,.track:focus-visible{outline:2px solid var(--pink);outline-offset:4px}.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}.mobile-only,.mobile-break{display:none}
+.header{position:fixed;top:0;left:0;width:100%;height:54px;z-index:32;background:rgba(255,255,255,.1);backdrop-filter:blur(15px);box-shadow:0 2px 2px #0000000f}.header-inner{max-width:var(--content);margin:auto;height:100%;display:flex;align-items:center;justify-content:space-between}.brand{font-size:18px;font-weight:700;color:#101828;white-space:nowrap;line-height:22px}.brand span{color:var(--pink)}.login{height:36px;border-radius:12px;background:var(--pink);color:white;font-weight:500;padding:8px 14px;line-height:17px}
+.hero{position:relative;display:flex;flex-direction:column;align-items:center;gap:20px;padding:100px 30px 60px;isolation:isolate}.hero-background{position:absolute;inset:0;z-index:-2;overflow:hidden}.hero-background img{width:100%;height:100%;object-fit:cover}.hero:after{content:'';position:absolute;inset:0;z-index:-1;background:linear-gradient(180deg,transparent,rgba(0,0,0,.3) 50%,rgba(0,0,0,.4))}.hero-copy{display:flex;flex-direction:column;align-items:center;gap:12px;width:100%;color:#fff}.badge{display:flex;align-items:center;gap:4px;padding:6px 8px;background:#0003;border-radius:10px;font-weight:500;font-size:12px;line-height:14px}.badge img{width:12px;height:12px}.hero-text{display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;width:100%}.hero h1{font-size:52px;line-height:1.3;letter-spacing:-1.2px;font-weight:700}.hero-text>p{font-size:18px;line-height:1.8;width:100%}
+.search-panel{width:600px;max-width:100%;background:#fff;border-radius:40px;padding:6px 20px 20px;display:flex;flex-direction:column;align-items:center;gap:20px}.search-tabs{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:10px;width:100%}.tab-pair{display:flex;gap:10px;align-items:center}.search-tab{display:flex;align-items:center;gap:6px;white-space:nowrap;border-bottom:2px solid transparent;padding:12px 16px;color:#666;font-weight:500;line-height:17px}.search-tab-icon{width:14px;height:14px;display:block;flex:none}.search-tab.active{color:var(--pink);border-color:var(--pink)}#search-content{width:100%;display:flex;flex-direction:column;gap:20px}.prompt-form{display:flex;align-items:center;gap:10px;padding:10px 10px 10px 14px;border-radius:24px;background:var(--surface);width:100%}.prompt-form>img{width:16px;height:16px;flex:none}.prompt-form input{border:none;outline:none;min-width:0;flex:1;background:transparent;font-size:16px;line-height:1.8;color:#333;width:100%;padding:0}.prompt-form input::placeholder{color:#aaa}.send{width:36px;height:36px;border-radius:12px;background:var(--pink);display:flex;align-items:center;justify-content:center;flex:none;margin-left:2px}.send img{width:16px;height:16px}.suggestions{display:flex;flex-wrap:wrap;gap:6px;padding-left:20px}.suggestions button{background:var(--surface);color:#666;font-size:12px;line-height:16px;padding:8px 10px;border-radius:8px;white-space:nowrap}.suggestions button:hover{background:#fce7ef}
+.content{max-width:var(--content);margin:60px auto;display:flex;flex-direction:column;gap:var(--section-gap)}h2{font-size:26px;line-height:31px;font-weight:700}.benefits h2{padding-left:4px}.benefits{display:flex;flex-direction:column;gap:30px}.benefit-list{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;row-gap:40px}.benefit{display:flex;align-items:center;gap:18px;padding:0 20px}.benefit-icon{width:48px;height:48px;background:var(--surface);border-radius:16px;display:flex;align-items:center;justify-content:center;flex:none}.benefit-icon img{width:26px;height:26px}.benefit p{font-size:16px;font-weight:500;white-space:nowrap}.section-heading{height:40px;display:flex;align-items:flex-start;justify-content:space-between;gap:8px}.section-title{display:flex;align-items:center;gap:16px;padding-left:4px}.see-all{display:flex;align-items:center;color:var(--pink);font-size:14px;line-height:17px;font-weight:500;white-space:nowrap}.see-all img{width:16px;height:16px}.arrows{display:flex;gap:8px}.arrow{width:40px;height:40px;display:flex;align-items:center;justify-content:center;border:1px solid #0000002e;border-radius:20px}.arrow img{width:20px;height:20px}.arrow:disabled{border-color:#0000000f}.arrow:not(:disabled):hover{background:var(--surface)}.carousel-section{min-width:0;display:flex;flex-direction:column;gap:30px}.track{display:flex;align-items:flex-start;gap:var(--card-gap);overflow-x:auto;scrollbar-width:none;scroll-snap-type:x mandatory;overscroll-behavior-x:contain}.track::-webkit-scrollbar{display:none}.travel-card{width:342px;flex:none;border-radius:30px;overflow:hidden;scroll-snap-align:start}.travel-card{text-align:left}.travel-photo,.travel-description{display:block}.travel-photo{position:relative;height:220px;border-radius:30px;overflow:hidden}.travel-photo picture,.travel-photo picture>img{width:100%;height:100%;object-fit:cover}.travel-photo:after,.country-card:after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,transparent 30%,#0009);pointer-events:none}.travel-label{position:absolute;left:24px;top:133px;color:white;z-index:1;display:flex;flex-direction:column;gap:2px}.travel-name{font-size:26px;line-height:31px;font-weight:700}.travel-country{font-size:16px;line-height:19px;font-weight:500;padding-left:2px}.heart{position:absolute;right:16px;top:16px;width:32px;height:32px;z-index:2;backdrop-filter:blur(8px);background:#0000001a;border-radius:20px;display:flex;align-items:center;justify-content:center}.heart img{width:20px;height:20px}.travel-details{padding:20px 16px;display:flex;flex-direction:column;gap:12px}.price-row{display:flex;justify-content:space-between;align-items:flex-start}.price-group{display:flex;flex-direction:column;gap:2px}.trip-duration{display:flex;align-items:center;gap:4px;font-size:12px;line-height:14px;color:var(--muted)}.trip-duration img,.rating img{width:12px;height:12px}.price{font-size:20px;line-height:24px;font-weight:500}.rating{display:flex;gap:2px;align-items:center;font-size:12px;line-height:16px;font-weight:500}.travel-description{font-size:12px;line-height:14px;color:var(--muted);white-space:nowrap}.tags{display:flex;gap:6px}.tags span{border-radius:6px;background:#f3f4f6;color:#6a7282;font-size:12px;line-height:14px;padding:4px 6px;white-space:nowrap}.mobile-data{display:none}.country-card{position:relative;display:block;flex:none;width:220px;height:220px;border-radius:30px;overflow:hidden;text-align:left;scroll-snap-align:start}.country-card picture,.country-card picture>img{display:block;width:100%;height:100%;object-fit:cover}.country-card:first-child .desktop-image{width:150%;position:absolute;left:-20.45%;max-width:none}.country-label{position:absolute;left:24px;top:148px;color:white;z-index:1;display:flex;flex-direction:column;gap:4px}.country-label strong{font-size:20px;line-height:24px;font-weight:700}.country-label small{font-size:12px;line-height:14px;font-weight:500;padding-left:2px}
+footer{background:var(--surface);padding:60px 0}.footer-inner{max-width:var(--content);margin:auto;display:flex;align-items:center;justify-content:space-between}.footer-inner>.brand{width:342px;letter-spacing:-.425px}.footer-inner>p{width:220px;text-align:center;font-size:12px;line-height:14px;font-weight:500}.footer-inner nav{display:flex;justify-content:flex-end;gap:20px;width:342px}.footer-inner nav button{font-size:12px;line-height:14px;color:#666;white-space:nowrap}
+dialog{border:0;border-radius:24px;padding:32px;max-width:540px;width:calc(100% - 40px);color:var(--ink);box-shadow:0 20px 100px #0003}dialog::backdrop{background:#0006;backdrop-filter:blur(4px)}.dialog-close{position:absolute;right:16px;top:12px;font-size:28px}.dialog-title{font-size:24px;margin-bottom:18px;padding-right:20px}.dialog-body{font-size:14px;line-height:1.8}.dialog-list{display:grid;gap:12px}.dialog-list button{text-align:left;border-radius:12px;background:var(--surface);padding:12px}.toast{position:fixed;bottom:24px;left:50%;transform:translate(-50%,20px);padding:12px 20px;background:#333;color:white;border-radius:12px;z-index:20;opacity:0;pointer-events:none;transition:.2s;max-width:calc(100% - 32px);width:max-content;font-size:14px}.toast.visible{opacity:1;transform:translate(-50%,0)}
+@media(min-width:1200px) and (max-width:1499px){&{--content:calc(100% - 120px)}.travel-card{width:calc((100vw - 192px)/4)}.country-card{width:calc((100vw - 240px)/6);height:calc((100vw - 240px)/6)}.country-label{top:auto;bottom:24px}.benefit{padding:0 8px;gap:12px}.benefit p{font-size:14px}}
+@media(min-width:1500px) and (max-width:1919px){&{--content:calc(100% - 160px)}.content,.header-inner,.footer-inner{max-width:1440px}}
+@media(max-width:1199px){.header-inner,.content,.footer-inner{margin-left:30px;margin-right:30px}.search-panel{width:100%}.hero-text>p{max-width:100%}.benefit-list{display:grid;grid-template-columns:1fr 1fr;row-gap:40px}.benefit{width:max-content}.footer-inner>.brand,.footer-inner nav{width:auto}}
+@media(min-width:1200px) and (max-width:1399px){.benefit-list{display:grid;grid-template-columns:repeat(4,1fr)}}
+@media(max-width:699px) and (min-width:600px){.benefit{padding:0 8px;gap:12px}.benefit p{font-size:14px}.footer-inner nav{gap:12px}.footer-inner>p{width:auto}}
+@media(max-width:599px){&{--section-gap:60px;--card-gap:16px}.mobile-only{display:block}.mobile-break{display:inline}.desktop-space,.see-all{display:none}.header{height:56px}.header-inner{margin-left:20px;margin-right:10px}.login{background:transparent;color:var(--pink);font-size:14px;line-height:17px;padding:8px 10px;display:flex;align-items:center;gap:6px}.login img{width:16px;height:16px}.hero{padding:120px 20px 100px;gap:30px}.hero:after{background:linear-gradient(180deg,transparent,#0000004d 50%,#0000004d)}.hero-copy{padding:0 20px}.hero h1{font-size:30px;line-height:1.3;white-space:nowrap}.hero-text>p{font-size:14px;line-height:1.8}.search-panel{border-radius:30px;padding:6px 12px 12px;gap:10px}.search-tabs{gap:6px;max-width:250px}.tab-pair{gap:10px}.search-tab{font-size:12px;line-height:14px;padding:12px 8px}.prompt-form{padding:8px 8px 8px 14px;border-radius:20px;gap:6px}.prompt-form input{font-size:14px}.send{margin-left:14px}.suggestions{display:none}.content{margin:40px 20px}.benefits{gap:24px}h2{font-size:20px;line-height:30px}.benefit-list{display:flex;flex-direction:column;align-items:flex-start;gap:20px}.benefit{padding:0 10px;gap:18px}.benefit p{font-size:16px}.section-heading{height:30px}.arrows{gap:8px}.arrow{width:30px;height:30px}.arrow img{width:16px;height:16px}.carousel-section{gap:24px}.track{margin-right:-20px}.travel-card{width:200px;border-radius:20px}.travel-photo{height:140px;border-radius:20px}.travel-label{left:16px;top:76px;gap:6px}.travel-name{font-size:20px;line-height:24px}.travel-country{font-size:12px;line-height:14px}.heart{right:12px;top:12px}.travel-details{padding:16px 6px}.price-group{gap:6px}.price{font-size:18px;line-height:22px}.travel-description{line-height:1.6;white-space:normal}.mobile-data{display:initial}.desktop-data{display:none}.country-card{width:140px;height:140px;border-radius:20px}.country-label{left:16px;top:85px;gap:4px}.country-label strong{font-size:16px;line-height:19px}.country-label small{font-size:10px;line-height:12px}.country-card:first-child .desktop-image{width:100%;left:0}.footer-inner{margin:0 20px;flex-direction:column;align-items:flex-start;gap:16px}.footer-inner>.brand,.footer-inner>p,.footer-inner nav{width:auto}.footer-inner>p{text-align:left}.footer-inner nav{gap:20px}}
+@media(max-width:374px){.hero-copy{padding:0 6px}.hero h1{font-size:27px}.hero-text>p{font-size:13px}.benefit{padding:0 4px;gap:12px}.benefit p{font-size:14px}}
+@media(prefers-reduced-motion:reduce){.toast{transition:none}}
+/* Only the tag wrapper receives padding; text variants retain their geometry. */
+.tags>span>span{padding:0;background:none;border-radius:0}
+.benefit:nth-child(1),.benefit:nth-child(2){width:250px}.benefit:nth-child(3){width:283px}.benefit:nth-child(4){width:268px}
+@media(min-width:600px) and (max-width:1199px){.benefit-list{display:flex;flex-wrap:wrap}.track{margin-right:-30px}}
+@media(max-width:599px){.benefit:nth-child(1),.benefit:nth-child(2){width:230px}.benefit:nth-child(3){width:263px}.benefit:nth-child(4){width:248px}}
+@media(width:402px){.hero{height:588px}}
+/* Figma's section bounds are rounded to whole pixels. */
+@media(min-width:1500px){.hero{min-height:589px}}
+@media(min-width:600px) and (max-width:1199px){.hero{min-height:589px}}
+@media(min-width:600px) and (max-width:740px){.hero{min-height:621px}}
+@media(max-width:599px){.header .brand{font-size:16px;line-height:19px}.login{gap:4px;padding:8px 14px 8px 10px}.login img,.arrow img{width:20px;height:20px}.hero{min-height:588px}.hero-text>p{word-break:break-all}.travel-description{height:19px;line-height:19px}.price{line-height:22px}.country-card{height:140px}}
+
+/* 조건 검색: 기존 메인 화면의 색상과 타이포그래피를 재사용한다. */
+.prompt-form{transition:background-color .15s,box-shadow .15s}
+.prompt-form:hover{background:#fff;box-shadow:inset 0 0 0 1px var(--pink),0 4px 12px #00000012}
+[hidden]{display:none!important}
+.search-panel.condition-mode{width:600px;gap:16px;padding-bottom:22px}
+#condition-content{width:100%}
+.condition-form{display:flex;flex-direction:column;gap:18px}
+.trip-types{display:flex;gap:4px;align-self:flex-start;padding:3px;border-radius:11px;background:#f3f4f6}
+.trip-types label{cursor:pointer}
+.trip-types input{position:absolute;opacity:0;width:1px;height:1px}
+.trip-types span{display:block;padding:7px 13px;border-radius:8px;color:#777;font-size:13px;font-weight:600}
+.trip-types input:checked+span{color:var(--pink);background:#fff;box-shadow:0 1px 4px #00000014}
+.trip-types input:focus-visible+span{outline:2px solid var(--pink);outline-offset:2px}
+.condition-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.condition-field{min-width:0;min-height:68px;text-align:left;border:1px solid #e6e7eb;border-radius:14px;background:#fff;padding:12px 16px;display:flex;flex-direction:column;justify-content:center;gap:7px;transition:border-color .15s,background .15s,box-shadow .15s}
+.condition-field:hover{border-color:#000;background:#fff;box-shadow:none}
+.condition-field[aria-expanded=true]{border-color:var(--pink);background:#fffafd;box-shadow:0 0 0 3px #d7055212}
+.condition-field>span{font-size:12px;color:#8a8a8a}
+.condition-field strong{font-size:15px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.condition-actions{display:flex;align-items:center;justify-content:space-between;gap:12px}
+#condition-error{color:#bd114a;font-size:12px;line-height:1.5}
+.condition-submit,.picker-done{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:42px;border-radius:12px;background:var(--pink);color:#fff;font-weight:700;padding:0 24px;white-space:nowrap}
+.condition-submit{width:213px;max-width:100%;height:56px;min-height:56px;flex-shrink:0;border-radius:20px;background:#d70552}
+.condition-submit:hover,.picker-done:hover{background:#b60445}
+.search-glyph{position:relative;width:13px;height:13px;border:2px solid currentColor;border-radius:50%;display:inline-block;flex:none;margin-right:2px}
+.search-glyph:after{content:'';position:absolute;width:6px;height:2px;background:currentColor;right:-5px;bottom:-3px;transform:rotate(45deg);border-radius:2px}
+.picker-backdrop{position:fixed;inset:0;background:#10182880;z-index:30}
+.picker-panel{position:fixed;z-index:31;top:50%;left:50%;transform:translate(-50%,-50%);width:min(440px,calc(100vw - 28px));max-height:min(680px,calc(100dvh - 28px));overflow:hidden;border-radius:24px;background:#fff;box-shadow:0 24px 80px #10182838;display:flex;flex-direction:column}
+.picker-header{height:70px;flex:none;display:flex;align-items:center;justify-content:space-between;padding:0 24px;border-bottom:1px solid #eef0f3}
+.picker-header h2{font-size:20px;line-height:1.3}
+.picker-close{font-size:26px;color:#667085;width:32px;height:32px;line-height:1}
+.picker-body{overflow:auto;padding:22px 24px 26px;overscroll-behavior:contain}
+.picker-search-label,.cabin-label{display:block;font-size:13px;font-weight:700;margin-bottom:9px}
+.picker-search{display:flex;align-items:center;gap:10px;border:1px solid #d9dce2;border-radius:12px;padding:0 13px}
+.picker-search:focus-within{border-color:var(--pink);box-shadow:0 0 0 3px #d705521a}
+.picker-search span{font-size:22px;color:var(--pink)}
+.picker-search input{height:46px;min-width:0;width:100%;outline:none;border:0;background:none}
+.picker-hint{color:#777;font-size:13px;line-height:1.5;margin:18px 0 12px}
+.airport-list{display:flex;flex-direction:column;max-height:340px;overflow:auto}
+.airport-option{display:flex;align-items:center;gap:12px;width:100%;min-height:65px;padding:8px;text-align:left;border-radius:10px}
+.airport-option:hover,.airport-option:focus-visible{background:#fff0f5}
+.airport-symbol{width:36px;height:36px;border-radius:10px;background:#fce7ef;color:var(--pink);display:grid;place-items:center;flex:none}
+.airport-option>span:nth-child(2){display:flex;flex-direction:column;gap:5px;min-width:0;flex:1}
+.airport-option strong{font-size:14px}
+.airport-option small{color:#888;font-size:12px}
+.airport-option b{color:var(--pink);font-size:13px}
+.picker-empty{padding:20px;text-align:center;color:#888}
+.date-summary{display:flex;justify-content:space-between;align-items:center;gap:8px;background:#fff4f8;border-radius:12px;padding:14px;color:#9b1649;font-weight:600;font-size:13px}
+.calendar-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.calendar-top strong{font-size:16px}
+.calendar-top button{font-size:26px;width:34px;height:34px;border-radius:9px}
+.calendar-top button:hover:not(:disabled){background:#fff0f5}
+.calendar-top button:disabled{opacity:.25}
+.calendar-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;text-align:center}
+.calendar-grid>b{padding:8px 0;color:#888;font-size:12px;font-weight:500}
+.calendar-day{aspect-ratio:1;border-radius:10px;font-size:13px}
+.calendar-day:hover:not(:disabled){background:#fce7ef}
+.calendar-day.selected{background:var(--pink);color:#fff;font-weight:700}
+.calendar-day.between{background:#fff0f5;color:var(--pink)}
+.calendar-day:disabled{color:#c4c4c4;cursor:default}
+.picker-done{width:100%;margin-top:18px}
+.passenger-list{display:flex;flex-direction:column}
+.passenger-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 0;border-bottom:1px solid #eef0f3}
+.passenger-row>span{display:flex;flex-direction:column;gap:5px}
+.passenger-row strong{font-size:14px}
+.passenger-row small{font-size:12px;color:#888}
+.counter{display:flex;align-items:center;gap:10px}
+.counter button{width:30px;height:30px;border:1px solid #d9dce2;border-radius:50%;font-size:18px}
+.counter button:hover:not(:disabled){border-color:var(--pink);color:var(--pink)}
+.counter button:disabled{opacity:.35}
+.counter output{min-width:18px;text-align:center;font-weight:700}
+.cabin-label{margin-top:22px}
+#cabin-select{width:100%;height:46px;border:1px solid #d9dce2;border-radius:12px;background:#fff;padding:0 12px;color:var(--ink)}
+/* Figma Origin 638:19536: 출발지·도착지 선택이 함께 쓰는 드롭다운. */
+.picker-panel.location-picker{position:absolute;top:auto;bottom:auto;transform:none;width:342px;max-width:calc(100vw - 24px);height:480px;max-height:none;overflow:hidden;padding:20px 0 0;border-radius:24px;gap:16px;box-shadow:0 2px 6px #0000001a,0 10px 60px #0003}
+.location-picker .picker-header{height:19px;padding:0 20px;border:0;flex:none}
+.location-picker .picker-header h2{font-size:16px;font-weight:700;line-height:19px}
+.location-picker .picker-close{position:absolute;width:1px;height:1px;padding:0;overflow:hidden;clip-path:inset(50%)}
+.location-picker .picker-close:focus-visible{clip-path:none;width:28px;height:28px;right:12px;top:12px;background:#fff;border-radius:8px}
+.location-picker .picker-body{min-height:0;flex:1;padding:6px 0 0;overflow:hidden;display:flex;flex-direction:column;gap:16px}
+.origin-search-wrap{padding:0 20px}
+.origin-search{display:flex;align-items:center;gap:10px;height:50px;padding:0 16px;border:1px solid #ddd;border-radius:12px;background:#fff}
+.origin-search:has(input:focus-visible){outline:2px solid #333;outline-offset:2px}
+.origin-search .search-glyph{width:12px;height:12px;border-width:1px;margin:0 2px 2px 0}
+.origin-search .search-glyph:after{width:5px;height:1px;right:-4px;bottom:-2px}
+.origin-search input{border:0;outline:0;min-width:0;width:100%;padding:0;background:none;color:#333;font-size:14px;font-weight:400;line-height:17px}
+.origin-search input::placeholder{color:#aaa}
+.origin-regions{min-height:0;flex:1;overflow-y:auto;overscroll-behavior:contain}
+.origin-region{display:flex;flex-direction:column;gap:6px;padding-bottom:20px}
+.origin-region h3{display:flex;align-items:center;gap:6px;height:46px;padding:0 20px;color:#333;font-size:16px;font-weight:500;line-height:21px}
+.origin-flag{display:block;width:22px;height:22px;flex:none;object-fit:contain;border-radius:50%}
+.origin-chips{display:flex;flex-wrap:wrap;column-gap:8px;row-gap:12px;padding:0 20px}
+.origin-chip{padding:6px 8px;background:#f6f6f6;color:#000;border-radius:8px;font-size:14px;font-weight:400;line-height:21px;white-space:nowrap}
+.origin-chip:hover{background:#eee;font-weight:500}
+.dialog-body{white-space:pre-line}
+@media(max-width:599px){
+  .search-panel.condition-mode{width:100%;max-width:100%;padding:6px 12px 16px;gap:12px}
+  .condition-form{gap:12px}
+  .condition-fields{grid-template-columns:1fr;gap:8px}
+  .condition-field{min-height:56px;padding:10px 13px;gap:5px}
+  .condition-field strong{font-size:13px}
+  .condition-actions{align-items:stretch;flex-direction:column;gap:4px}
+  .condition-submit{align-self:stretch;width:100%}
+  .hero:has(.condition-mode){height:auto;min-height:0;padding-bottom:56px}
+  .picker-panel{top:auto;bottom:0;left:0;transform:none;width:100%;max-height:min(86dvh,720px);border-radius:24px 24px 0 0}
+  .picker-header{height:62px;padding:0 20px}
+  .picker-body{padding:18px 20px 30px}
+  .picker-panel.location-picker{width:342px;border-radius:24px}
+  .location-picker .picker-header{height:19px}
+  .location-picker .picker-body{padding:6px 0 0}
+}
+
+/* Figma Sign In: 440 × 628 desktop/tablet dialog, 402 × 723 mobile page. */
+.login-dialog{position:fixed;inset:0;margin:auto;width:440px;height:628px;max-width:calc(100vw - 32px);max-height:calc(100dvh - 32px);padding:30px 30px 40px;border:0;border-radius:40px;background:#fff;color:#333;box-shadow:0 20px 80px #0003;overflow-y:auto}
+.login-dialog[open]{display:block}
+.login-dialog::backdrop{background:#0009;backdrop-filter:blur(8px)}
+.login-dialog-header{display:flex;align-items:center;justify-content:space-between;height:24px}
+.login-dialog-header .brand{font-size:18px;line-height:24px;font-weight:700;letter-spacing:-.4px}
+.login-close{position:relative;width:22px;height:22px;color:#888;flex:none}
+.login-close:before,.login-close:after{content:'';position:absolute;width:16px;height:1px;left:3px;top:10px;background:currentColor;transform:rotate(45deg)}
+.login-close:after{transform:rotate(-45deg)}
+.login-dialog h2{font-size:20px;line-height:27px;text-align:center;font-weight:700;margin:38px 0 0}
+.login-form{display:flex;flex-direction:column;margin-top:41px}
+.login-form label{font-size:14px;line-height:17px;font-weight:500;margin-bottom:10px}
+.login-form input{height:46px;width:100%;border:1px solid #dedede;border-radius:12px;background:#fff;color:#333;padding:0 14px;font-size:14px;outline:none}
+.login-form input::placeholder{color:#bdbdbd}
+.login-form input:focus{border-color:var(--pink);box-shadow:0 0 0 3px #d7055217}
+.login-form input[aria-invalid=true]{border-color:#d70552}
+.login-form label[for="login-password"]{margin-top:16px}
+.login-submit{height:52px;width:100%;margin-top:28px;border-radius:12px;background:var(--pink);color:white;font-size:14px;font-weight:600}
+.login-submit:hover{background:#bd0649}
+.login-signup{margin:27px 0 0;text-align:center;color:#aaa;font-size:13px;line-height:17px}
+.login-signup-link{color:var(--pink);font-size:13px;font-weight:600;margin-left:4px}
+.login-signup-link:hover{text-decoration:underline}
+.login-social{display:flex;flex-direction:column;gap:10px;margin-top:38px}
+.login-social button{height:46px;width:100%;display:flex;align-items:center;justify-content:center;gap:8px;border-radius:12px;font-size:13px;font-weight:500}
+.login-social img{width:20px;height:20px;flex:none}
+.login-google{border:1px solid #e7e7e7;background:#fff;color:#333}
+.login-google:hover{background:#f8f8f8}
+.login-kakao{background:#ffe324;color:#191919}
+.login-kakao:hover{background:#ffda00}
+.login-feedback{position:absolute;left:30px;right:30px;bottom:12px;margin:0;text-align:center;font-size:11px;line-height:1.3;color:var(--pink)}
+.login-feedback:empty{display:none}
+@media(max-width:599px){
+  .login-dialog{inset:0;width:100vw;height:100dvh;min-height:0;max-width:none;max-height:none;margin:0;padding:30px 20px;border-radius:0;box-shadow:none}
+  .login-dialog::backdrop{background:#fff;backdrop-filter:none}
+  .login-dialog h2{margin-top:38px}
+  .login-form{margin-top:59px}
+  .login-form input{height:52px}
+  .login-form label[for="login-password"]{margin-top:16px}
+  .login-submit{height:52px;margin-top:26px}
+  .login-signup{margin-top:60px}
+  .login-social{margin-top:60px}
+  .login-social button{height:56px}
+  .login-feedback{position:static;margin-top:12px}
+}
+@media(max-height:680px) and (min-width:600px){
+  .login-dialog{max-height:calc(100dvh - 24px)}
+}
+
+/* Brand scrollbars; mobile keeps scrolling with hidden bars. */
+*{scrollbar-color:var(--pink) #fce7ef;scrollbar-width:thin}
+@supports selector(::-webkit-scrollbar){
+  *{scrollbar-width:auto;scrollbar-color:auto}
+  ::-webkit-scrollbar{width:10px;height:10px}
+  ::-webkit-scrollbar-track{background:#fce7ef;border-radius:999px}
+  ::-webkit-scrollbar-thumb{background:var(--pink);border:2px solid #fce7ef;border-radius:999px}
+  ::-webkit-scrollbar-thumb:hover{background:#b90446}
+  ::-webkit-scrollbar-corner{background:#fce7ef}
+}
+@media(max-width:599px){
+  *{scrollbar-width:none}
+  ::-webkit-scrollbar{display:none;width:0;height:0}
+}
+
+@media(min-width:600px) and (prefers-reduced-motion:no-preference){
+  .login-dialog[open]{animation:login-fade-in 240ms cubic-bezier(.22,1,.36,1) both}
+  .login-dialog[open]::backdrop{animation:login-backdrop-in 240ms ease-out both}
+  .login-dialog[open].is-closing{animation:login-fade-out 180ms ease-in both}
+  .login-dialog[open].is-closing::backdrop{animation:login-backdrop-out 180ms ease-in both}
+  .login-dialog.is-closing{pointer-events:none}
+}
+}
+
+/* 로그인 상태 헤더 링크(시안 없음): 로그인 버튼 스타일을 그대로 쓴다. */
+.main-page .header-links{display:flex;gap:8px}.main-page .header-links .login{display:inline-flex;align-items:center}
+.main-page .infant-types{margin-top:14px;width:max-content}
+
+/* 디자인에 사진이 없는 나라 카드. 하단 그라데이션(.country-card:after)이 있어 흰 라벨은 그대로 읽힌다. */
+.main-page .country-card.no-photo{background:#c9cdd4}

@@ -179,6 +179,6 @@ function readLocation(formData: FormData, name: "origin" | "destination") {
   return typeof raw === "string" && raw ? (JSON.parse(raw) as LocationOption) : null;
 }
 
-function cityName(option: LocationOption) {
+export function cityName(option: LocationOption) {
   return option.type === "CITY" ? option.nameKo : (option.cityNameKo ?? option.nameKo);
 }

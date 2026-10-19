@@ -125,6 +125,23 @@ export function searchLocations(keyword: string): LocationOption[] {
   return [...cities, ...airports].slice(0, MAX_RESULTS);
 }
 
+/** 검색어가 없을 때 보여 줄 주요 도시(노출 순서 상위). 공항이 하나뿐인 도시는 공항으로 보여 준다. */
+export function popularLocations(): LocationOption[] {
+  return CITIES.slice(0, MAX_RESULTS).map((city) =>
+    city[5].length > 1 ? toCityOption(city) : toAirportOption(city, city[5][0]),
+  );
+}
+
+/** 페이지 간에 넘긴 `type:code`(예: `CITY:SEL`, `AIRPORT:ICN`)를 다시 선택지로 바꾼다. */
+export function findLocation(type: LocationOption["type"], code: string): LocationOption | null {
+  for (const city of CITIES) {
+    if (type === "CITY" && city[0] === code) return toCityOption(city);
+    const airport = type === "AIRPORT" && city[5].find(([airportCode]) => airportCode === code);
+    if (airport) return toAirportOption(city, airport);
+  }
+  return null;
+}
+
 function toCityOption([code, nameKo, nameEn, countryNameKo, , airports]: City): LocationOption {
   return {
     type: "CITY",
