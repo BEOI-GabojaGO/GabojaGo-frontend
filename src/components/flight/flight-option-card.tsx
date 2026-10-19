@@ -1,44 +1,5 @@
-import { formatMinutes, formatPrice } from "@/lib/flight-client";
+import { formatMinutes } from "@/lib/flight-client";
 import type { FlightOption } from "@/lib/flight-types";
-
-type FlightOptionCardProps = {
-  option: FlightOption;
-  priceLabel: string;
-  actionLabel?: string;
-  onSelect?: () => void;
-  disabled?: boolean;
-};
-
-export function FlightOptionCard({
-  option,
-  priceLabel,
-  actionLabel = "선택",
-  onSelect,
-  disabled = false,
-}: FlightOptionCardProps) {
-  return (
-    <article className="flex flex-col gap-4 rounded-2xl border border-slate-200 bg-white p-5 sm:flex-row sm:items-center sm:justify-between">
-      <FlightRouteSummary option={option} />
-
-      <div className="flex shrink-0 items-center justify-between gap-4 sm:flex-col sm:items-end">
-        <div className="text-right">
-          <p className="text-xs text-slate-500">{priceLabel}</p>
-          <p className="text-lg font-bold text-slate-900">{formatPrice(option.price)}</p>
-        </div>
-        {onSelect && (
-          <button
-            type="button"
-            onClick={onSelect}
-            disabled={disabled}
-            className="h-10 rounded-xl bg-blue-600 px-5 text-sm font-bold text-white shadow-sm transition hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-200 disabled:cursor-not-allowed disabled:bg-blue-300"
-          >
-            {actionLabel}
-          </button>
-        )}
-      </div>
-    </article>
-  );
-}
 
 /** 항공사·편명, 출발→도착 공항과 현지시각, 소요시간 요약. 가격은 문맥마다 의미가 달라 포함하지 않는다. */
 export function FlightRouteSummary({
