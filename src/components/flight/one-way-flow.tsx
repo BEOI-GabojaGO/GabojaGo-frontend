@@ -2,22 +2,24 @@
 
 import { useState, type FormEvent } from "react";
 import { BookingOptionsPanel } from "@/components/flight/booking-options-panel";
-import { FlightOptionCard } from "@/components/flight/flight-option-card";
 import {
-  EmptyMessage,
-  ErrorAlert,
-  PriceInsightsNote,
-  PrimaryButton,
-  SearchSummary,
-  SecondaryButton,
-  StepIndicator,
-} from "@/components/flight/flow-ui";
+  airlinesOf,
+  FlightCard,
+  FlightHeart,
+  FlightListLayout,
+  ListAlert,
+  passengersOf,
+  RouteHeading,
+  useFlightFilter,
+} from "@/components/flight/flight-list-ui";
+import { ErrorAlert, PrimaryButton, useAutoSearchOnce } from "@/components/flight/flow-ui";
 import {
   readOneWaySearchForm,
   SearchConditionFields,
 } from "@/components/flight/search-condition-fields";
-import { passengersOf, WishlistButton } from "@/components/flight/wishlist-button";
+import { useToast } from "@/components/main/main-ui";
 import { postJson } from "@/lib/flight-client";
+import type { InitialSearch } from "@/lib/flight-search-params";
 import type {
   FlightOption,
   OneWaySearchRequest,
@@ -29,13 +31,15 @@ import type {
  * 편도 조회: 조건 입력 → 항공편 선택 → 예약 옵션.
  * 백엔드 POST /flight-searches/one-way → POST /itineraries(returnId 생략)
  */
-export function OneWayFlow() {
-  const [request, setRequest] = useState<OneWaySearchRequest | null>(null);
-  const [locations, setLocations] = useState<SelectedLocations | null>(null);
+export function OneWayFlow({ initial }: { initial?: InitialSearch<OneWaySearchRequest> | null }) {
+  const [request, setRequest] = useState<OneWaySearchRequest | null>(initial?.request ?? null);
+  const [locations, setLocations] = useState<SelectedLocations | null>(initial?.locations ?? null);
   const [search, setSearch] = useState<OneWaySearchResponse | null>(null);
   const [selected, setSelected] = useState<FlightOption | null>(null);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState("");
+  const filter = useFlightFilter();
+  const { notify, toast } = useToast();
 
   function reset() {
     setSearch(null);
@@ -53,14 +57,18 @@ export function OneWayFlow() {
       return;
     }
 
-    setRequest(form.request);
-    setLocations(form.locations);
+    await runSearch(form.request, form.locations);
+  }
+
+  async function runSearch(nextRequest: OneWaySearchRequest, nextLocations: SelectedLocations) {
+    setRequest(nextRequest);
+    setLocations(nextLocations);
     setPending(true);
     setError("");
 
     const result = await postJson<OneWaySearchResponse>(
       "/api/v1/flight-searches/one-way",
-      form.request,
+      nextRequest,
     );
 
     setPending(false);
@@ -73,69 +81,73 @@ export function OneWayFlow() {
     setSearch(result.data);
   }
 
+  useAutoSearchOnce(initial, runSearch);
+
+  if (!search || !request || !locations) {
+    return (
+      <div className="search-form-wrap">
+        <h1>편도 항공권 검색</h1>
+        <div className="space-y-5">
+          <ErrorAlert message={error} />
+          <form onSubmit={handleSearch} className="space-y-5">
+            <SearchConditionFields tripType="one-way" defaultValues={request} defaultLocations={locations} />
+            <PrimaryButton type="submit" disabled={pending}>
+              {pending ? "항공편을 찾는 중..." : "편도 항공편 조회"}
+            </PrimaryButton>
+          </form>
+        </div>
+      </div>
+    );
+  }
+
+  const list = filter.apply(search.flights, "outbound");
+
   return (
-    <div className="space-y-6">
-      <StepIndicator
-        current={!search ? 1 : !selected ? 2 : 3}
-        labels={["조건 입력", "항공편 선택", "예약 옵션"]}
-      />
+    <>
+      <FlightListLayout
+        request={request}
+        locations={locations}
+        filter={filter}
+        airlines={[...new Set(search.flights.flatMap(airlinesOf))]}
+        legs={["outbound"]}
+        onEdit={reset}
+      >
+        <ListAlert message={error} />
+        <RouteHeading from={locations.origin} to={locations.destination} leg="편도" filter={filter} />
 
-      <ErrorAlert message={error} />
-
-      {!search && (
-        <form onSubmit={handleSearch} className="space-y-5">
-          <SearchConditionFields
-            tripType="one-way"
-            defaultValues={request}
-            defaultLocations={locations}
-          />
-          <PrimaryButton type="submit" disabled={pending}>
-            {pending ? "항공편을 찾는 중..." : "편도 항공편 조회"}
-          </PrimaryButton>
-        </form>
-      )}
-
-      {search && request && locations && (
-        <SearchSummary request={request} locations={locations} onEdit={reset} />
-      )}
-
-      {search && !selected && (
-        <section className="space-y-3">
-          <h2 className="text-lg font-bold text-slate-900">직항 편도 {search.totalFlights}개</h2>
-          <PriceInsightsNote insights={search.priceInsights} />
-          {search.noNonstopFlight && (
-            <EmptyMessage>이 노선에는 직항 항공편이 없습니다.</EmptyMessage>
+        <div className="flight-list" aria-live="polite">
+          {list.length === 0 && (
+            <p className="empty-result">
+              {search.flights.length > 0
+                ? "필터 조건에 맞는 항공권이 없습니다."
+                : search.noNonstopFlight
+                  ? "이 노선에는 직항 항공편이 없습니다."
+                  : "조건에 맞는 항공편이 없습니다."}
+            </p>
           )}
-          {search.flights.map((flight) => (
-            <FlightOptionCard
+          {list.map((flight) => (
+            <FlightCard
               key={flight.id}
               option={flight}
-              priceLabel="편도 요금"
-              actionLabel="이 항공편 선택"
-              onSelect={() => setSelected(flight)}
+              chosen={selected?.id === flight.id}
+              onSelect={() => {
+                setSelected(flight);
+                notify("항공편을 선택했습니다. 아래에서 예약 옵션을 확인하세요.");
+              }}
+              heart={
+                <FlightHeart
+                  request={{ ...passengersOf(request), price: flight.price, outbound: flight }}
+                  notify={notify}
+                />
+              }
             />
           ))}
-        </section>
-      )}
+        </div>
 
-      {search && selected && (
-        <>
-          <section className="space-y-3">
-            <div className="flex items-center justify-between gap-4">
-              <h2 className="text-lg font-bold text-slate-900">선택한 항공편</h2>
-              <SecondaryButton onClick={() => setSelected(null)}>항공편 다시 선택</SecondaryButton>
-            </div>
-            <FlightOptionCard option={selected} priceLabel="편도 요금" />
-            {request && (
-              <WishlistButton
-                key={selected.id}
-                request={{ ...passengersOf(request), price: selected.price, outbound: selected }}
-              />
-            )}
-          </section>
-
-          <section className="space-y-3">
-            <h2 className="text-lg font-bold text-slate-900">예약 옵션</h2>
+        {selected && (
+          // ponytail: 예약 옵션은 시안이 없어 기존 스타일 그대로. 시안이 나오면 바꾼다.
+          <section className="booking-section">
+            <h2>예약 옵션</h2>
             <BookingOptionsPanel
               key={selected.id}
               searchId={search.searchId}
@@ -143,8 +155,9 @@ export function OneWayFlow() {
               onExpired={reset}
             />
           </section>
-        </>
-      )}
-    </div>
+        )}
+      </FlightListLayout>
+      {toast}
+    </>
   );
 }

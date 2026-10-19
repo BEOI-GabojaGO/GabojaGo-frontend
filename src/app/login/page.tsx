@@ -2,11 +2,11 @@ import { AuthShell } from "@/components/auth/auth-shell";
 import { LoginForm } from "@/components/auth/login-form";
 
 type LoginPageProps = {
-  searchParams: Promise<{ registered?: string }>;
+  searchParams: Promise<{ registered?: string; next?: string }>;
 };
 
 export default async function LoginPage({ searchParams }: LoginPageProps) {
-  const { registered } = await searchParams;
+  const { registered, next } = await searchParams;
 
   return (
     <AuthShell
@@ -16,7 +16,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
       footerHref="/signup"
       footerLinkText="회원가입"
     >
-      <LoginForm registered={registered === "1"} />
+      <LoginForm registered={registered === "1"} next={next} />
     </AuthShell>
   );
 }

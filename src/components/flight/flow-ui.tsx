@@ -1,8 +1,33 @@
-import type { ReactNode } from "react";
+import { useEffect, useRef, type ReactNode } from "react";
 import { formatLocation, formatPrice } from "@/lib/flight-client";
+import type { InitialSearch } from "@/lib/flight-search-params";
 import type { PriceInsights, SelectedLocations } from "@/lib/flight-types";
 
 // 항공권 조회 흐름(왕복 단계별·왕복 일괄·편도)이 함께 쓰는 작은 UI 조각.
+
+/**
+ * 메인 화면에서 넘어온 조건이 있으면 한 번만 자동 검색한다.
+ * 개발 모드 StrictMode의 이중 실행과 새로고침 재검색으로 SerpApi를 또 부르지 않도록
+ * ref로 한 번만 실행하고 주소의 쿼리를 지운다.
+ */
+export function useAutoSearchOnce<T>(
+  initial: InitialSearch<T> | null | undefined,
+  search: (request: T, locations: SelectedLocations) => Promise<void>,
+) {
+  const started = useRef(false);
+  const searchRef = useRef(search);
+
+  useEffect(() => {
+    searchRef.current = search;
+  });
+
+  useEffect(() => {
+    if (!initial || started.current) return;
+    started.current = true;
+    window.history.replaceState(null, "", window.location.pathname);
+    void searchRef.current(initial.request, initial.locations);
+  }, [initial]);
+}
 
 export function StepIndicator({ current, labels }: { current: number; labels: string[] }) {
   return (
