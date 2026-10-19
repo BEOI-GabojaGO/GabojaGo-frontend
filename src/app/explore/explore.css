@@ -1,0 +1,130 @@
+/*
+ * 둘러보기 디자인 1.0(가보자GO-둘러보기-다자인1.0/style.css) 이식본.
+ * 전역 CSS는 라우트 이동 후에도 남으므로 .explore-page 아래로 스코프한다(main.css와 같은 방식).
+ * 빼낸 것: @font-face(next/font 사용), 교통수단 섹션, 위시리스트 다이얼로그.
+ * 바꾼 것: 태블릿에서 계정 메뉴를 숨기고 시각용 로그인 버튼만 두던 규칙 → 계정 메뉴를 모든 폭에서 보여 준다.
+ */
+.explore-page {
+  --pink: #d70552;
+  --text: #333;
+  --muted: #888;
+  --page-gutter: 240px;
+  --card-width: 342px;
+  --card-gap: 24px;
+  min-height: 100vh;
+  background: #fff;
+  color: var(--text);
+  font-family: var(--font-noto-kr), sans-serif;
+  font-weight: 400;
+
+  * { box-sizing: border-box; }
+  h1, h2, h3, p, ul { margin: 0; }
+  ul { list-style: none; padding: 0; }
+  button { font: inherit; cursor: pointer; border: 0; padding: 0; background: none; color: inherit; touch-action: manipulation; }
+  a { text-decoration: none; color: inherit; touch-action: manipulation; }
+  img { display: block; }
+  button:focus-visible, a:focus-visible, .card-track:focus-visible { outline: 3px solid var(--pink); outline-offset: 4px; }
+  .page-container { margin-inline: var(--page-gutter); }
+
+  /* Header */
+  .site-header { position: absolute; top: 0; left: 0; width: 100%; height: 54px; z-index: 2; background: rgb(0 0 0 / 10%); color: white; }
+  .header-inner { height: 100%; display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+  .brand-group { display: flex; align-items: center; gap: 14px; flex-shrink: 0; }
+  .back-button { width: 16px; height: 30px; display: grid; place-items: center; }
+  .back-button img { transform: rotate(180deg); }
+  .brand { font-size: 18px; line-height: 26px; font-weight: 700; white-space: nowrap; }
+  .brand span { color: var(--pink); }
+  .account-nav { display: flex; align-items: center; }
+  .wishlist-button { display: flex; align-items: center; gap: 4px; border-radius: 12px; padding: 8px 14px 8px 10px; border: 1px solid rgb(255 255 255 / 20%); font-size: 14px; line-height: 20px; font-weight: 500; }
+  .wishlist-button img { margin: 0 6px 0 0; }
+  .user-button { padding: 8px 24px; font-size: 14px; line-height: 20px; font-weight: 500; white-space: nowrap; display: flex; align-items: center; gap: 8px; }
+
+  /* Full-width hero */
+  .hero { position: relative; height: 520px; color: #fff; overflow: hidden; background: #1f2937; }
+  .hero-photo { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center; }
+  .hero-shade { position: absolute; inset: 0; background: linear-gradient(90deg, rgb(0 0 0 / 60%) 0%, rgb(0 0 0 / 40%) 40%, transparent 80%); }
+  .hero-content { position: absolute; top: 277px; left: 0; right: 0; display: flex; flex-direction: column; align-items: flex-start; gap: 40px; }
+  .hero-title-group { display: flex; flex-direction: column; gap: 4px; }
+  .hero h1 { font-size: 52px; line-height: 75px; font-weight: 700; }
+  .hero-title-group > p { margin-left: 4px; font-size: 20px; line-height: 29px; }
+  .primary-button { display: inline-flex; align-items: center; justify-content: center; padding: 18px 34px; background: var(--pink); border-radius: 20px; font-size: 14px; line-height: 20px; font-weight: 500; transition: background .18s; }
+  .primary-button:hover { background: #bc0044; }
+
+  /* Horizontal lists */
+  .collections { padding-top: 40px; display: flex; flex-direction: column; gap: 30px; padding-bottom: 120px; }
+  .collection { min-width: 0; scroll-margin-top: 24px; }
+  .section-heading { height: 40px; display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 20px; }
+  .section-heading h2 { padding-left: 4px; font-size: 26px; line-height: 37px; font-weight: 700; }
+  .carousel-controls { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+  .carousel-arrow { display: grid; place-items: center; width: 40px; height: 40px; border: 1px solid #ddd; border-radius: 50%; background: white; transition: opacity .18s, background .18s; }
+  .carousel-arrow:hover:not(:disabled) { background: #f7f7f7; }
+  .carousel-arrow:disabled { opacity: .22; cursor: default; }
+  .card-track { display: flex; gap: var(--card-gap); overflow-x: auto; overflow-y: hidden; scrollbar-width: none; scroll-snap-type: x proximity; overscroll-behavior-x: contain; padding-bottom: 15px; }
+  .card-track::-webkit-scrollbar { display: none; }
+  .card { flex: 0 0 var(--card-width); min-width: 0; background: #fff; border-radius: 30px; scroll-snap-align: start; overflow: hidden; }
+  .card-media { position: relative; height: 200px; border-radius: 30px; overflow: hidden; background: #f3f4f6; }
+  .card-photo { position: absolute; inset: -10px 0 auto; width: 100%; height: calc(100% + 20px); object-fit: cover; object-position: center; }
+  /* 디자인에 없는 상태: DB·목 데이터 모두 사진이 없을 때 */
+  .photo-empty { position: absolute; inset: 0; display: grid; place-items: center; color: #9ca3af; font-size: 13px; }
+  .favorite { position: absolute; top: 16px; right: 16px; width: 32px; height: 32px; display: grid; place-items: center; border-radius: 50%; background: rgb(0 0 0 / 10%); z-index: 1; }
+  .favorite img { grid-area: 1/1; }
+  .favorite .heart-filled { display: none; }
+  .favorite[aria-pressed="true"] .heart-outline { display: none; }
+  .favorite[aria-pressed="true"] .heart-filled { display: block; }
+  .card-body { display: flex; flex-direction: column; gap: 10px; padding: 12px 12px 20px; }
+  .card-body h3 { font-size: 20px; line-height: 29px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .description { font-size: 12px; line-height: 17px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .tags { display: flex; flex-wrap: wrap; gap: 6px; }
+  .tags li { flex-shrink: 0; border-radius: 4px; padding: 4px 6px; background: #f3f4f6; color: #6a7282; font-size: 12px; line-height: 17px; }
+  .status { color: var(--muted); font-size: 14px; }
+
+  /* useToast(main-ui)와 같은 클래스 이름을 쓴다 */
+  .toast { position: fixed; bottom: 24px; left: 50%; transform: translate(-50%, 12px); padding: 12px 20px; max-width: calc(100% - 32px); width: max-content; color: white; background: rgb(28 31 38 / 94%); border-radius: 12px; font-size: 13px; opacity: 0; pointer-events: none; z-index: 10; transition: opacity .2s, transform .2s; }
+  .toast.visible { opacity: 1; transform: translate(-50%, 0); }
+
+  /* Tablet frame: 700px in Figma. */
+  @media (min-width: 700px) and (max-width: 1439px) {
+    & { --page-gutter: 30px; }
+    .hero { height: 580px; }
+    .hero-content { top: 311px; margin-inline: 40px; }
+    .collections { gap: 40px; }
+  }
+
+  /* Mobile frame: 402px in Figma. */
+  @media (max-width: 699px) {
+    & { --page-gutter: 20px; --card-width: 200px; --card-gap: 16px; }
+    .site-header { height: 56px; }
+    .header-inner { gap: 8px; }
+    .brand-group { gap: 10px; }
+    .brand { font-size: 16px; line-height: 24px; }
+    .back-button { width: 13px; }
+    .wishlist-button { border: 0; padding: 8px 14px 8px 10px; }
+    .user-button { padding: 8px 0 8px 4px; gap: 6px; }
+    .hero-content { top: 332px; gap: 20px; }
+    .hero-title-group { gap: 6px; }
+    .hero h1 { font-size: 32px; line-height: 46px; }
+    .hero-title-group > p { font-size: 16px; line-height: 24px; font-weight: 500; }
+    .primary-button { padding: 14px 20px; border-radius: 16px; }
+    .collections { gap: 40px; padding-bottom: 70px; }
+    .section-heading { height: 30px; margin-bottom: 24px; }
+    .section-heading h2 { font-size: 20px; line-height: 30px; }
+    .carousel-arrow { width: 30px; height: 30px; }
+    .card-track { margin-right: -20px; padding-right: 20px; padding-bottom: 0; }
+    .card, .card-media { border-radius: 20px; }
+    .card-media { height: 140px; }
+    .card-photo { top: 0; height: 100%; }
+    .favorite { top: 10px; right: 10px; }
+    .card-body { padding: 12px 6px; gap: 12px; }
+    .card-body h3 { font-size: 16px; line-height: 24px; }
+    .tags li { padding: 3px 6px; }
+  }
+  @media (max-width: 360px) {
+    .wishlist-button { padding-inline: 8px; }
+    .wishlist-button span { display: none; }
+    .hero-title-group > p { max-width: calc(100vw - 44px); font-size: 14px; }
+    .section-heading h2 { font-size: 18px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { transition: none !important; }
+  }
+}
