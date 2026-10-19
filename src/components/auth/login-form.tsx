@@ -3,13 +3,15 @@
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import { FormField } from "@/components/auth/form-field";
-import { readErrorMessage } from "@/lib/auth-client";
+import { readErrorMessage, safeNext } from "@/lib/auth-client";
 
 type LoginFormProps = {
   registered?: boolean;
+  /** 로그인 후 돌아갈 경로(?next=). 같은 사이트 경로가 아니면 무시하고 계정 화면으로 간다. */
+  next?: string;
 };
 
-export function LoginForm({ registered = false }: LoginFormProps) {
+export function LoginForm({ registered = false, next }: LoginFormProps) {
   const router = useRouter();
   const [pending, setPending] = useState(false);
   const [error, setError] = useState("");
@@ -36,7 +38,7 @@ export function LoginForm({ registered = false }: LoginFormProps) {
         return;
       }
 
-      router.replace("/account");
+      router.replace(safeNext(next) ?? "/account");
       router.refresh();
     } catch {
       setError("서버에 연결할 수 없습니다. 백엔드 서버 상태를 확인해 주세요.");
