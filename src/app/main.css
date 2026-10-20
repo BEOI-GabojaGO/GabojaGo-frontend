@@ -223,3 +223,17 @@ dialog{border:0;border-radius:24px;padding:32px;max-width:540px;width:calc(100% 
 
 /* 디자인에 사진이 없는 나라 카드. 하단 그라데이션(.country-card:after)이 있어 흰 라벨은 그대로 읽힌다. */
 .main-page .country-card.no-photo{background:#c9cdd4}
+
+/* 로딩 화면이 사라질 때 메인 구역을 차례로 띄운다. fill-mode가 backwards라 끝나면 transform이 남지 않는다(position:fixed 자식 보호). */
+.main-page{overflow-x:clip}
+.main-page :is(.header,.hero-copy,.search-panel,.content,footer){animation:site-content-in 440ms cubic-bezier(.22,1,.36,1) backwards}
+.main-page .header{animation-delay:910ms}
+.main-page .hero-background{animation:site-hero-in 440ms cubic-bezier(.22,1,.36,1) 950ms backwards}
+.main-page .hero-copy{animation-delay:1020ms}
+.main-page .search-panel{animation-delay:1090ms}
+.main-page .content{animation-delay:1170ms}
+.main-page footer{animation-delay:1230ms}
+@keyframes site-content-in{from{opacity:0;transform:translate3d(0,10px,0)}to{opacity:1;transform:none}}
+@keyframes site-hero-in{from{opacity:0;transform:scale(1.015)}to{opacity:1;transform:none}}
+@keyframes site-content-fade{from{opacity:0}}
+@media (prefers-reduced-motion:reduce){.main-page :is(.header,.hero-background,.hero-copy,.search-panel,.content,footer){animation:site-content-fade 180ms 340ms backwards}}
