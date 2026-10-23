@@ -16,6 +16,11 @@ const BENEFITS = [
   { icon: "imgIconHear.svg", text: "사용자 고민 경청 및 해소" },
 ];
 
+const HERO_IMAGES = [
+  "/main/imgFrame179.webp",
+  ...[1, 2, 3, 4].map((n) => `/main/hero/hero-banner-${n}.webp`),
+];
+
 export default function Home() {
   return (
     <div className={`main-page ${notoSansKr.variable}`}>
@@ -30,9 +35,18 @@ export default function Home() {
 
       <main id="home">
         <section className="hero" aria-labelledby="hero-title">
-          <picture className="hero-background">
-            <img src="/main/imgFrame179.webp" alt="산토리니의 푸른 바다와 하얀 건물" />
-          </picture>
+          {/* 6.5초마다 1.5초 동안 교차 전환한다(CSS만, main.css의 hero-slide). 장식용이라 alt를 비운다. */}
+          <div className="hero-background" aria-hidden="true">
+            {HERO_IMAGES.map((src, index) => (
+              <picture
+                key={src}
+                className="hero-background-slide"
+                style={{ animationDelay: `${index * 6.5 - 1.5}s` }}
+              >
+                <img src={src} alt="" fetchPriority={index ? "low" : "high"} />
+              </picture>
+            ))}
+          </div>
           <div className="hero-copy">
             <p className="badge">
               <img src="/main/imgSparkleIcon1.svg" alt="" />

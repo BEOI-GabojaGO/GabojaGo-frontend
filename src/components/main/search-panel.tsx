@@ -1,9 +1,10 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useLayoutEffect, useRef, useState, type FormEvent, type KeyboardEvent, type ReactNode } from "react";
+import { createPortal } from "react-dom";
+import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type FormEvent, type KeyboardEvent, type ReactNode } from "react";
 import { cityName } from "@/components/flight/search-condition-fields";
-import { Img, useInfoDialog, useIsMobile, useToast } from "@/components/main/main-ui";
+import { Img, prefersReducedMotion, useInfoDialog, useIsMobile, useToast } from "@/components/main/main-ui";
 import { formatLocation } from "@/lib/flight-client";
 import { toSearchQuery } from "@/lib/flight-search-params";
 import type { LocationOption, TravelClass } from "@/lib/flight-types";
@@ -67,10 +68,40 @@ export function SearchPanel() {
   const isMobile = useIsMobile();
   const promptInput = useRef<HTMLInputElement>(null);
   const tabRefs = useRef<(HTMLButtonElement | null)[]>([]);
+  const tabList = useRef<HTMLDivElement>(null);
+  const indicator = useRef<HTMLSpanElement>(null);
   const { show, dialog } = useInfoDialog();
   const { notify, toast } = useToast();
   const condition = mode === "조건";
-  const activeTab = TABS.find((tab) => tab.mode === mode)!;
+  const activeIndex = TABS.findIndex((tab) => tab.mode === mode);
+  const activeTab = TABS[activeIndex];
+
+  // 활성 탭 밑줄을 그 탭 아래로 옮기고(CSS transition), 고정 배경 높이(--hero-height)를 히어로 높이에 맞춘다.
+  useLayoutEffect(() => {
+    const list = tabList.current!;
+    const hero = list.closest<HTMLElement>(".hero")!;
+    function sync() {
+      const tab = tabRefs.current[activeIndex];
+      const bar = indicator.current;
+      if (!tab || !bar) return;
+      const l = list.getBoundingClientRect();
+      const r = tab.getBoundingClientRect();
+      bar.style.transform = `translate3d(${r.left - l.left + list.scrollLeft}px,${r.bottom - l.top - 2}px,0)`;
+      bar.style.width = `${r.width}px`;
+      // 첫 배치는 애니메이션 없이 자리를 잡은 뒤 transition을 켠다.
+      if (!bar.classList.contains("ready")) {
+        void bar.offsetWidth;
+        bar.classList.add("ready");
+      }
+      hero.style.setProperty("--hero-height", `${hero.getBoundingClientRect().height}px`);
+    }
+    sync();
+    const observer = new ResizeObserver(sync);
+    observer.observe(list);
+    observer.observe(hero);
+    void document.fonts?.ready.then(sync);
+    return () => observer.disconnect();
+  }, [activeIndex]);
 
   const placeholder =
     mode === "사주"
@@ -81,12 +112,18 @@ export function SearchPanel() {
           ? "여행 조건을 자유롭게 말씀해 주세요."
           : "여행 조건(예산, 날짜, 특징, 스타일 등)을 자유롭게 말씀해 주세요.";
 
+  function selectTab(index: number) {
+    setMode(TABS[index].mode);
+    // 모바일에서는 탭 줄이 가로로 스크롤되므로 고른 탭이 보이게 한다.
+    tabRefs.current[index]?.scrollIntoView({ block: "nearest", inline: "nearest", behavior: prefersReducedMotion() ? "auto" : "smooth" });
+  }
+
   function onTabKeyDown(event: KeyboardEvent, index: number) {
     const last = TABS.length - 1;
     const next = { ArrowRight: index === last ? 0 : index + 1, ArrowLeft: index === 0 ? last : index - 1, Home: 0, End: last }[event.key];
     if (next === undefined) return;
     event.preventDefault();
-    setMode(TABS[next].mode);
+    selectTab(next);
     tabRefs.current[next]?.focus();
   }
 
@@ -113,7 +150,7 @@ export function SearchPanel() {
       aria-selected={tab.mode === mode}
       aria-controls={tab.mode === "조건" ? "condition-content" : "search-content"}
       tabIndex={tab.mode === mode ? 0 : -1}
-      onClick={() => setMode(tab.mode)}
+      onClick={() => selectTab(index)}
       onKeyDown={(event) => onTabKeyDown(event, index)}
     >
       <svg className="search-tab-icon" aria-hidden="true" focusable="false" width="14" height="14" viewBox="0 0 14 14" fill="none">
@@ -125,9 +162,10 @@ export function SearchPanel() {
 
   return (
     <div className={`search-panel${condition ? " condition-mode" : ""}`}>
-      <div className="search-tabs" role="tablist" aria-label="여행 검색 방식">
+      <div ref={tabList} className="search-tabs" role="tablist" aria-label="여행 검색 방식">
         <div className="tab-pair">{TABS.slice(0, 2).map((tab, i) => renderTab(tab, i))}</div>
         <div className="tab-pair">{TABS.slice(2).map((tab, i) => renderTab(tab, i + 2))}</div>
+        <span ref={indicator} className="tab-indicator" aria-hidden="true" />
       </div>
 
       <div id="search-content" role="tabpanel" aria-labelledby={activeTab.id} hidden={condition}>
@@ -181,7 +219,10 @@ const PASSENGER_ROWS = [
   { key: "infants", label: "유아", description: "만 2세 미만", min: 0 },
 ] as const;
 
-const PICKER_TITLES = { origin: "출발지", destination: "도착지", dates: "일정 선택", passengers: "탑승객 선택" };
+const PICKER_TITLES = { origin: "출발지", destination: "도착지", dates: "일정 선택", passengers: "탑승객" };
+// 피커는 모두 누른 칸 아래에 붙는 드롭다운이다(시안 positionAnchoredPicker). 폭은 Figma 기준.
+const PICKER_WIDTHS = { origin: 362, destination: 362, dates: 374, passengers: 352 };
+const PICKER_CLASSES = { origin: "location-picker", destination: "location-picker", dates: "date-picker", passengers: "passenger-picker" };
 
 // Figma Origin(638:19536)의 도시 칩. 시드(locations.ts)에 없는 도시는 빠져 있다(docs/location-seed-expansion-proposal.md).
 const LOCATION_REGIONS = [
@@ -240,61 +281,74 @@ function ConditionSearch({ notify }: { notify: (text: string) => void }) {
     cabin: "일반석",
   }));
   const [picker, setPicker] = useState<PickerType | null>(null);
+  const [closing, setClosing] = useState(false);
   const [error, setError] = useState("");
   const triggers = useRef<Partial<Record<PickerType, HTMLButtonElement | null>>>({});
   const panel = useRef<HTMLElement>(null);
+  const closeTimer = useRef<number>(undefined);
   const [panelPosition, setPanelPosition] = useState<{ left: number; top: number }>();
-  const locationPicker = picker === "origin" || picker === "destination";
 
-  // 출발지·도착지 드롭다운은 누른 칸 바로 아래에 붙인다(디자인 positionLocationPicker 이식).
+  /** 닫힘 애니메이션(180ms) 뒤에 피커를 내리고 누른 칸으로 포커스를 돌려준다. */
+  function closePicker() {
+    if (!picker) return;
+    const finish = () => {
+      triggers.current[picker]?.focus();
+      setPicker(null);
+      setClosing(false);
+    };
+    if (prefersReducedMotion()) return finish();
+    setClosing(true);
+    window.clearTimeout(closeTimer.current);
+    closeTimer.current = window.setTimeout(finish, 180);
+  }
+
+  function openPicker(type: PickerType) {
+    window.clearTimeout(closeTimer.current);
+    setClosing(false);
+    setPicker(type);
+  }
+
+  // 누른 칸 바로 아래에 붙인다. 일정은 출발지 칸 왼쪽에 맞춘다(시안).
   useLayoutEffect(() => {
-    if (!locationPicker) return;
+    if (!picker) return;
     function place() {
       const trigger = triggers.current[picker!]?.getBoundingClientRect();
+      const anchor = triggers.current[picker === "dates" ? "origin" : picker!]?.getBoundingClientRect();
       const parent = panel.current?.offsetParent?.getBoundingClientRect();
-      if (!trigger || !parent) return;
-      const width = Math.min(342, window.innerWidth - 24);
-      const maxLeft = window.innerWidth - width - 12;
-      const left = Math.min(Math.max(12, Math.min(trigger.left - 60, maxLeft)) + 20, maxLeft);
+      if (!trigger || !anchor || !parent) return;
+      const width = Math.min(PICKER_WIDTHS[picker!], window.innerWidth - 24);
+      const left = Math.max(12, Math.min(anchor.left - 40, window.innerWidth - width - 12));
       setPanelPosition({ left: left - parent.left, top: trigger.bottom - 12 - parent.top });
-    }
-    function onPointerDown(event: MouseEvent) {
-      const target = event.target as Element;
-      if (!panel.current?.contains(target) && !target.closest(".condition-field")) setPicker(null);
     }
     place();
     window.addEventListener("resize", place);
-    document.addEventListener("mousedown", onPointerDown);
-    return () => {
-      window.removeEventListener("resize", place);
-      document.removeEventListener("mousedown", onPointerDown);
-    };
-  }, [picker, locationPicker]);
+    return () => window.removeEventListener("resize", place);
+  }, [picker]);
 
   function update(patch: Partial<Condition>) {
     setState((current) => ({ ...current, ...patch }));
     setError("");
   }
 
-  function closePicker() {
-    if (!picker) return;
-    triggers.current[picker]?.focus();
-    setPicker(null);
-  }
-
-  // 피커가 열려 있는 동안 body 스크롤 잠금 + Escape 닫기 + Tab 포커스 가두기.
+  // 바깥 클릭·Escape로 닫고, Tab 포커스는 피커 안에 가둔다.
+  const closeRef = useRef(closePicker);
+  useEffect(() => {
+    closeRef.current = closePicker;
+  });
   useEffect(() => {
     if (!picker) return;
-    if (!locationPicker) document.body.classList.add("picker-open");
     panel.current?.querySelector<HTMLElement>("input,button:not(.picker-close)")?.focus();
 
+    function onPointerDown(event: MouseEvent) {
+      const target = event.target as Element;
+      if (!panel.current?.contains(target) && !target.closest(".condition-field")) closeRef.current();
+    }
     function onKeyDown(event: globalThis.KeyboardEvent) {
       if (event.key === "Escape") {
-        triggers.current[picker!]?.focus();
-        setPicker(null);
+        closeRef.current();
         return;
       }
-      if (event.key !== "Tab" || !panel.current || locationPicker) return;
+      if (event.key !== "Tab" || !panel.current) return;
       const focusable = [...panel.current.querySelectorAll<HTMLElement>("button:not([disabled]),input:not([disabled]),select:not([disabled])")].filter(
         (element) => element.getClientRects().length,
       );
@@ -309,12 +363,13 @@ function ConditionSearch({ notify }: { notify: (text: string) => void }) {
       }
     }
 
+    document.addEventListener("mousedown", onPointerDown);
     document.addEventListener("keydown", onKeyDown);
     return () => {
-      document.body.classList.remove("picker-open");
+      document.removeEventListener("mousedown", onPointerDown);
       document.removeEventListener("keydown", onKeyDown);
     };
-  }, [picker, locationPicker]);
+  }, [picker]);
 
   const { origin, destination } = state;
   const oneway = state.trip === "oneway";
@@ -341,7 +396,7 @@ function ConditionSearch({ notify }: { notify: (text: string) => void }) {
     event.preventDefault();
     if (!origin || !destination) {
       setError("출발지와 목적지를 선택해 주세요.");
-      setPicker(origin ? "destination" : "origin");
+      openPicker(origin ? "destination" : "origin");
       return;
     }
     if (cityName(origin) === cityName(destination)) {
@@ -350,7 +405,7 @@ function ConditionSearch({ notify }: { notify: (text: string) => void }) {
     }
     if (!state.depart || (!oneway && !state.return)) {
       setError("여행 일정을 선택해 주세요.");
-      setPicker("dates");
+      openPicker("dates");
       return;
     }
     const lap = state.infantSeat === "lap";
@@ -379,7 +434,7 @@ function ConditionSearch({ notify }: { notify: (text: string) => void }) {
       aria-haspopup="dialog"
       aria-controls="picker-panel"
       aria-expanded={picker === type}
-      onClick={() => setPicker(picker === type ? null : type)}
+      onClick={() => (picker === type ? closePicker() : openPicker(type))}
     >
       <span>{label}</span>
       <strong>{value}</strong>
@@ -424,16 +479,16 @@ function ConditionSearch({ notify }: { notify: (text: string) => void }) {
         </div>
       </form>
 
-      {picker && (
-        <>
-          {!locationPicker && <div className="picker-backdrop" onClick={closePicker} />}
+      {/* 히어로(isolation)와 고정 배경 위 본문(z-index:3)에 가리지 않도록 시안처럼 히어로 밖(.main-page 바로 아래)에 띄운다. */}
+      {picker &&
+        createPortal(
           <section
             ref={panel}
-            className={`picker-panel${locationPicker ? " location-picker" : ""}`}
-            style={locationPicker ? panelPosition : undefined}
+            className={`picker-panel ${PICKER_CLASSES[picker]}${closing ? " is-closing" : ""}`}
+            style={panelPosition}
             id="picker-panel"
             role="dialog"
-            aria-modal={!locationPicker}
+            aria-modal="false"
             aria-labelledby="picker-title"
           >
             <header className="picker-header">
@@ -460,9 +515,9 @@ function ConditionSearch({ notify }: { notify: (text: string) => void }) {
               {picker === "dates" && <DatePicker state={state} update={update} onDone={closePicker} />}
               {picker === "passengers" && <PassengerPicker state={state} update={update} onDone={closePicker} />}
             </div>
-          </section>
-        </>
-      )}
+          </section>,
+          document.querySelector(".main-page")!,
+        )}
     </>
   );
 }
@@ -517,10 +572,15 @@ function LocationPicker({ label, onSelect }: { label: string; onSelect: (option:
 
 type PickerProps = { state: Condition; update: (patch: Partial<Condition>) => void; onDone: () => void };
 
+const WEEKDAYS = ["일", "월", "화", "수", "목", "금", "토"];
+const ROW_HEIGHT = 46;
+const ROW_GAP = 10;
+
+/** Figma Calendar(362 × 471). 왕복이면 출발~귀국을 주 단위 띠로 칠한다(시안 calendarMonthMarkup). */
 function DatePicker({ state, update, onDone }: PickerProps) {
   const [month, setMonth] = useState(() => {
-    const now = new Date();
-    return new Date(now.getFullYear(), now.getMonth(), 1);
+    const base = state.depart ? new Date(`${state.depart}T00:00:00`) : new Date();
+    return new Date(base.getFullYear(), base.getMonth(), 1);
   });
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -528,66 +588,92 @@ function DatePicker({ state, update, onDone }: PickerProps) {
   const monthIndex = month.getMonth();
   const firstDay = new Date(year, monthIndex, 1).getDay();
   const days = new Date(year, monthIndex + 1, 0).getDate();
+  const rows = Math.max(5, Math.ceil((firstDay + days) / 7));
+  const gridHeight = rows * ROW_HEIGHT + (rows - 1) * ROW_GAP;
   const oneway = state.trip === "oneway";
-  const phase = oneway || !state.depart || state.return ? "출발일을 선택해 주세요." : "귀국일을 선택해 주세요.";
+  const phase = oneway || !state.depart || state.return ? "출발일을 선택해 주세요" : "귀국일을 선택해 주세요";
   const prevDisabled = year === today.getFullYear() && monthIndex === today.getMonth();
+  const complete = !!state.depart && (oneway || !!state.return);
+  const range = !oneway && state.depart && state.return ? { start: state.depart, end: state.return } : null;
+  // 하루 차이(토요일 출발 제외)는 띠 대신 두 동그라미를 반씩 잇는다.
+  const departDate = range ? new Date(`${range.start}T00:00:00`) : null;
+  const adjacent = !!departDate && departDate.getDay() !== 6 && dateKey(new Date(departDate.getFullYear(), departDate.getMonth(), departDate.getDate() + 1)) === range!.end;
 
   function pick(key: string) {
     if (oneway || !state.depart || state.return || key <= state.depart) update({ depart: key, return: null });
     else update({ return: key });
   }
 
+  const cells: ReactNode[] = Array.from({ length: firstDay }, (_, i) => <span key={`lead-${i}`} className="calendar-empty" aria-hidden="true" />);
+  for (let day = 1; day <= days; day++) {
+    const date = new Date(year, monthIndex, day);
+    const key = dateKey(date);
+    const start = key === state.depart;
+    const end = !!range && key === range.end;
+    const fill = !!range && !adjacent && key >= range.start && key <= range.end;
+    const classes = [
+      "calendar-day",
+      (start || end) && "selected",
+      start && "range-start",
+      end && "range-end",
+      range && key > range.start && key < range.end && "between",
+      fill && "range-week",
+      fill && (start || date.getDay() === 0 || day === 1) && "range-row-start",
+      fill && (end || date.getDay() === 6 || day === days) && "range-row-end",
+      adjacent && (start || end) && "adjacent-range",
+    ].filter(Boolean);
+    cells.push(
+      <button
+        key={key}
+        type="button"
+        className={classes.join(" ")}
+        // 백엔드가 @Future라 오늘은 고를 수 없다.
+        disabled={date <= today}
+        aria-label={`${year}년 ${monthIndex + 1}월 ${day}일`}
+        aria-pressed={start || end}
+        onClick={() => pick(key)}
+      >
+        <span>{day}</span>
+      </button>,
+    );
+  }
+  while (cells.length < rows * 7) cells.push(<span key={`tail-${cells.length}`} className="calendar-empty" aria-hidden="true" />);
+
   return (
     <>
-      <div className="date-summary">
-        <span>출발 {state.depart ? formatDate(state.depart) : "날짜 선택"}</span>
-        <span aria-hidden="true">→</span>
-        <span>{oneway ? "편도" : `귀국 ${state.return ? formatDate(state.return) : "날짜 선택"}`}</span>
-      </div>
-      <p className="picker-hint">{phase}</p>
-      <div className="calendar">
+      {/* 패널 높이(--calendar-grid-height)가 이 달의 주 수를 따른다. */}
+      <div className="calendar" ref={(element) => element?.closest<HTMLElement>(".picker-panel")?.style.setProperty("--calendar-grid-height", `${gridHeight}px`)}>
         <div className="calendar-top">
           <button type="button" aria-label="이전 달" disabled={prevDisabled} onClick={() => setMonth(new Date(year, monthIndex - 1, 1))}>
-            ‹
+            <Img name="imgChevronLeftIcon.svg" />
           </button>
-          <strong>
+          <strong aria-live="polite">
             {year}년 {monthIndex + 1}월
           </strong>
           <button type="button" aria-label="다음 달" onClick={() => setMonth(new Date(year, monthIndex + 1, 1))}>
-            ›
+            <Img name="imgChevronRightIcon.svg" />
           </button>
         </div>
-        <div className="calendar-grid">
-          {["일", "월", "화", "수", "목", "금", "토"].map((day) => (
-            <b key={day}>{day}</b>
+        <p className="calendar-phase" aria-live="polite">
+          {phase}
+        </p>
+        <div className="calendar-weekdays" aria-hidden="true">
+          {WEEKDAYS.map((day, i) => (
+            <b key={day} className={i === 0 ? "sunday" : i === 6 ? "saturday" : undefined}>
+              {day}
+            </b>
           ))}
-          {Array.from({ length: firstDay }, (_, i) => (
-            <span key={`blank-${i}`} />
-          ))}
-          {Array.from({ length: days }, (_, i) => {
-            const date = new Date(year, monthIndex, i + 1);
-            const key = dateKey(date);
-            const selected = key === state.depart || key === state.return;
-            const between = !!state.depart && !!state.return && key > state.depart && key < state.return;
-            return (
-              <button
-                key={key}
-                type="button"
-                className={`calendar-day${selected ? " selected" : ""}${between ? " between" : ""}`}
-                // 백엔드가 @Future라 오늘은 고를 수 없다.
-                disabled={date <= today}
-                aria-label={`${year}년 ${monthIndex + 1}월 ${i + 1}일`}
-                aria-pressed={selected}
-                onClick={() => pick(key)}
-              >
-                {i + 1}
-              </button>
-            );
-          })}
+        </div>
+        <div className="calendar-viewport">
+          <div className="calendar-track">
+            <section className="calendar-slide" style={{ "--slide-grid-height": `${gridHeight}px` } as CSSProperties} aria-label={`${year}년 ${monthIndex + 1}월`}>
+              <div className="calendar-grid">{cells}</div>
+            </section>
+          </div>
         </div>
       </div>
-      <button className="picker-done" type="button" onClick={onDone}>
-        완료
+      <button className="picker-done calendar-done" type="button" disabled={!complete} onClick={onDone}>
+        선택하기
       </button>
     </>
   );
@@ -608,57 +694,60 @@ function PassengerPicker({ state, update, onDone }: PickerProps) {
 
   return (
     <>
-      <p className="picker-hint">탑승객은 최대 9명까지 선택할 수 있어요.</p>
-      <div className="passenger-list">
-        {PASSENGER_ROWS.map(({ key, label, description, min }) => (
-          <div className="passenger-row" key={key}>
-            <span>
-              <strong>{label}</strong>
-              <small>{description}</small>
-            </span>
-            <div className="counter">
-              <button type="button" aria-label={`${label} 줄이기`} disabled={state[key] === min} onClick={() => step(key, -1)}>
-                −
-              </button>
-              <output aria-label={`${label} ${state[key]}명`}>{state[key]}</output>
-              <button type="button" aria-label={`${label} 늘리기`} onClick={() => step(key, 1)}>
-                +
-              </button>
+      <div className="passenger-controls">
+        <div className="passenger-list">
+          {PASSENGER_ROWS.map(({ key, label, description, min }) => (
+            <div className="passenger-row" key={key}>
+              <span>
+                <strong>{label}</strong>
+                <small>{description}</small>
+              </span>
+              {/* +/- 기호는 CSS(data-step)로 그린다. */}
+              <div className="counter">
+                <button type="button" data-step="-1" aria-label={`${label} 줄이기`} disabled={state[key] === min} onClick={() => step(key, -1)} />
+                <output aria-label={`${label} ${state[key]}명`}>{state[key]}</output>
+                <button type="button" data-step="1" aria-label={`${label} 늘리기`} onClick={() => step(key, 1)} />
+              </div>
             </div>
-          </div>
-        ))}
-      </div>
-      {state.infants > 0 && (
-        <div className="trip-types infant-types" role="radiogroup" aria-label="유아 좌석">
-          {(
-            [
-              ["lap", "무릎에 앉혀요"],
-              ["seat", "좌석을 따로 둬요"],
-            ] as const
-          ).map(([value, label]) => (
-            <label key={value}>
-              <input
-                type="radio"
-                name="infant-seat"
-                value={value}
-                checked={state.infantSeat === value}
-                // 무릎으로 바꾸면 유아 수를 성인 수에 맞춘다.
-                onChange={() => update(value === "lap" ? { infantSeat: value, infants: Math.min(state.infants, state.adults) } : { infantSeat: value })}
-              />
-              <span>{label}</span>
-            </label>
           ))}
         </div>
-      )}
-      <label className="cabin-label" htmlFor="cabin-select">좌석 등급</label>
-      <select id="cabin-select" value={state.cabin} onChange={(event) => update({ cabin: event.target.value })}>
-        {CABINS.map((cabin) => (
-          <option key={cabin}>{cabin}</option>
-        ))}
-      </select>
-      <button className="picker-done" type="button" onClick={onDone}>
-        적용하기
-      </button>
+        {state.infants > 0 && (
+          <div className="infant-types" role="radiogroup" aria-label="유아 좌석">
+            {(
+              [
+                ["lap", "무릎에 앉혀요"],
+                ["seat", "좌석을 따로 둬요"],
+              ] as const
+            ).map(([value, label]) => (
+              <label key={value}>
+                <input
+                  type="radio"
+                  name="infant-seat"
+                  value={value}
+                  checked={state.infantSeat === value}
+                  // 무릎으로 바꾸면 유아 수를 성인 수에 맞춘다.
+                  onChange={() => update(value === "lap" ? { infantSeat: value, infants: Math.min(state.infants, state.adults) } : { infantSeat: value })}
+                />
+                <span>{label}</span>
+              </label>
+            ))}
+          </div>
+        )}
+        <fieldset className="cabin-options">
+          <legend className="sr-only">좌석 등급</legend>
+          {CABINS.map((cabin) => (
+            <label key={cabin}>
+              <input type="radio" name="cabin-class" value={cabin} checked={state.cabin === cabin} onChange={() => update({ cabin })} />
+              <span>{cabin}</span>
+            </label>
+          ))}
+        </fieldset>
+      </div>
+      <div className="passenger-action">
+        <button className="picker-done" type="button" onClick={onDone}>
+          선택하기
+        </button>
+      </div>
     </>
   );
 }
