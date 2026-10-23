@@ -50,16 +50,6 @@ function recommendedSearchUrl({ destination: [type, code], nights }: (typeof TRA
   return `/flights/round-trip/step?${toSearchQuery(request, { origin, destination })}`;
 }
 
-/** 모바일 시안은 임시 문구를 보여 준다. 화면 폭에 따른 전환은 CSS(.desktop-data / .mobile-data)가 한다. */
-function Responsive({ desktop, mobile }: { desktop: ReactNode; mobile: ReactNode }) {
-  return (
-    <>
-      <span className="desktop-data">{desktop}</span>
-      <span className="mobile-data">{mobile}</span>
-    </>
-  );
-}
-
 export function MainCarousels() {
   const router = useRouter();
   const { show, dialog } = useInfoDialog();
@@ -89,16 +79,16 @@ export function MainCarousels() {
                 <img src={asset(t.image)} alt={`${t.name} 여행 풍경`} />
               </picture>
               <span className="travel-label">
-                <span className="travel-name"><Responsive desktop={t.name} mobile="여행지" /></span>
-                <span className="travel-country"><Responsive desktop={t.country} mobile="국가명" /></span>
+                <span className="travel-name">{t.name}</span>
+                <span className="travel-country">{t.country}</span>
               </span>
             </span>
             <span className="travel-details">
               <span className="trip-duration"><Img name="imgCalendarIcon1.svg" />{tripLength(t.nights)}</span>
-              <span className="travel-description"><Responsive desktop={t.description} mobile="여행지에 대한 간단한 설명입니다. " /></span>
+              <span className="travel-description">{t.description}</span>
               <span className="tags">
                 {t.tags.map((tag) => (
-                  <span key={tag}><Responsive desktop={`# ${tag}`} mobile="# 태그" /></span>
+                  <span key={tag}># {tag}</span>
                 ))}
               </span>
             </span>
@@ -130,8 +120,8 @@ export function MainCarousels() {
               </picture>
             )}
             <span className="country-label">
-              <strong><Responsive desktop={name} mobile="국가명" /></strong>
-              <small><Responsive desktop={en} mobile="Country Name" /></small>
+              <strong>{name}</strong>
+              <small>{en}</small>
             </span>
           </button>
         ))}
