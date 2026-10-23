@@ -8,7 +8,26 @@ import { loginHref } from "@/lib/auth-client";
 import { requestJson } from "@/lib/flight-client";
 
 /**
- * 둘러보기 디자인 헤더. 디자인의 사용자 이름 자리는 로그인 상태면 닉네임(→ 내 계정), 아니면 로그인 링크다.
+ * 로그인 후 헤더 계정 메뉴(둘러보기 시안): "♡ 위시리스트" + "닉네임님 ▾"(→ 내 계정).
+ * 로그아웃이면 시안(메인·항공권 목록·예약하기)대로 "로그인"만 보이므로 각 헤더가 따로 그린다. 메인 헤더도 이걸 쓴다.
+ */
+export function AccountLinks({ nickname }: { nickname: string }) {
+  return (
+    <nav className="account-nav" aria-label="내 계정">
+      <Link className="wishlist-button" href="/wishlist">
+        <img src="/explore/account.svg" width={14} height={13} alt="" />
+        <span>위시리스트</span>
+      </Link>
+      <Link className="user-button" href="/account">
+        {nickname}님
+        <img src="/explore/chevron-down.svg" width={14} height={14} alt="" />
+      </Link>
+    </nav>
+  );
+}
+
+/**
+ * 둘러보기·항공권 화면 헤더. 로그인 상태면 AccountLinks, 아니면 새 디자인 로그인 페이지로 가는 "로그인"이다.
  * 토큰은 HttpOnly 쿠키라 /api/users/me 응답으로 로그인 여부를 판단한다(login-dialog와 같은 방식).
  */
 export function ExploreHeader() {
@@ -35,22 +54,14 @@ export function ExploreHeader() {
             가보자 <span>GO</span>
           </Link>
         </div>
-        <div className="account-nav">
-          <Link className="wishlist-button" href="/wishlist">
-            <img src="/explore/account.svg" width={14} height={13} alt="" />
-            <span>위시리스트</span>
+        {nickname ? (
+          <AccountLinks nickname={nickname} />
+        ) : (
+          <Link className="login-button" href={loginHref(pathname)}>
+            <img className="login-icon" src="/main/imgIconLogin.svg" width={20} height={20} alt="" />
+            로그인
           </Link>
-          {nickname ? (
-            <Link className="user-button" href="/account">
-              {nickname}님
-              <img src="/explore/chevron-down.svg" width={14} height={14} alt="" />
-            </Link>
-          ) : (
-            <Link className="user-button" href={loginHref(pathname)}>
-              로그인
-            </Link>
-          )}
-        </div>
+        )}
       </nav>
     </header>
   );

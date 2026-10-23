@@ -38,6 +38,9 @@
   .wishlist-button { display: flex; align-items: center; gap: 4px; border-radius: 12px; padding: 8px 14px 8px 10px; border: 1px solid rgb(255 255 255 / 20%); font-size: 14px; line-height: 20px; font-weight: 500; }
   .wishlist-button img { margin: 0 6px 0 0; }
   .user-button { padding: 8px 24px; font-size: 14px; line-height: 20px; font-weight: 500; white-space: nowrap; display: flex; align-items: center; gap: 8px; }
+  /* 로그아웃: 메인 시안의 분홍 "로그인". 사진 위라 모바일도 알약 모양을 유지하고 아이콘은 쓰지 않는다. */
+  .login-button { border-radius: 12px; padding: 8px 14px; background: var(--pink); font-size: 14px; line-height: 20px; font-weight: 500; white-space: nowrap; }
+  .login-icon { display: none; }
 
   /* Full-width hero */
   .hero { position: relative; height: 520px; color: #fff; overflow: hidden; background: #1f2937; }

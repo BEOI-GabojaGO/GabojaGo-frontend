@@ -35,8 +35,11 @@
   .brand span { color: #d70552; }
   .account-nav { display: flex; align-items: center; gap: 8px; }
   .wishlist-button { display: flex; align-items: center; gap: 6px; padding: 8px 10px; color: #555; font-size: 14px; font-weight: 500; }
-  .user-button { height: 36px; display: flex; align-items: center; gap: 6px; border-radius: 12px; background: #d70552; color: #fff; font-weight: 500; padding: 8px 14px; line-height: 17px; white-space: nowrap; }
-  .user-button img { filter: brightness(0) invert(1); }
+  /* 로그인 후: 둘러보기 시안의 "닉네임님 ▾" */
+  .user-button { display: flex; align-items: center; gap: 8px; padding: 8px 0 8px 14px; color: #333; font-size: 14px; line-height: 20px; font-weight: 500; white-space: nowrap; }
+  /* 로그아웃: 메인·항공권 목록 시안의 분홍 "로그인". 아이콘은 모바일에서만 */
+  .login-button { height: 36px; display: flex; align-items: center; gap: 4px; border-radius: 12px; background: #d70552; color: #fff; font-weight: 500; padding: 8px 14px; line-height: 17px; white-space: nowrap; }
+  .site-header .login-icon { display: none; filter: none; }
 
   /* 조건 입력 단계(시안 없음, 기존 폼) */
   .search-form-wrap { width: min(calc(100% - 40px), 720px); margin: 0 auto; padding: 40px 0 80px; }
@@ -222,9 +225,10 @@
     .site-header { height: 56px; }
     .page-container { width: calc(100% - 30px); }
     .brand { font-size: 16px; line-height: 19px; }
-    .wishlist-button span { display: none; }
-    .user-button { background: transparent; color: #d70552; padding: 8px 4px; }
-    .user-button img { filter: brightness(.2); }
+    .user-button { padding: 8px 0 8px 4px; gap: 6px; }
+    @media (max-width: 360px) { .wishlist-button span { display: none; } }
+    .login-button { background: transparent; color: #d70552; font-size: 14px; padding: 8px 14px 8px 10px; }
+    .site-header .login-icon { display: block; width: 20px; height: 20px; }
     .page-layout { min-height: calc(100vh - 56px); padding-top: 14px; padding-bottom: 32px; }
     .mobile-summary { min-height: 67px; padding: 11px 15px; border-radius: 19px; column-gap: 7px; row-gap: 4px; }
     .summary-route { font-size: 13px; }

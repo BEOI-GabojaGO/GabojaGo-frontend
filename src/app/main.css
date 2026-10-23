@@ -1,10 +1,6 @@
 /* 메인 디자인(가보자GO-메인-디자인/styles.css) 이식본. 전역 CSS는 라우트 이동 후에도 남으므로 .main-page 아래로 스코프한다. */
 .main-page{--pink:#d70552;--ink:#333;--muted:#888;--surface:#f6f6f6;--content:1440px;--page-padding:30px;--section-gap:80px;--card-gap:24px;min-height:100vh;background:#fff;color:var(--ink);font-family:var(--font-noto-kr),sans-serif;font-size:14px;line-height:1.2}
-body.login-open,body.picker-open{overflow:hidden}
-@keyframes login-fade-in{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
-@keyframes login-fade-out{from{opacity:1;transform:translateY(0)}to{opacity:0;transform:translateY(24px)}}
-@keyframes login-backdrop-in{from{opacity:0}to{opacity:1}}
-@keyframes login-backdrop-out{from{opacity:1}to{opacity:0}}
+body.picker-open{overflow:hidden}
 @keyframes calendar-pop-in{from{opacity:0;transform:translateY(-8px) scale(.985)}to{opacity:1;transform:translateY(0) scale(1)}}
 @keyframes calendar-pop-out{from{opacity:1;transform:translateY(0) scale(1)}to{opacity:0;transform:translateY(-8px) scale(.985)}}
 @keyframes hero-slide{0%{opacity:0}4.6%{opacity:1}24.6%{opacity:1}29.2%{opacity:0}100%{opacity:0}}
@@ -231,64 +227,6 @@ dialog{border:0;border-radius:24px;padding:32px;max-width:540px;width:calc(100% 
 .picker-panel.location-picker.is-closing,.picker-panel.date-picker.is-closing,.picker-panel.passenger-picker.is-closing{pointer-events:none;animation:calendar-pop-out 180ms ease-in both}
 @media(prefers-reduced-motion:reduce){.picker-panel.location-picker,.picker-panel.date-picker,.picker-panel.passenger-picker{animation:none}.picker-panel.date-picker,.date-picker .calendar-viewport,.date-picker .calendar-track{transition:none}.date-picker .calendar-track{scroll-behavior:auto}}
 
-/* Figma Sign In: 440 × 660 desktop/tablet dialog, 402 × 723 mobile page. */
-.login-view[hidden],.signup-view[hidden]{display:none}
-.login-dialog{position:fixed;inset:0;margin:auto;width:440px;height:660px;max-width:calc(100vw - 32px);max-height:calc(100dvh - 32px);padding:30px 30px 40px;border:0;border-radius:40px;background:#fff;color:#333;box-shadow:0 20px 80px #0003;overflow-x:hidden;overflow-y:auto;scrollbar-width:none}
-.login-dialog[open]{display:block}
-.login-dialog::backdrop{background:#0009;backdrop-filter:blur(8px)}
-.login-dialog-header{display:flex;align-items:center;justify-content:space-between;height:24px}
-.login-dialog-header .brand{font-size:18px;line-height:24px;font-weight:700;letter-spacing:-.4px}
-.login-close{position:relative;width:22px;height:22px;color:#888;flex:none}
-.login-close:before,.login-close:after{content:'';position:absolute;width:16px;height:1px;left:3px;top:10px;background:currentColor;transform:rotate(45deg)}
-.login-close:after{transform:rotate(-45deg)}
-.login-dialog h2{font-size:20px;line-height:27px;text-align:center;font-weight:700;margin:38px 0 0}
-.login-form{display:flex;flex-direction:column;margin-top:41px}
-.login-field{display:flex;flex-direction:column}.login-password-field{margin-top:16px}
-.login-form label{font-size:14px;line-height:17px;font-weight:500;margin-bottom:10px}
-.login-form input{height:53px;width:100%;border:1px solid #ddd;border-radius:12px;background:#fff;color:#333;padding:0 14px;font-size:14px;outline:none}
-.login-form input::placeholder{color:#bdbdbd}
-.login-form input:focus{border-color:var(--pink);box-shadow:0 0 0 3px #d7055217}
-.login-form input[aria-invalid=true]{border-color:#d70552}
-.field-error{min-height:0;margin:7px 0 0;color:var(--pink);font-size:11px;line-height:15px}.field-error:empty{display:none}
-.login-submit{height:53px;width:100%;margin-top:32px;border-radius:20px;background:var(--pink);color:white;font-size:14px;font-weight:600}
-.login-submit:hover{background:#bd0649}
-.login-signup{margin:33px 0 0;text-align:center;color:#aaa;font-size:13px;line-height:17px}
-.login-signup-link{color:var(--pink);font-size:13px;font-weight:600;margin-left:4px}
-.login-signup-link:hover{text-decoration:underline}
-.login-social{display:flex;flex-direction:column;gap:10px;margin-top:28px}
-.login-social button{height:56px;width:100%;display:flex;align-items:center;justify-content:center;gap:8px;border-radius:20px;font-size:13px;font-weight:500}
-.login-social img{width:20px;height:20px;flex:none}
-.login-google{border:1px solid #e5e7eb;background:#fff;color:#364153}
-.login-google:hover{background:#f8f8f8}
-.login-kakao{background:#ffdf20;color:#101828}
-.login-kakao:hover{background:#ffda00}
-.login-feedback,.signup-feedback{position:static;margin:12px 0;text-align:center;color:var(--pink);font-size:12px;line-height:1.4}
-.login-feedback:empty{display:none}
-.signup-dialog{height:713px}
-.signup-login{margin-top:25px}
-.signup-fields{display:flex;flex-direction:column;gap:22px}
-.signup-field label,.signup-field input{display:block}
-.signup-feedback:empty{display:none}
-@media(max-width:599px){
-  .login-dialog{inset:0;width:100vw;height:100dvh;min-height:0;max-width:none;max-height:none;margin:0;padding:30px 20px;border-radius:0;box-shadow:none}
-  .login-dialog::backdrop{background:#fff;backdrop-filter:none}
-  .login-dialog h2{margin-top:38px}
-  .login-form{margin-top:59px}
-  .login-form input{height:52px}
-  .login-password-field{margin-top:16px}
-  .login-submit{height:52px;margin-top:26px}
-  .login-signup{margin-top:60px}
-  .login-social{margin-top:60px}
-  .login-social button{height:56px}
-  .login-feedback{margin:12px 0}
-  .signup-form{margin-top:55px}
-  .signup-field label{margin-bottom:12px}
-  .signup-form input,.signup-submit{height:53px}
-  .signup-fields{gap:16px}
-}
-@media(max-height:680px) and (min-width:600px){
-  .login-dialog{height:calc(100dvh - 24px);max-height:none}
-}
 
 /* Brand scrollbars; mobile keeps scrolling with hidden bars. */
 *{scrollbar-color:var(--pink) #fce7ef;scrollbar-width:thin}
@@ -305,13 +243,6 @@ dialog{border:0;border-radius:24px;padding:32px;max-width:540px;width:calc(100% 
   ::-webkit-scrollbar{display:none;width:0;height:0}
 }
 
-@media(min-width:600px) and (prefers-reduced-motion:no-preference){
-  .login-dialog[open]{animation:login-fade-in 240ms cubic-bezier(.22,1,.36,1) both}
-  .login-dialog[open]::backdrop{animation:login-backdrop-in 240ms ease-out both}
-  .login-dialog[open].is-closing{animation:login-fade-out 180ms ease-in both}
-  .login-dialog[open].is-closing::backdrop{animation:login-backdrop-out 180ms ease-in both}
-  .login-dialog.is-closing{pointer-events:none}
-}
 /* Keep the active hero background pinned while the hero content and white page content scroll above it. */
 &{--hero-height:589px}
 .hero-background{position:fixed;top:0;right:0;bottom:auto;left:0;height:var(--hero-height);z-index:0}
@@ -332,8 +263,14 @@ footer{position:relative;z-index:3}
 @media(prefers-reduced-motion:reduce){#search-content,#condition-content{animation:none!important}}
 }
 
-/* 로그인 상태 헤더 링크(시안 없음): 로그인 버튼 스타일을 그대로 쓴다. */
-.main-page .header-links{display:flex;gap:8px}.main-page .header-links .login{display:inline-flex;align-items:center}
+/* 로그인 후 헤더(둘러보기 시안 "♡ 위시리스트 · 닉네임님 ▾"). 메인 헤더는 밝아서 글자·아이콘을 진하게 쓴다. */
+.main-page .account-nav{display:flex;align-items:center}
+.main-page .wishlist-button{display:flex;align-items:center;gap:4px;border-radius:12px;padding:8px 14px 8px 10px;border:1px solid rgb(0 0 0 / 10%);color:#333;font-size:14px;line-height:20px;font-weight:500}
+.main-page .wishlist-button img{margin:0 6px 0 0}
+.main-page .user-button{display:flex;align-items:center;gap:8px;padding:8px 0 8px 24px;color:#333;font-size:14px;line-height:20px;font-weight:500;white-space:nowrap}
+.main-page .account-nav img{filter:brightness(.2)}
+@media(max-width:599px){.main-page .wishlist-button{border:0}.main-page .user-button{padding:8px 0 8px 4px;gap:6px}}
+@media(max-width:360px){.main-page .wishlist-button{padding-inline:8px}.main-page .wishlist-button span{display:none}}
 /* 유아 좌석 선택(시안 없음): 왕복·편도 토글과 같은 톤의 작은 세그먼트. 이 줄이 생기면 탑승객 피커 고정 높이를 푼다. */
 .main-page .infant-types{display:flex;gap:4px;width:max-content;padding:2px;border-radius:12px;background:#eee}
 .main-page .infant-types label{cursor:pointer}
