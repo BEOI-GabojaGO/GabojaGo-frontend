@@ -35,4 +35,8 @@ input {
 .site-loader-plane{position:absolute;left:0;top:0;width:22px;height:22px;z-index:1;offset-path:path("M 16 15 C 45 -3 105 -3 134 15");offset-anchor:center;offset-rotate:auto 42deg;animation:site-loader-flight 900ms linear both}
 @keyframes site-loader-flight{0%{offset-distance:0%;opacity:0}15%{opacity:1}100%{offset-distance:100%;opacity:1}}
 @keyframes site-loader-out{to{opacity:0;visibility:hidden}}
-@media (prefers-reduced-motion:reduce){.site-loader{animation-duration:160ms;animation-delay:180ms}.site-loader-plane{animation:none;offset-distance:100%}}
+/* 검색 중: 사라지지 않고 비행기가 계속 난다. 응답이 오면 언마운트된다. */
+.site-loader.is-busy{animation:site-loader-in 200ms ease both}
+.site-loader.is-busy .site-loader-plane{animation-duration:1400ms;animation-iteration-count:infinite}
+@keyframes site-loader-in{from{opacity:0}}
+@media (prefers-reduced-motion:reduce){.site-loader.is-busy{animation:none}.site-loader{animation-duration:160ms;animation-delay:180ms}.site-loader-plane{animation:none;offset-distance:100%}}

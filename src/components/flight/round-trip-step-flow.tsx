@@ -20,6 +20,7 @@ import {
   SearchConditionFields,
 } from "@/components/flight/search-condition-fields";
 import { useToast } from "@/components/main/main-ui";
+import { SiteLoader } from "@/components/site-loader";
 import { FLIGHT_SEARCH_NOT_FOUND, postJson, requestJson } from "@/lib/flight-client";
 import type { InitialSearch } from "@/lib/flight-search-params";
 import type {
@@ -137,7 +138,11 @@ export function RoundTripStepFlow({ initial }: { initial?: InitialSearch<FlightS
     setError("");
   }
 
+  // 첫 렌더는 자동 검색 effect보다 먼저라 pending이 아직 false다. 그때도 폼 대신 로더를 보인다.
+  const loader = (pending || (initial && !search && !error)) && <SiteLoader busy label="항공권을 찾는 중" />;
+
   if (!search || !request || !locations) {
+    if (loader) return loader;
     return (
       <div className="search-form-wrap">
         <h1>왕복 항공권 검색</h1>
@@ -146,7 +151,7 @@ export function RoundTripStepFlow({ initial }: { initial?: InitialSearch<FlightS
           <form onSubmit={handleSearch} className="space-y-5">
             <SearchConditionFields tripType="round-trip" defaultValues={request} defaultLocations={locations} />
             <PrimaryButton type="submit" disabled={pending}>
-              {pending ? "가는편을 찾는 중..." : "가는편 조회"}
+              가는편 조회
             </PrimaryButton>
           </form>
         </div>
@@ -198,12 +203,6 @@ export function RoundTripStepFlow({ initial }: { initial?: InitialSearch<FlightS
             disabled={pending}
             onPick={changeReturnDate}
           />
-        )}
-
-        {pending && (
-          <p className="list-status" role="status">
-            {outbound ? "오는편을 찾는 중..." : "항공권을 찾는 중..."}
-          </p>
         )}
 
         <div className="flight-list" aria-live="polite">
@@ -260,6 +259,7 @@ export function RoundTripStepFlow({ initial }: { initial?: InitialSearch<FlightS
           </section>
         )}
       </FlightListLayout>
+      {loader}
       {toast}
     </>
   );
