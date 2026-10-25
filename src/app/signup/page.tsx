@@ -1,16 +1,15 @@
-import { AuthShell } from "@/components/auth/auth-shell";
-import { SignupForm } from "@/components/auth/signup-form";
+import { Noto_Sans_KR } from "next/font/google";
+import { AuthPage } from "@/components/auth/auth-forms";
+import "../auth.css";
 
-export default function SignupPage() {
+const notoSansKr = Noto_Sans_KR({ subsets: ["latin"], preload: false, variable: "--font-noto-kr" });
+
+export default async function SignupPage({ searchParams }: PageProps<"/signup">) {
+  const { next } = await searchParams;
+
   return (
-    <AuthShell
-      title="여행을 시작해 볼까요?"
-      description="간단한 정보만 입력하면 가보자GO를 시작할 수 있어요."
-      footerText="이미 계정이 있나요?"
-      footerHref="/login"
-      footerLinkText="로그인"
-    >
-      <SignupForm />
-    </AuthShell>
+    <main className={`auth-ui auth-page ${notoSansKr.variable}`}>
+      <AuthPage view="signup" next={typeof next === "string" ? next : undefined} />
+    </main>
   );
 }

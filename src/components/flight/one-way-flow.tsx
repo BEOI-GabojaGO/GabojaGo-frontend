@@ -18,6 +18,7 @@ import {
   SearchConditionFields,
 } from "@/components/flight/search-condition-fields";
 import { useToast } from "@/components/main/main-ui";
+import { SiteLoader } from "@/components/site-loader";
 import { postJson } from "@/lib/flight-client";
 import type { InitialSearch } from "@/lib/flight-search-params";
 import type {
@@ -83,6 +84,9 @@ export function OneWayFlow({ initial }: { initial?: InitialSearch<OneWaySearchRe
 
   useAutoSearchOnce(initial, runSearch);
 
+  // 첫 렌더는 자동 검색 effect보다 먼저라 pending이 아직 false다. 그때도 폼 대신 로더를 보인다.
+  if (pending || (initial && !search && !error)) return <SiteLoader busy label="항공편을 찾는 중" />;
+
   if (!search || !request || !locations) {
     return (
       <div className="search-form-wrap">
@@ -92,7 +96,7 @@ export function OneWayFlow({ initial }: { initial?: InitialSearch<OneWaySearchRe
           <form onSubmit={handleSearch} className="space-y-5">
             <SearchConditionFields tripType="one-way" defaultValues={request} defaultLocations={locations} />
             <PrimaryButton type="submit" disabled={pending}>
-              {pending ? "항공편을 찾는 중..." : "편도 항공편 조회"}
+              편도 항공편 조회
             </PrimaryButton>
           </form>
         </div>

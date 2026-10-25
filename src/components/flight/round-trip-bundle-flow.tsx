@@ -12,6 +12,7 @@ import {
   StepIndicator,
 } from "@/components/flight/flow-ui";
 import { RoundTripCombinationCard } from "@/components/flight/round-trip-combination-card";
+import { SiteLoader } from "@/components/site-loader";
 import {
   EMPTY_ROUND_TRIP_FILTER,
   RoundTripFilterForm,
@@ -121,6 +122,9 @@ export function RoundTripBundleFlow() {
   // 응답에 필터 후 전체 개수가 없어, 한 페이지를 꽉 채웠을 때만 다음 페이지가 있다고 본다.
   const hasNextPage = combinations.length === PAGE_SIZE;
 
+  // 첫 조회만 SerpApi를 부른다(최대 수십 초). 필터·페이지 이동은 캐시 조회라 버튼 문구로 충분하다.
+  if (pending && !result) return <SiteLoader busy label="왕복 조합을 비교하는 중" />;
+
   return (
     <div className="space-y-6">
       <StepIndicator
@@ -138,7 +142,7 @@ export function RoundTripBundleFlow() {
             defaultLocations={locations}
           />
           <PrimaryButton type="submit" disabled={pending}>
-            {pending ? "조합을 비교하는 중이에요(최대 수십 초)..." : "왕복 조합 조회"}
+            왕복 조합 조회
           </PrimaryButton>
         </form>
       )}
