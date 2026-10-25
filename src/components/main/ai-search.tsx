@@ -9,7 +9,9 @@ import type {
   ChatConfirmation,
   ChatMessageResponse,
   ChatSearchResult,
+  ChatSearchStatus,
   ChatSessionCreated,
+  ChatSessionState,
   FlexibleFlightSearchResponse,
 } from "@/lib/chat-types";
 import { formatMinutes, formatPrice, postJson, requestJson } from "@/lib/flight-client";
@@ -20,6 +22,37 @@ const MAX_MESSAGE = 1000;
 const PAGE = 3;
 
 type SearchView = { conditions: ChatConditions; dateMode: "EXACT" | "FLEXIBLE"; data: ChatSearchResult };
+
+/** 탭 단위로 대화를 이어가려고 세션 ID만 보관한다. 메시지 이력은 서버에도 없어 복원하지 않는다. */
+const SESSION_KEY = "gabojago.aiChatSessionId";
+const storage = {
+  get: () => {
+    try {
+      return sessionStorage.getItem(SESSION_KEY);
+    } catch {
+      return null;
+    }
+  },
+  set: (id: string | null) => {
+    try {
+      if (id) sessionStorage.setItem(SESSION_KEY, id);
+      else sessionStorage.removeItem(SESSION_KEY);
+    } catch {
+      // 저장소를 쓸 수 없으면 새로고침 때 새 대화로 시작한다.
+    }
+  },
+};
+
+/** 검색 응답이 불명확할 때 상태 GET 간격·횟수 상한. 재POST는 하지 않는다(인계 문서 5절). */
+const STATUS_POLL_MS = 3000;
+const STATUS_POLL_LIMIT = 10;
+
+const SEARCH_FAILURES: Record<string, string> = {
+  SERPAPI_QUOTA_EXCEEDED: "항공권 검색 한도를 모두 썼어요. 잠시 후 다시 시도해 주세요.",
+  FLIGHT_SEARCH_FAILED: "항공권 검색에 실패했어요. 다시 검색하려면 버튼을 눌러 주세요.",
+};
+
+const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 /**
  * 메인 AI 검색(시안 AI Prompt Modal) + 채팅 API. 결정 사항은 docs/AI-SEARCH-DECISIONS.md.
@@ -36,6 +69,12 @@ export function useAiSearch() {
   const [searching, setSearching] = useState(false);
   const [search, setSearch] = useState<SearchView | null>(null);
   const [visible, setVisible] = useState(PAGE);
+  /** 세션이 만료돼 새 대화를 시작해야 하는 상태. */
+  const [expired, setExpired] = useState(false);
+  /** 검색 한도(429)를 넘으면 같은 화면에서 다시 검색하지 않게 확인 버튼을 숨긴다. */
+  const [quotaExceeded, setQuotaExceeded] = useState(false);
+  /** 새로고침 전 세션을 이어 쓰는 첫 응답에 한 번 안내한다. */
+  const [resumed, setResumed] = useState(false);
   const { notify, toast } = useToast();
 
   function open() {
@@ -45,6 +84,32 @@ export function useAiSearch() {
   }
 
   const close = () => closeDialogAnimated(ref.current, 700);
+
+  /** 만료됐을 때 처음부터. 서버 세션은 다음 메시지 때 새로 만든다. */
+  function startOver() {
+    sessionId.current = null;
+    storage.set(null);
+    setTurn(null);
+    setSearch(null);
+    setQuestion("");
+    setError("");
+    setExpired(false);
+    setResumed(false);
+    setQuotaExceeded(false);
+  }
+
+  /** 세션 404는 대화 만료다. 다른 404(검색 기록 없음 등)와 구분한다. */
+  function failed(result: { code?: string; message: string }) {
+    if (result.code === "CHAT_SESSION_NOT_FOUND") {
+      sessionId.current = null;
+      storage.set(null);
+      setExpired(true);
+      setError("대화가 만료됐어요. 새 대화를 시작해 주세요.");
+      return;
+    }
+    if (result.code === "SERPAPI_QUOTA_EXCEEDED") setQuotaExceeded(true);
+    setError(SEARCH_FAILURES[result.code ?? ""] ?? result.message);
+  }
 
   /** 메시지 하나를 보낸다. 성공하면 true(추가 입력창 비우기용). 실패하면 입력은 그대로 둔다. */
   async function send(text: string) {
@@ -58,23 +123,35 @@ export function useAiSearch() {
     setQuestion(message);
     setPending(true);
     setError("");
+    // 이어쓰기 안내는 새로고침 뒤 첫 응답에만 보여 준다.
+    setResumed(false);
     try {
       if (!sessionId.current) {
-        const created = await requestJson<ChatSessionCreated>("/api/v1/chat-sessions", { method: "POST" });
-        if (!created.ok) {
-          setError(created.message);
-          return false;
+        // 새로고침 전 대화가 있으면 이어서 쓴다(서버가 조건·문맥을 갖고 있다).
+        const stored = storage.get();
+        if (stored) {
+          sessionId.current = stored;
+          setResumed(true);
+        } else {
+          const created = await requestJson<ChatSessionCreated>("/api/v1/chat-sessions", { method: "POST" });
+          if (!created.ok) {
+            setError(created.message);
+            return false;
+          }
+          sessionId.current = created.data.chatSessionId;
+          storage.set(sessionId.current);
         }
-        sessionId.current = created.data.chatSessionId;
       }
       const result = await postJson<ChatMessageResponse>(`/api/v1/chat-sessions/${encodeURIComponent(sessionId.current)}/messages`, { message });
       if (!result.ok) {
-        setError(result.message);
+        // 메시지는 자동 재시도하지 않는다(중복 저장·LLM 호출). 입력은 그대로 둔다.
+        failed(result);
         return false;
       }
       // conditions는 누적 전체 조건이라 이전 값과 합치지 않고 교체한다. 조건이 바뀌었으니 이전 결과도 지운다.
       setTurn(result.data);
       setSearch(null);
+      setQuotaExceeded(false);
       return true;
     } finally {
       setPending(false);
@@ -91,21 +168,51 @@ export function useAiSearch() {
       const base = `/api/v1/chat-sessions/${encodeURIComponent(id)}`;
       const confirmed = await postJson<ChatConfirmation>(`${base}/confirmation`, { conditionVersion: turn.conditionVersion });
       if (!confirmed.ok) {
-        setError(confirmed.message);
-        return;
-      }
-      const result = await requestJson<ChatSearchResult>(`${base}/search`, { method: "POST" });
-      if (!result.ok) {
-        setError(result.message);
+        if (confirmed.code === "CHAT_CONDITION_VERSION_CONFLICT") await refreshConditions(base);
+        else failed(confirmed);
         return;
       }
       // 결과에 dateMode가 없을 수 있어 승인한 조건의 dateMode로 구분한다.
       const conditions = turn.conditions ?? {};
-      setSearch({ conditions, dateMode: conditions.dateMode ?? "EXACT", data: result.data });
-      setVisible(PAGE);
+      const show = (data: ChatSearchResult) => {
+        setSearch({ conditions, dateMode: conditions.dateMode ?? "EXACT", data });
+        setVisible(PAGE);
+      };
+      const result = await requestJson<ChatSearchResult>(`${base}/search`, { method: "POST" });
+      if (result.ok) return show(result.data);
+      // 응답이 불명확하면(연결 끊김, 검색 실패·진행 중) 다시 POST하지 않고 최신 검색 상태로 확인한다.
+      if (result.status === 0 || result.status >= 500 || result.code === "CHAT_SEARCH_IN_PROGRESS") await checkSearch(base, show);
+      else failed(result);
     } finally {
       setSearching(false);
     }
+  }
+
+  /** 승인 409: 서버의 최신 조건·버전으로 바꾸고 사용자가 다시 확인하게 한다(자동 승인하지 않음). */
+  async function refreshConditions(base: string) {
+    const latest = await requestJson<ChatSessionState>(base);
+    if (!latest.ok) return failed(latest);
+    const { state, conditions, conditionVersion } = latest.data;
+    setTurn((current) => current && { ...current, state, conditions, conditionVersion });
+    setError("조건이 바뀌었어요. 최신 조건을 확인하고 다시 눌러 주세요.");
+  }
+
+  /** GET .../search로 결과를 확인한다. 진행 중이면 상한까지 기다리고, 다이얼로그를 닫으면 멈춘다. */
+  async function checkSearch(base: string, show: (data: ChatSearchResult) => void) {
+    for (let attempt = 0; attempt < STATUS_POLL_LIMIT; attempt++) {
+      const status = await requestJson<ChatSearchStatus>(`${base}/search`);
+      if (!status.ok) {
+        if (status.code === "CHAT_SEARCH_NOT_FOUND") setError("검색 기록을 찾을 수 없어요. 다시 검색하려면 버튼을 눌러 주세요.");
+        else failed(status);
+        return;
+      }
+      const job = status.data;
+      if (job.status === "COMPLETED" && job.result) return show(job.result);
+      if (job.status === "FAILED") return failed({ code: job.failureCode ?? undefined, message: SEARCH_FAILURES.FLIGHT_SEARCH_FAILED });
+      if (!ref.current?.open) return;
+      await wait(STATUS_POLL_MS);
+    }
+    setError("검색이 오래 걸리고 있어요. 잠시 후 다시 확인해 주세요.");
   }
 
   /** 메인 입력창에서 AI 검색을 요청할 때. 다이얼로그를 열고 같은 대화에 이어 보낸다. */
@@ -121,7 +228,7 @@ export function useAiSearch() {
 
   const conditions = turn?.conditions ?? {};
   // 문장(reply)과 관계없이 서버가 계산한 상태로 판단한다. 최종 판단은 서버가 다시 한다.
-  const canSearch = turn?.state === "AWAITING_CONFIRMATION" && !turn.missingFields.length && !turn.ambiguousFields.length && !search;
+  const canSearch = turn?.state === "AWAITING_CONFIRMATION" && !turn.missingFields.length && !turn.ambiguousFields.length && !search && !quotaExceeded && !expired;
   const results = search ? resultItems(search) : null;
 
   const dialog = (
@@ -154,9 +261,17 @@ export function useAiSearch() {
             // reply는 텍스트로만 그린다(HTML 삽입 금지).
             <p>{turn?.reply ?? "여행 조건을 말씀해 주시면 정리해 드릴게요."}</p>
           )}
+          {resumed && !pending && (
+            <p className="ai-resume-note">새로고침 전 대화에 이어서 답했어요. 지난 메시지는 다시 표시되지 않아요.</p>
+          )}
           {error && (
             <p className="ai-error" role="alert">
               {error}
+              {expired && (
+                <button className="ai-restart" type="button" onClick={startOver}>
+                  새 대화 시작
+                </button>
+              )}
             </p>
           )}
         </div>

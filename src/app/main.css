@@ -192,6 +192,8 @@ dialog{border:0;border-radius:24px;padding:32px;max-width:540px;width:calc(100% 
 .ai-pending{color:#888}
 .ai-error{color:var(--pink);font-size:13px;line-height:1.5}
 .ai-result-notice{color:#666;font-size:14px;line-height:1.6}
+.ai-resume-note{color:#888;font-size:12px;line-height:1.5}
+.ai-restart{margin-left:8px;color:var(--pink);font-weight:600;text-decoration:underline}
 /* API 항공사 로고는 비율이 제각각이라 칸 안에 맞춘다. */
 img.ai-airline-logo{object-fit:contain}
 .ai-dialog-actions button:disabled{opacity:.6;cursor:default}
