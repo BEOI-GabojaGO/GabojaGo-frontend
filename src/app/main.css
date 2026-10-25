@@ -33,6 +33,30 @@ dialog{border:0;border-radius:24px;padding:32px;max-width:540px;width:calc(100% 
 @media(min-width:600px) and (max-width:740px){.hero{min-height:621px}}
 @media(max-width:599px){.header .brand{font-size:16px;line-height:19px}.login{gap:4px;padding:8px 14px 8px 10px}.login img,.arrow img{width:20px;height:20px}.hero{min-height:588px}.hero-text>p{word-break:break-all}.travel-description{height:19px;line-height:19px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}.price{line-height:22px}.country-card{height:140px}}
 
+/* MBTI search panel: Figma frame 197:4953 */
+.search-panel.mbti-mode{width:600px;max-width:100%;min-height:0;gap:20px;padding:6px 20px 22px;border-radius:40px}
+#mbti-content{width:100%;display:flex;flex-direction:column;gap:20px}
+.mbti-title{margin:0;color:#333;font-size:20px;line-height:28px;font-weight:700;letter-spacing:-.02em}
+.mbti-grid{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:8px;width:100%}
+.mbti-option{height:40px;padding:0 8px;border:1px solid #ddd;border-radius:10px;background:#fff;color:#333;font-family:inherit;font-size:14px;line-height:20px;font-weight:400;transition:border-color 180ms ease,background-color 180ms ease,color 180ms ease,box-shadow 180ms ease}
+.mbti-option:hover{border-color:#999;background:#fff}
+.mbti-option:focus-visible{outline:2px solid #d70552;outline-offset:2px}
+.mbti-option.is-selected{border-color:var(--pink);color:var(--pink);font-weight:500;background:#fff;box-shadow:0 3px 8px #d7055226}
+.mbti-submit{align-self:flex-end;display:inline-flex;align-items:center;justify-content:center;gap:8px;width:198px;height:54px;padding:0 24px;border:0;border-radius:20px;background:var(--pink);color:#fff;font-family:inherit;font-size:14px;line-height:20px;font-weight:600;white-space:nowrap;transition:background-color 180ms ease,transform 180ms ease,box-shadow 180ms ease}
+.mbti-submit:hover{background:#b60445;box-shadow:0 6px 14px #d7055233}
+.mbti-submit:active{transform:translateY(1px)}
+.mbti-submit:focus-visible{outline:2px solid #d70552;outline-offset:3px}
+.mbti-submit .search-glyph{width:13px;height:13px;border-width:2px;margin:0;color:currentColor}
+.mbti-submit .search-glyph:after{width:6px;height:2px;right:-5px;bottom:-3px}
+@media(max-width:599px){
+  .search-panel.mbti-mode{width:100%;min-height:0;padding:6px 12px 12px;gap:12px;border-radius:30px}
+  #mbti-content{gap:16px}
+  .mbti-title{font-size:18px;line-height:26px}
+  .mbti-grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+  .mbti-option{height:38px;border-radius:9px;font-size:13px;line-height:18px}
+  .mbti-submit{align-self:stretch;width:100%;height:48px;border-radius:16px}
+}
+@media(prefers-reduced-motion:reduce){.mbti-option,.mbti-submit{transition:none}}
 /* 조건 검색: 기존 메인 화면의 색상과 타이포그래피를 재사용한다. */
 .prompt-form{transition:background-color .15s,box-shadow .15s}
 .prompt-form:hover{background:#fff;box-shadow:inset 0 0 0 1px var(--pink),0 4px 12px #00000012}
@@ -171,7 +195,8 @@ dialog{border:0;border-radius:24px;padding:32px;max-width:540px;width:calc(100% 
   .condition-field strong{font-size:13px}
   .condition-actions{align-items:stretch;flex-direction:column;gap:4px}
   .condition-submit{align-self:stretch;width:100%}
-  .hero:has(.condition-mode){height:auto;min-height:0;padding-bottom:56px}
+  /* MBTI 패널도 길어서 시안대로 두면 402px에서 버튼이 본문에 가린다(시안 버그). 조건 탭과 같이 히어로를 늘린다. */
+  .hero:has(.condition-mode,.mbti-mode){height:auto;min-height:0;padding-bottom:56px}
   .picker-panel{top:auto;bottom:0;left:0;transform:none;width:100%;max-height:min(86dvh,720px);border-radius:24px 24px 0 0}
   .picker-header{height:62px;padding:0 20px}
   .picker-body{padding:18px 20px 30px}
@@ -259,8 +284,8 @@ footer{position:relative;z-index:3}
 @media(max-width:599px){.content{padding-top:56px;margin-top:-16px;scroll-margin-top:56px}}
 @media(max-width:599px){.content::before{bottom:-40px}}
 /* 탭을 바꾸면 새 패널이 아래에서 떠오른다. */
-#search-content:not([hidden]),#condition-content:not([hidden]){animation:tab-content-in 300ms cubic-bezier(.22,1,.36,1) 55ms backwards}
-@media(prefers-reduced-motion:reduce){#search-content,#condition-content{animation:none!important}}
+#search-content:not([hidden]),#condition-content:not([hidden]),#mbti-content:not([hidden]){animation:tab-content-in 300ms cubic-bezier(.22,1,.36,1) 55ms backwards}
+@media(prefers-reduced-motion:reduce){#search-content,#condition-content,#mbti-content{animation:none!important}}
 }
 
 /* 로그인 후 헤더(둘러보기 시안 "♡ 위시리스트 · 닉네임님 ▾"). 메인 헤더는 밝아서 글자·아이콘을 진하게 쓴다. */
