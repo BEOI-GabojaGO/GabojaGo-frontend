@@ -474,9 +474,12 @@ export function FlightCard({
 export function FlightHeart({
   request,
   notify,
+  className = "heart-button",
 }: {
   request: Omit<FlightWishlistRequest, "price"> & { price: number | null };
   notify: (message: string) => void;
+  /** 메인 AI 검색 카드는 시안 클래스(ai-flight-heart)를 쓴다. */
+  className?: string;
 }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -520,7 +523,7 @@ export function FlightHeart({
   const on = saved !== null;
   return (
     <button
-      className="heart-button"
+      className={className}
       type="button"
       aria-label={on ? "위시리스트에서 빼기" : "위시리스트에 담기"}
       aria-pressed={on}

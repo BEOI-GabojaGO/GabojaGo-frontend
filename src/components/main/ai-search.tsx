@@ -1,10 +1,25 @@
+/* eslint-disable @next/next/no-img-element -- API의 항공사 로고 URL과 디자인 원본 SVG를 그대로 쓴다. */
 // 클라이언트 컴포넌트 전용(React 훅 포함). 서버 컴포넌트에서는 import하지 않는다.
-import { useRef, useState, type FormEvent } from "react";
-import { closeDialogAnimated, Img, isBackdropClick } from "@/components/main/main-ui";
-import type { ChatConditions, ChatMessageResponse, ChatSessionCreated } from "@/lib/chat-types";
-import { formatPrice, postJson, requestJson } from "@/lib/flight-client";
+import { useRef, useState, type FormEvent, type ReactNode } from "react";
+import { airlinesOf, FlightHeart } from "@/components/flight/flight-list-ui";
+import { closeDialogAnimated, Img, isBackdropClick, useToast } from "@/components/main/main-ui";
+import { SiteLoader } from "@/components/site-loader";
+import type {
+  ChatConditions,
+  ChatConfirmation,
+  ChatMessageResponse,
+  ChatSearchResult,
+  ChatSessionCreated,
+  FlexibleFlightSearchResponse,
+} from "@/lib/chat-types";
+import { formatMinutes, formatPrice, postJson, requestJson } from "@/lib/flight-client";
+import type { RoundTripCombination, RoundTripSearchResponse, TravelClass } from "@/lib/flight-types";
 
 const MAX_MESSAGE = 1000;
+/** 결과는 3장씩 보여 준다. "더 많은 항공권 찾기"는 같은 결과를 더 펼친다(추가 호출 없음, 결정 3.2 (a)). */
+const PAGE = 3;
+
+type SearchView = { conditions: ChatConditions; dateMode: "EXACT" | "FLEXIBLE"; data: ChatSearchResult };
 
 /**
  * 메인 AI 검색(시안 AI Prompt Modal) + 채팅 API. 결정 사항은 docs/AI-SEARCH-DECISIONS.md.
@@ -18,6 +33,10 @@ export function useAiSearch() {
   const [draft, setDraft] = useState("");
   const [pending, setPending] = useState(false);
   const [error, setError] = useState("");
+  const [searching, setSearching] = useState(false);
+  const [search, setSearch] = useState<SearchView | null>(null);
+  const [visible, setVisible] = useState(PAGE);
+  const { notify, toast } = useToast();
 
   function open() {
     if (ref.current?.open) return;
@@ -53,11 +72,39 @@ export function useAiSearch() {
         setError(result.message);
         return false;
       }
-      // conditions는 누적 전체 조건이라 이전 값과 합치지 않고 교체한다.
+      // conditions는 누적 전체 조건이라 이전 값과 합치지 않고 교체한다. 조건이 바뀌었으니 이전 결과도 지운다.
       setTurn(result.data);
+      setSearch(null);
       return true;
     } finally {
       setPending(false);
+    }
+  }
+
+  /** 확인 버튼: 마지막 응답의 서버 conditionVersion으로 승인한 뒤 검색 POST를 한 번만 보낸다(SerpApi). */
+  async function searchFlights() {
+    const id = sessionId.current;
+    if (!turn || !id || searching) return;
+    setSearching(true);
+    setError("");
+    try {
+      const base = `/api/v1/chat-sessions/${encodeURIComponent(id)}`;
+      const confirmed = await postJson<ChatConfirmation>(`${base}/confirmation`, { conditionVersion: turn.conditionVersion });
+      if (!confirmed.ok) {
+        setError(confirmed.message);
+        return;
+      }
+      const result = await requestJson<ChatSearchResult>(`${base}/search`, { method: "POST" });
+      if (!result.ok) {
+        setError(result.message);
+        return;
+      }
+      // 결과에 dateMode가 없을 수 있어 승인한 조건의 dateMode로 구분한다.
+      const conditions = turn.conditions ?? {};
+      setSearch({ conditions, dateMode: conditions.dateMode ?? "EXACT", data: result.data });
+      setVisible(PAGE);
+    } finally {
+      setSearching(false);
     }
   }
 
@@ -73,6 +120,9 @@ export function useAiSearch() {
   }
 
   const conditions = turn?.conditions ?? {};
+  // 문장(reply)과 관계없이 서버가 계산한 상태로 판단한다. 최종 판단은 서버가 다시 한다.
+  const canSearch = turn?.state === "AWAITING_CONFIRMATION" && !turn.missingFields.length && !turn.ambiguousFields.length && !search;
+  const results = search ? resultItems(search) : null;
 
   const dialog = (
     <dialog
@@ -140,7 +190,39 @@ export function useAiSearch() {
             <strong>-</strong>
           </div>
         </section>
+        {results && (
+          <div className="ai-flight-list" aria-label="추천 항공권">
+            {results.notice && <p className="ai-result-notice">{results.notice}</p>}
+            {results.items.slice(0, visible).map(({ key, combination, caption }) => (
+              <AiFlightCard
+                key={key}
+                combination={combination}
+                caption={caption}
+                heart={
+                  <FlightHeart
+                    className="ai-flight-heart"
+                    request={{
+                      ...passengersOf(search!.conditions),
+                      price: combination.price,
+                      stayMinutes: combination.stayMinutes,
+                      sameAirline: combination.sameAirline,
+                      outbound: combination.outbound,
+                      inbound: combination.inbound,
+                    }}
+                    notify={notify}
+                  />
+                }
+              />
+            ))}
+          </div>
+        )}
         <div className="ai-dialog-actions">
+          {canSearch && (
+            <button className="ai-more-flights" type="button" disabled={searching} onClick={() => void searchFlights()}>
+              <span className="search-glyph" aria-hidden="true" />
+              이 조건으로 항공권 찾기
+            </button>
+          )}
           <button
             className="ai-edit-query"
             type="button"
@@ -155,6 +237,17 @@ export function useAiSearch() {
             <span className="ai-action-label-mobile">조건 수정</span>
             <span className="ai-action-label-desktop">조건 수정하기</span>
           </button>
+          {results && results.items.length > visible && (
+            <button className="ai-more-flights" type="button" onClick={() => setVisible((n) => n + PAGE)}>
+              <span className="search-glyph ai-action-label-desktop" aria-hidden="true" />
+              <svg className="ai-action-icon" aria-hidden="true" width="20" height="20" viewBox="0 0 20 20" fill="none">
+                <circle cx="8.75" cy="8.75" r="5.583" stroke="currentColor" strokeWidth="1.5" />
+                <path d="M12.708 12.708L16.667 16.667" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+              </svg>
+              <span className="ai-action-label-mobile">더 많은 항공권</span>
+              <span className="ai-action-label-desktop">더 많은 항공권 찾기</span>
+            </button>
+          )}
         </div>
       </div>
       <div className="ai-dialog-footer">
@@ -175,10 +268,85 @@ export function useAiSearch() {
           </button>
         </form>
       </div>
+      {searching && <SiteLoader busy label="항공권을 찾는 중" />}
+      {toast}
     </dialog>
   );
 
   return { ask, dialog };
+}
+
+type ResultItem = { key: string; combination: RoundTripCombination; caption?: string };
+
+/** EXACT는 combinations, FLEXIBLE은 예산을 적용한 priceSelection.options를 쓴다(원본 results를 최종 목록으로 쓰지 않음). */
+function resultItems({ dateMode, data }: SearchView): { items: ResultItem[]; notice: string } {
+  if (dateMode === "FLEXIBLE") {
+    const flexible = data as FlexibleFlightSearchResponse;
+    const items = flexible.priceSelection.options.map((option) => ({
+      key: `${option.searchId}-${option.combination.outboundId}-${option.combination.returnId}`,
+      combination: option.combination,
+      caption: `${shortDate(option.outboundDate)}~${shortDate(option.returnDate)}`,
+    }));
+    const failed = flexible.failedDates.length ? ` 일부 날짜(${flexible.failedDates.length}개)는 조회하지 못했어요.` : "";
+    // 최저가는 실제로 찾아본 날짜 후보 중 최저가다(기간 전체의 절대 최저가가 아님).
+    const notice = flexible.priceSelection.cheapest ? `찾아본 날짜 중 가격이 낮은 순서예요.${failed}` : `조건에 맞는 추천 결과가 없어요.${failed}`;
+    return { items, notice };
+  }
+  const exact = data as RoundTripSearchResponse;
+  const items = exact.combinations.map((combination) => ({
+    key: `${exact.searchId}-${combination.outboundId}-${combination.returnId}`,
+    combination,
+  }));
+  const notice = exact.noNonstopFlight ? "이 노선에는 직항 항공편이 없어요." : items.length ? "" : "조건에 맞는 항공권이 없어요.";
+  return { items, notice };
+}
+
+/** 위시리스트에 담을 인원·좌석 등급. 말하지 않은 값은 항공권 검색 기본값(성인 1명, 일반석)이다. */
+function passengersOf(c: ChatConditions) {
+  return {
+    adults: c.adults ?? 1,
+    children: c.children ?? 0,
+    infantsInSeat: c.infantsInSeat ?? 0,
+    infantsOnLap: c.infantsOnLap ?? 0,
+    travelClass: (c.travelClass ?? 1) as TravelClass,
+  };
+}
+
+/** 시안 AI 항공권 카드. 가는편 시간을 보여 주고 가격은 조합 price(왕복 총액)다. */
+function AiFlightCard({ combination, caption, heart }: { combination: RoundTripCombination; caption?: string; heart: ReactNode }) {
+  const leg = combination.outbound;
+  const first = leg.segments[0];
+  const last = leg.segments.at(-1);
+  const airline = airlinesOf(leg).join(", ") || "항공사 정보 없음";
+  // 가는편 전체 로고가 비어 있는 응답이 있어 첫 구간 로고로 대신한다.
+  const logo = leg.airlineLogo ?? first?.airlineLogo;
+  const back = combination.inbound.segments[0]?.departure?.localTime?.slice(11);
+  return (
+    <article className="ai-flight-card" aria-label={`${airline} 가는편 ${first?.departure?.localTime ?? ""} 출발${back ? `, 오는편 ${back} 출발` : ""}`}>
+      {logo ? <img className="ai-airline-logo" src={logo} width={40} height={40} alt="" /> : <span className="ai-airline-logo" />}
+      <div className="ai-airline">
+        <strong>{airline}</strong>
+        <small>
+          {leg.stops === 0 ? "직항" : `경유 ${leg.stops}회`}
+          {caption && ` · ${caption}`}
+        </small>
+      </div>
+      <div className="ai-flight-route">
+        <strong>{first?.departure?.localTime?.slice(11) ?? "-"}</strong>
+        <span>
+          <img className="ai-route-plane" src="/flight/airplane.svg" alt="" />
+          <small>{formatMinutes(leg.totalDurationMinutes)}</small>
+        </span>
+        <strong>{last?.arrival?.localTime?.slice(11) ?? "-"}</strong>
+        <small className="ai-origin-code">{first?.departure?.code}</small>
+        <small className="ai-destination-code">{last?.arrival?.code}</small>
+      </div>
+      <strong className="ai-flight-price">
+        {combination.price == null ? "가격 정보 없음" : `${combination.price.toLocaleString("ko-KR")}원`} <small>왕복</small>
+      </strong>
+      {heart}
+    </article>
+  );
 }
 
 const shortDate = (value: string) => {
