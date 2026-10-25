@@ -1,6 +1,6 @@
 /* 메인 디자인(가보자GO-메인-디자인/styles.css) 이식본. 전역 CSS는 라우트 이동 후에도 남으므로 .main-page 아래로 스코프한다. */
 .main-page{--pink:#d70552;--ink:#333;--muted:#888;--surface:#f6f6f6;--content:1440px;--page-padding:30px;--section-gap:80px;--card-gap:24px;min-height:100vh;background:#fff;color:var(--ink);font-family:var(--font-noto-kr),sans-serif;font-size:14px;line-height:1.2}
-body.picker-open{overflow:hidden}
+body.picker-open,body.ai-open{overflow:hidden}
 @keyframes calendar-pop-in{from{opacity:0;transform:translateY(-8px) scale(.985)}to{opacity:1;transform:translateY(0) scale(1)}}
 @keyframes calendar-pop-out{from{opacity:1;transform:translateY(0) scale(1)}to{opacity:0;transform:translateY(-8px) scale(.985)}}
 @keyframes hero-slide{0%{opacity:0}4.6%{opacity:1}24.6%{opacity:1}29.2%{opacity:0}100%{opacity:0}}
@@ -57,6 +57,140 @@ dialog{border:0;border-radius:24px;padding:32px;max-width:540px;width:calc(100% 
   .mbti-submit{align-self:stretch;width:100%;height:48px;border-radius:16px}
 }
 @media(prefers-reduced-motion:reduce){.mbti-option,.mbti-submit{transition:none}}
+/* Figma AI Prompt Modal: 740 × 800, with viewport-aware scrolling. */
+.ai-dialog{position:fixed;inset:0;margin:auto;width:740px;height:800px;max-width:calc(100vw - 32px);max-height:calc(100dvh - 32px);padding:30px 30px 46px;border:0;border-radius:40px;background:#fff;color:#333;box-shadow:0 20px 80px #0003;overflow:hidden}
+.ai-dialog[open]{display:flex;flex-direction:column}
+.ai-dialog::backdrop{background:#0009;backdrop-filter:blur(8px)}
+.ai-dialog::-webkit-scrollbar{display:none;width:0;height:0}
+@media(min-width:700px) and (prefers-reduced-motion:no-preference){
+  .ai-dialog[open]{animation:login-fade-in 240ms cubic-bezier(.22,1,.36,1) both}
+  .ai-dialog[open]::backdrop{animation:login-backdrop-in 240ms ease-out both}
+  .ai-dialog[open].is-closing{animation:login-fade-out 180ms ease-in both}
+  .ai-dialog[open].is-closing::backdrop{animation:login-backdrop-out 180ms ease-in both}
+  .ai-dialog.is-closing{pointer-events:none}
+}
+.ai-dialog-header{position:relative;z-index:2;display:flex;align-items:center;justify-content:space-between;min-height:38px;flex:none;background:linear-gradient(to bottom,#fff 0%,#fffc 55%,#fff3 100%)}
+.ai-dialog-header h2{font-size:18px;line-height:22px;font-weight:700}
+.ai-dialog-close{position:relative;width:24px;height:24px;flex:none;color:#888}
+.ai-dialog-close:before,.ai-dialog-close:after{content:'';position:absolute;top:11px;left:4px;width:16px;height:1px;background:currentColor;transform:rotate(45deg)}
+.ai-dialog-close:after{transform:rotate(-45deg)}
+.ai-dialog-content{display:flex;flex:1;min-height:0;flex-direction:column;align-items:stretch;overflow-x:hidden;overflow-y:auto;scrollbar-width:none;padding-bottom:8px}
+.ai-dialog-content::-webkit-scrollbar{display:none;width:0;height:0}
+.ai-dialog-footer{position:relative;z-index:2;flex:none;padding:5px 0;background:linear-gradient(to bottom,#fff3 0%,#fff9 40%,#fff9 100%)}
+.ai-user-message{align-self:flex-end;max-width:min(80%,520px);margin-top:0;padding:12px 14px;border-radius:24px;background:#f6f6f6;color:#333;font-size:16px;line-height:19px;overflow-wrap:anywhere}
+.ai-answer{margin-top:20px;font-size:16px;line-height:19px}
+.ai-answer strong{display:inline-block;padding:6px 10px;border-radius:10px;background:#d705520f;color:var(--pink);font-size:14px;font-weight:700;line-height:19px}
+.ai-answer p{margin-top:12px}
+.ai-trip-summary{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:60px;row-gap:30px;margin-top:20px;padding:20px 40px;border-radius:40px;background:#f6f6f6}
+.ai-trip-summary>div{min-width:0;display:flex;flex-direction:column;gap:6px}
+.ai-trip-summary span{color:#888;font-size:12px;line-height:14px}
+.ai-trip-summary strong{font-size:16px;line-height:19px;font-weight:500;overflow-wrap:anywhere}
+.ai-flight-list{display:flex;flex-direction:column;gap:10px;margin-top:20px}
+.ai-flight-card{display:grid;grid-template-columns:40px 90px 300px minmax(0,1fr) 24px;align-items:center;gap:10px;min-height:100px;padding:30px;border:1px solid #eee;border-radius:30px;background:#fff;box-shadow:0 2px 12px #0000000a}
+.ai-flight-card:hover{border-color:var(--pink)}
+.ai-airline-logo{flex:none}
+.ai-airline{display:flex;flex-direction:column;gap:0;min-width:0}
+.ai-airline strong{font-size:16px;font-weight:400;white-space:nowrap}.ai-airline small{font-size:12px;color:#888}
+.ai-flight-route{display:grid;grid-template-columns:auto minmax(68px,1fr) auto;grid-template-rows:auto auto;column-gap:10px;align-items:center;text-align:center;min-width:0}
+.ai-flight-route>strong{font-size:18px;font-weight:400;white-space:nowrap}
+.ai-flight-route>span{grid-column:2;grid-row:1/3;display:flex;flex-direction:column;align-items:center;gap:0}
+.ai-flight-route>span small{font-size:12px;color:#888;white-space:nowrap}
+.ai-flight-route>small{font-size:12px;color:#888}
+.ai-origin-code{grid-column:1}.ai-destination-code{grid-column:3}
+.ai-flight-price{font-size:20px;font-weight:500;white-space:nowrap}.ai-flight-price small{font-size:12px;font-weight:400;color:#888}
+.ai-flight-heart{display:flex;align-items:center;justify-content:center;width:24px;height:24px}
+.ai-flight-heart img{width:24px;height:24px}
+.ai-dialog-actions{display:flex;align-items:center;justify-content:flex-end;gap:12px;margin-top:20px}
+.ai-dialog-actions button{display:flex;align-items:center;justify-content:center;gap:8px;min-height:54px;padding:0 20px;border-radius:20px;font-size:14px;font-weight:600;white-space:nowrap}
+.ai-action-icon,.ai-action-label-mobile{display:none}
+.ai-edit-query{border:1px solid #e9e9e9;background:#fff}.ai-edit-query:hover{background:#f6f6f6}
+.ai-more-flights{background:var(--pink);color:#fff}.ai-more-flights:hover{background:#bd0649}
+.ai-followup-form{display:flex;align-items:center;gap:12px;min-height:56px;margin-top:0;padding:10px 10px 10px 14px;border-radius:24px;background:#f6f6f6;transition:background-color .15s,box-shadow .15s}
+.ai-followup-form:hover{background:#fff;box-shadow:inset 0 0 0 1px var(--pink),0 4px 12px #00000012}
+.ai-followup-form>img{width:16px;height:16px;flex:none}.ai-followup-form input{min-width:0;width:100%;flex:1;border:0;outline:0;background:transparent;color:#333;font-size:14px;line-height:1.8}.ai-followup-form input::placeholder{color:#aaa}
+.ai-followup-form button{display:flex;align-items:center;justify-content:center;width:36px;height:36px;flex:none;border-radius:12px;background:var(--pink)}.ai-followup-form button img{width:16px;height:16px}
+@media(min-width:700px){
+  .ai-dialog{padding:0}
+  .ai-dialog-header{height:64px;min-height:64px;padding:20px 30px}
+  .ai-dialog-content{position:absolute;top:0;right:30px;bottom:30px;left:30px;flex:none;padding-top:64px;padding-bottom:94px}
+  .ai-dialog-footer{position:absolute;bottom:0;left:0;right:0;height:112px;padding:36px 60px 20px}
+  .ai-flight-route{padding-inline:20px}
+}
+@media(min-width:700px) and (max-width:1199px){
+  .ai-dialog{width:580px;height:800px}
+  .ai-dialog-header{height:84px;min-height:84px;padding:30px}
+  .ai-dialog-content{top:0;right:30px;bottom:30px;left:30px;padding-top:84px;padding-bottom:94px}
+  .ai-dialog-footer{padding:36px 30px 20px}
+  .ai-user-message{font-size:14px;line-height:1.8}
+  .ai-answer{font-size:14px;line-height:1.8}
+  .ai-trip-summary strong{font-size:14px;line-height:17px}
+  .ai-flight-card{position:relative;display:block;width:100%;height:120px;min-height:120px;padding:20px;border-color:#eee;border-radius:30px;box-shadow:none}
+  .ai-flight-card:hover{border-width:1px;border-color:var(--pink);box-shadow:0 4px 12px #0000000f}
+  .ai-airline-logo{position:absolute;top:20px;right:90px;width:30px;height:30px}
+  .ai-airline{position:absolute;top:20px;right:20px;width:60px;min-width:60px}
+  .ai-airline strong{font-size:14px;line-height:17px}
+  .ai-airline small{font-size:10px;line-height:14px}
+  .ai-flight-route{position:absolute;top:20px;left:20px;width:124px;height:64px;padding:0;grid-template-columns:42px 40px 42px;grid-template-rows:22px 14px;column-gap:0;text-align:left}
+  .ai-flight-route>strong{font-size:16px;line-height:22px;text-align:left}
+  .ai-flight-route>strong:nth-of-type(2),.ai-destination-code{text-align:right}
+  .ai-flight-route>span{position:relative;grid-column:2;grid-row:1/3;align-self:start}
+  .ai-flight-route>span small{position:absolute;top:42px;left:-42px;font-size:10px;line-height:14px;color:#888}
+  .ai-flight-route>small{font-size:10px;line-height:14px;text-align:left}
+  .ai-route-plane{width:20px;height:20px}
+  .ai-flight-price{position:absolute;right:54px;bottom:20px;font-size:16px;line-height:24px}
+  .ai-flight-price small{font-size:10px;line-height:14px}
+  .ai-flight-heart{position:absolute;right:20px;bottom:20px}
+}
+@media(max-width:699px){
+  .ai-dialog{inset:0;width:100vw;height:100dvh;max-width:none;max-height:none;margin:0;padding:0;border-radius:0;box-shadow:none}
+  .ai-dialog::backdrop{background:#fff;backdrop-filter:none}
+  .ai-dialog-header{position:absolute;top:0;right:0;left:0;height:76px;min-height:76px;padding:30px 20px 20px;background:linear-gradient(to bottom,#fff 0%,#fffc 55%,#fff3 100%)}
+  .ai-dialog-content{position:absolute;top:0;right:0;bottom:0;left:0;padding:96px max(20px,calc((100vw - 520px)/2)) 120px;overflow-y:auto}
+  .ai-dialog-footer{position:absolute;right:0;bottom:0;left:0;height:120px;padding:0 max(20px,calc((100vw - 520px)/2));display:flex;align-items:center;background:linear-gradient(to bottom,#fff3 0%,#fff9 40%,#fff 100%)}
+  .ai-followup-form{width:100%}
+  .ai-user-message{max-width:80%;margin-top:0;font-size:14px;line-height:1.8}
+  .ai-answer{font-size:14px;line-height:1.8}
+  .ai-trip-summary{padding:20px;column-gap:12px;row-gap:16px;border-radius:24px}
+  .ai-trip-summary strong{font-size:14px;line-height:17px}
+  .ai-flight-list{gap:10px}
+  .ai-flight-card{position:relative;display:block;width:100%;height:117px;min-height:117px;padding:20px;border:1px solid #eee;border-radius:20px;background:#fff;box-shadow:none;overflow:hidden}
+  .ai-flight-card:hover{border-color:var(--pink);box-shadow:0 4px 12px #0000000f}
+  .ai-airline-logo{position:absolute;top:20px;right:74px;width:24px;height:24px}
+  .ai-airline{position:absolute;top:20px;right:20px;width:44px;min-width:44px}
+  .ai-airline strong{font-size:12px;line-height:14px}
+  .ai-airline small{font-size:10px;line-height:12px}
+  .ai-flight-route{position:absolute;top:20px;left:20px;width:116px;height:67px;padding:0;grid-template-columns:40px 12px 40px;grid-template-rows:17px 14px;column-gap:12px;row-gap:4px;text-align:left}
+  .ai-flight-route>strong{font-size:14px;line-height:17px;font-weight:500;text-align:center}
+  .ai-flight-route>strong:nth-of-type(2),.ai-destination-code{text-align:center}
+  .ai-flight-route>span{position:relative;grid-column:2;grid-row:1/3;align-self:start;width:12px;height:17px}
+  .ai-flight-route>span::before{content:'';position:absolute;top:8px;left:0;width:12px;height:1px;background:#ccc}
+  .ai-route-plane{display:none}
+  .ai-flight-route>span small{position:absolute;top:48px;left:-52px;width:max-content;font-size:12px;line-height:14px;color:#888}
+  .ai-flight-route>small{font-size:12px;line-height:14px;text-align:left}
+  .ai-flight-price{position:absolute;right:50px;bottom:20px;font-size:16px;line-height:20px}
+  .ai-flight-price small{font-size:12px;line-height:14px}
+  .ai-flight-heart{position:absolute;right:20px;bottom:20px;width:20px;height:20px}
+  .ai-flight-heart img{width:20px;height:20px}
+  .ai-dialog-actions{width:100%;height:48px;flex:none;gap:10px;margin-top:30px}
+  .ai-dialog-actions button{height:48px;min-height:48px;gap:4px;padding:14px 20px 14px 16px;border-radius:16px;font-size:14px;line-height:20px;font-weight:500}
+  .ai-action-icon{display:block;width:20px;height:20px;flex:0 0 20px}
+  .ai-action-label-mobile{display:inline}.ai-action-label-desktop{display:none}
+  .ai-edit-query{width:115px;border-color:#0000000f;color:#333}
+  .ai-more-flights{width:144px}
+}
+@media(max-width:599px){
+  .ai-dialog-header h2{font-size:18px;line-height:24px}
+  .ai-trip-summary span{font-size:11px}.ai-trip-summary strong{font-size:12px;line-height:17px}
+  .ai-followup-form input{font-size:12px}
+}
+@media(max-width:374px){
+  .ai-trip-summary{grid-template-columns:1fr 1fr;padding:16px;gap:14px 8px}
+  .ai-flight-price{right:48px;font-size:14px}.ai-flight-price small{font-size:10px}
+  .ai-airline{width:42px;min-width:42px}.ai-airline-logo{right:70px}
+}
+/* API 연동 상태 문구(시안 없음) */
+.ai-pending{color:#888}
+.ai-error{color:var(--pink);font-size:13px;line-height:1.5}
 /* 조건 검색: 기존 메인 화면의 색상과 타이포그래피를 재사용한다. */
 .prompt-form{transition:background-color .15s,box-shadow .15s}
 .prompt-form:hover{background:#fff;box-shadow:inset 0 0 0 1px var(--pink),0 4px 12px #00000012}

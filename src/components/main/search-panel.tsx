@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { createPortal } from "react-dom";
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type FormEvent, type KeyboardEvent, type ReactNode } from "react";
 import { cityName } from "@/components/flight/search-condition-fields";
+import { useAiSearch } from "@/components/main/ai-search";
 import { Img, prefersReducedMotion, useInfoDialog, useIsMobile, useToast } from "@/components/main/main-ui";
 import { formatLocation } from "@/lib/flight-client";
 import { toSearchQuery } from "@/lib/flight-search-params";
@@ -74,6 +75,7 @@ export function SearchPanel() {
   const indicator = useRef<HTMLSpanElement>(null);
   const { show, dialog } = useInfoDialog();
   const { notify, toast } = useToast();
+  const ai = useAiSearch();
   const condition = mode === "조건";
   const mbti = mode === "MBTI";
   const [mbtiType, setMbtiType] = useState(MBTI_TYPES[0]);
@@ -133,10 +135,11 @@ export function SearchPanel() {
     event.preventDefault();
     const query = prompt.trim();
     if (!query) return;
-    show(
-      "여행 조건을 확인했어요",
-      `“${query}”\n\n이 페이지는 Figma 시안을 구현한 퍼블리싱 데모입니다. 실제 AI 추천 및 항공권 검색은 서버 연결이 필요합니다. 아래 추천 여행지에서 여행 정보를 확인할 수 있어요.`,
-    );
+    // AI 검색은 채팅 API로 연결한다. 사주 검색은 시안에 결과 화면이 없어 안내만 한다(API 미연결).
+    if (mode === "AI") ai.ask(query);
+    else show("여행 조건을 확인했어요", `“${query}”
+
+사주 검색은 준비 중입니다. AI 검색 탭에서 같은 조건으로 찾아보세요.`);
   }
 
   const renderTab = (tab: (typeof TABS)[number], index: number) => (
@@ -235,6 +238,7 @@ export function SearchPanel() {
       </div>
 
       {dialog}
+      {ai.dialog}
       {toast}
     </div>
   );
