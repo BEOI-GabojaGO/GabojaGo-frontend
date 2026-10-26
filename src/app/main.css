@@ -91,6 +91,8 @@ dialog{border:0;border-radius:24px;padding:32px;max-width:540px;width:calc(100% 
 .ai-airline-logo{flex:none}
 .ai-airline{display:flex;flex-direction:column;gap:0;min-width:0}
 .ai-airline strong{font-size:16px;font-weight:400;white-space:nowrap}.ai-airline small{font-size:12px;color:#888}
+.ai-flight-legs{grid-column:1/4;display:flex;flex-direction:column;gap:12px;min-width:0}
+.ai-flight-leg{display:grid;grid-template-columns:40px 90px 300px;align-items:center;gap:10px}
 .ai-flight-route{display:grid;grid-template-columns:auto minmax(68px,1fr) auto;grid-template-rows:auto auto;column-gap:10px;align-items:center;text-align:center;min-width:0}
 .ai-flight-route>strong{font-size:18px;font-weight:400;white-space:nowrap}
 .ai-flight-route>span{grid-column:2;grid-row:1/3;display:flex;flex-direction:column;align-items:center;gap:0}
@@ -124,17 +126,19 @@ dialog{border:0;border-radius:24px;padding:32px;max-width:540px;width:calc(100% 
   .ai-user-message{font-size:14px;line-height:1.8}
   .ai-answer{font-size:14px;line-height:1.8}
   .ai-trip-summary strong{font-size:14px;line-height:17px}
-  .ai-flight-card{position:relative;display:block;width:100%;height:120px;min-height:120px;padding:20px;border-color:#eee;border-radius:30px;box-shadow:none}
+  .ai-flight-card{position:relative;display:block;width:100%;height:176px;min-height:176px;padding:20px;border-color:#eee;border-radius:30px;box-shadow:none}
   .ai-flight-card:hover{border-width:1px;border-color:var(--pink);box-shadow:0 4px 12px #0000000f}
-  .ai-airline-logo{position:absolute;top:20px;right:90px;width:30px;height:30px}
-  .ai-airline{position:absolute;top:20px;right:20px;width:60px;min-width:60px}
+  .ai-flight-leg{position:relative;display:block}
+  .ai-airline-logo{position:absolute;top:0;right:70px;width:30px;height:30px}
+  .ai-airline{position:absolute;top:0;right:0;width:60px;min-width:60px}
   .ai-airline strong{font-size:14px;line-height:17px}
   .ai-airline small{font-size:10px;line-height:14px}
-  .ai-flight-route{position:absolute;top:20px;left:20px;width:124px;height:64px;padding:0;grid-template-columns:42px 40px 42px;grid-template-rows:22px 14px;column-gap:0;text-align:left}
+  .ai-flight-legs{position:absolute;top:20px;right:20px;left:20px;gap:8px}
+  .ai-flight-route{position:relative;width:124px;height:64px;padding:0;grid-template-columns:42px 40px 42px;grid-template-rows:22px 14px;column-gap:0;text-align:left}
   .ai-flight-route>strong{font-size:16px;line-height:22px;text-align:left}
   .ai-flight-route>strong:nth-of-type(2),.ai-destination-code{text-align:right}
   .ai-flight-route>span{position:relative;grid-column:2;grid-row:1/3;align-self:start}
-  .ai-flight-route>span small{position:absolute;top:42px;left:-42px;font-size:10px;line-height:14px;color:#888}
+  .ai-flight-route>span small{position:absolute;top:42px;left:-42px;width:max-content;font-size:10px;line-height:14px;color:#888}
   .ai-flight-route>small{font-size:10px;line-height:14px;text-align:left}
   .ai-route-plane{width:20px;height:20px}
   .ai-flight-price{position:absolute;right:54px;bottom:20px;font-size:16px;line-height:24px}
@@ -153,13 +157,15 @@ dialog{border:0;border-radius:24px;padding:32px;max-width:540px;width:calc(100% 
   .ai-trip-summary{padding:20px;column-gap:12px;row-gap:16px;border-radius:24px}
   .ai-trip-summary strong{font-size:14px;line-height:17px}
   .ai-flight-list{gap:10px}
-  .ai-flight-card{position:relative;display:block;width:100%;height:117px;min-height:117px;padding:20px;border:1px solid #eee;border-radius:20px;background:#fff;box-shadow:none;overflow:hidden}
+  .ai-flight-card{position:relative;display:block;width:100%;height:182px;min-height:182px;padding:20px;border:1px solid #eee;border-radius:20px;background:#fff;box-shadow:none;overflow:hidden}
   .ai-flight-card:hover{border-color:var(--pink);box-shadow:0 4px 12px #0000000f}
-  .ai-airline-logo{position:absolute;top:20px;right:74px;width:24px;height:24px}
-  .ai-airline{position:absolute;top:20px;right:20px;width:44px;min-width:44px}
+  .ai-flight-leg{position:relative;display:block}
+  .ai-airline-logo{position:absolute;top:0;right:54px;width:24px;height:24px}
+  .ai-airline{position:absolute;top:0;right:0;width:44px;min-width:44px}
   .ai-airline strong{font-size:12px;line-height:14px}
   .ai-airline small{font-size:10px;line-height:12px}
-  .ai-flight-route{position:absolute;top:20px;left:20px;width:116px;height:67px;padding:0;grid-template-columns:40px 12px 40px;grid-template-rows:17px 14px;column-gap:12px;row-gap:4px;text-align:left}
+  .ai-flight-legs{position:absolute;top:20px;right:20px;left:20px;gap:8px}
+  .ai-flight-route{position:relative;width:116px;height:67px;padding:0;grid-template-columns:40px 12px 40px;grid-template-rows:17px 14px;column-gap:12px;row-gap:4px;text-align:left}
   .ai-flight-route>strong{font-size:14px;line-height:17px;font-weight:500;text-align:center}
   .ai-flight-route>strong:nth-of-type(2),.ai-destination-code{text-align:center}
   .ai-flight-route>span{position:relative;grid-column:2;grid-row:1/3;align-self:start;width:12px;height:17px}

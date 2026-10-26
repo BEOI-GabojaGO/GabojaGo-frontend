@@ -15,7 +15,7 @@ import type {
   FlexibleFlightSearchResponse,
 } from "@/lib/chat-types";
 import { formatMinutes, formatPrice, postJson, requestJson } from "@/lib/flight-client";
-import type { RoundTripCombination, RoundTripSearchResponse, TravelClass } from "@/lib/flight-types";
+import type { FlightOption, RoundTripCombination, RoundTripSearchResponse, TravelClass } from "@/lib/flight-types";
 
 const MAX_MESSAGE = 1000;
 /** 결과는 3장씩 보여 준다. "더 많은 항공권 찾기"는 같은 결과를 더 펼친다(추가 호출 없음, 결정 3.2 (a)). */
@@ -308,11 +308,11 @@ export function useAiSearch() {
         {results && (
           <div className="ai-flight-list" aria-label="추천 항공권">
             {results.notice && <p className="ai-result-notice">{results.notice}</p>}
-            {results.items.slice(0, visible).map(({ key, combination, caption }) => (
+            {results.items.slice(0, visible).map(({ key, combination, showDate }) => (
               <AiFlightCard
                 key={key}
                 combination={combination}
-                caption={caption}
+                showDate={showDate}
                 heart={
                   <FlightHeart
                     className="ai-flight-heart"
@@ -392,7 +392,7 @@ export function useAiSearch() {
   return { ask, dialog };
 }
 
-type ResultItem = { key: string; combination: RoundTripCombination; caption?: string };
+type ResultItem = { key: string; combination: RoundTripCombination; showDate?: boolean };
 
 /** EXACT는 combinations, FLEXIBLE은 예산을 적용한 priceSelection.options를 쓴다(원본 results를 최종 목록으로 쓰지 않음). */
 function resultItems({ dateMode, data }: SearchView): { items: ResultItem[]; notice: string } {
@@ -401,7 +401,7 @@ function resultItems({ dateMode, data }: SearchView): { items: ResultItem[]; not
     const items = flexible.priceSelection.options.map((option) => ({
       key: `${option.searchId}-${option.combination.outboundId}-${option.combination.returnId}`,
       combination: option.combination,
-      caption: `${shortDate(option.outboundDate)}~${shortDate(option.returnDate)}`,
+      showDate: true,
     }));
     const failed = flexible.failedDates.length ? ` 일부 날짜(${flexible.failedDates.length}개)는 조회하지 못했어요.` : "";
     // 최저가는 실제로 찾아본 날짜 후보 중 최저가다(기간 전체의 절대 최저가가 아님).
@@ -428,40 +428,55 @@ function passengersOf(c: ChatConditions) {
   };
 }
 
-/** 시안 AI 항공권 카드. 가는편 시간을 보여 주고 가격은 조합 price(왕복 총액)다. */
-function AiFlightCard({ combination, caption, heart }: { combination: RoundTripCombination; caption?: string; heart: ReactNode }) {
-  const leg = combination.outbound;
-  const first = leg.segments[0];
-  const last = leg.segments.at(-1);
-  const airline = airlinesOf(leg).join(", ") || "항공사 정보 없음";
-  // 가는편 전체 로고가 비어 있는 응답이 있어 첫 구간 로고로 대신한다.
-  const logo = leg.airlineLogo ?? first?.airlineLogo;
-  const back = combination.inbound.segments[0]?.departure?.localTime?.slice(11);
+/** 시안 AI 항공권 카드. 시안은 한 줄이지만 가격이 조합 price(왕복 총액)라 가는편·오는편을 편마다 한 줄씩 보여 준다. */
+function AiFlightCard({ combination, showDate, heart }: { combination: RoundTripCombination; showDate?: boolean; heart: ReactNode }) {
+  const { outbound, inbound } = combination;
+  const describe = (label: string, leg: FlightOption) =>
+    `${label} ${airlinesOf(leg).join(", ") || "항공사 정보 없음"} ${leg.segments[0]?.departure?.localTime ?? ""} 출발`;
   return (
-    <article className="ai-flight-card" aria-label={`${airline} 가는편 ${first?.departure?.localTime ?? ""} 출발${back ? `, 오는편 ${back} 출발` : ""}`}>
-      {logo ? <img className="ai-airline-logo" src={logo} width={40} height={40} alt="" /> : <span className="ai-airline-logo" />}
-      <div className="ai-airline">
-        <strong>{airline}</strong>
-        <small>
-          {leg.stops === 0 ? "직항" : `경유 ${leg.stops}회`}
-          {caption && ` · ${caption}`}
-        </small>
-      </div>
-      <div className="ai-flight-route">
-        <strong>{first?.departure?.localTime?.slice(11) ?? "-"}</strong>
-        <span>
-          <img className="ai-route-plane" src="/flight/airplane.svg" alt="" />
-          <small>{formatMinutes(leg.totalDurationMinutes)}</small>
-        </span>
-        <strong>{last?.arrival?.localTime?.slice(11) ?? "-"}</strong>
-        <small className="ai-origin-code">{first?.departure?.code}</small>
-        <small className="ai-destination-code">{last?.arrival?.code}</small>
+    <article className="ai-flight-card" aria-label={`${describe("가는편", outbound)}, ${describe("오는편", inbound)}`}>
+      <div className="ai-flight-legs">
+        <FlightLeg leg={outbound} label="가는편" showDate={showDate} />
+        <FlightLeg leg={inbound} label="오는편" showDate={showDate} />
       </div>
       <strong className="ai-flight-price">
         {combination.price == null ? "가격 정보 없음" : `${combination.price.toLocaleString("ko-KR")}원`} <small>왕복</small>
       </strong>
       {heart}
     </article>
+  );
+}
+
+/** 한 편의 로고·항공사·경로. 가는편과 오는편 항공사가 다를 수 있어 편마다 따로 그린다. */
+function FlightLeg({ leg, label, showDate }: { leg: FlightOption; label: string; showDate?: boolean }) {
+  const first = leg.segments[0];
+  const last = leg.segments.at(-1);
+  // 편 전체 로고가 비어 있는 응답이 있어 첫 구간 로고로 대신한다.
+  const logo = leg.airlineLogo ?? first?.airlineLogo;
+  const date = showDate && first?.departure?.localTime ? ` · ${shortDate(first.departure.localTime.slice(0, 10))}` : "";
+  return (
+    <div className="ai-flight-leg">
+      {logo ? <img className="ai-airline-logo" src={logo} width={40} height={40} alt="" /> : <span className="ai-airline-logo" />}
+      <div className="ai-airline">
+        <strong>{airlinesOf(leg).join(", ") || "항공사 정보 없음"}</strong>
+        <small>
+          {leg.stops === 0 ? "직항" : `경유 ${leg.stops}회`}
+          {date}
+        </small>
+      </div>
+      <div className="ai-flight-route">
+        <strong>{first?.departure?.localTime?.slice(11) ?? "-"}</strong>
+        <span>
+          <img className="ai-route-plane" src="/flight/airplane.svg" alt="" />
+          <small>
+            {label} · {formatMinutes(leg.totalDurationMinutes)}
+          </small>
+        </span>
+        <strong>{last?.arrival?.localTime?.slice(11) ?? "-"}</strong>
+        <small className="ai-origin-code">{first?.departure?.code}</small>
+        <small className="ai-destination-code">{last?.arrival?.code}</small>
+      </div>
+    </div>
   );
 }
 
