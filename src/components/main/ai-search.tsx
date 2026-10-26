@@ -341,9 +341,10 @@ export function useAiSearch() {
           <button
             className="ai-edit-query"
             type="button"
-            onClick={async () => {
-              await close();
-              document.querySelector<HTMLInputElement>("#travel-prompt")?.select();
+            onClick={() => {
+              // 팝업을 닫지 않고 현재 조건을 보여 준 뒤, 같은 대화에 바꿀 조건을 입력하게 한다.
+              ref.current?.querySelector(".ai-trip-summary")?.scrollIntoView({ behavior: "smooth", block: "start" });
+              ref.current?.querySelector<HTMLInputElement>("#ai-followup-input")?.focus({ preventScroll: true });
             }}
           >
             <svg className="ai-action-icon" aria-hidden="true" width="20" height="20" viewBox="0 0 20 20" fill="none">
