@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { createPortal } from "react-dom";
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type FormEvent, type KeyboardEvent, type ReactNode } from "react";
 import { cityName } from "@/components/flight/search-condition-fields";
+import { useAiSearch } from "@/components/main/ai-search";
 import { Img, prefersReducedMotion, useInfoDialog, useIsMobile, useToast } from "@/components/main/main-ui";
 import { formatLocation } from "@/lib/flight-client";
 import { toSearchQuery } from "@/lib/flight-search-params";
@@ -62,6 +63,8 @@ const TABS: { mode: Mode; id: string; label: string; icon: ReactNode }[] = [
 
 const SUGGESTIONS = ["가성비 좋은 일본 온천 여행", "아이와 함께 갈만한 동남아 여행", "혼자 떠나는 힐링 여행"];
 
+const MBTI_TYPES = ["INTJ", "INTP", "INFJ", "INFP", "ISTJ", "ISTP", "ISFJ", "ISFP", "ENTJ", "ENTP", "ENFJ", "ENFP", "ESTJ", "ESTP", "ESFJ", "ESFP"];
+
 export function SearchPanel() {
   const [mode, setMode] = useState<Mode>("AI");
   const [prompt, setPrompt] = useState("");
@@ -72,7 +75,10 @@ export function SearchPanel() {
   const indicator = useRef<HTMLSpanElement>(null);
   const { show, dialog } = useInfoDialog();
   const { notify, toast } = useToast();
+  const ai = useAiSearch();
   const condition = mode === "조건";
+  const mbti = mode === "MBTI";
+  const [mbtiType, setMbtiType] = useState(MBTI_TYPES[0]);
   const activeIndex = TABS.findIndex((tab) => tab.mode === mode);
   const activeTab = TABS[activeIndex];
 
@@ -106,11 +112,9 @@ export function SearchPanel() {
   const placeholder =
     mode === "사주"
       ? "생년월일과 선호하는 여행 스타일을 알려 주세요."
-      : mode === "MBTI"
-        ? "MBTI와 원하는 여행 스타일을 알려 주세요."
-        : isMobile
-          ? "여행 조건을 자유롭게 말씀해 주세요."
-          : "여행 조건(예산, 날짜, 특징, 스타일 등)을 자유롭게 말씀해 주세요.";
+      : isMobile
+        ? "여행 조건을 자유롭게 말씀해 주세요."
+        : "여행 조건(예산, 날짜, 특징, 스타일 등)을 자유롭게 말씀해 주세요.";
 
   function selectTab(index: number) {
     setMode(TABS[index].mode);
@@ -131,10 +135,11 @@ export function SearchPanel() {
     event.preventDefault();
     const query = prompt.trim();
     if (!query) return;
-    show(
-      "여행 조건을 확인했어요",
-      `“${query}”\n\n이 페이지는 Figma 시안을 구현한 퍼블리싱 데모입니다. 실제 AI 추천 및 항공권 검색은 서버 연결이 필요합니다. 아래 추천 여행지에서 여행 정보를 확인할 수 있어요.`,
-    );
+    // AI 검색은 채팅 API로 연결한다. 사주 검색은 시안에 결과 화면이 없어 안내만 한다(API 미연결).
+    if (mode === "AI") ai.ask(query);
+    else show("여행 조건을 확인했어요", `“${query}”
+
+사주 검색은 준비 중입니다. AI 검색 탭에서 같은 조건으로 찾아보세요.`);
   }
 
   const renderTab = (tab: (typeof TABS)[number], index: number) => (
@@ -148,7 +153,7 @@ export function SearchPanel() {
       type="button"
       role="tab"
       aria-selected={tab.mode === mode}
-      aria-controls={tab.mode === "조건" ? "condition-content" : "search-content"}
+      aria-controls={tab.mode === "조건" ? "condition-content" : tab.mode === "MBTI" ? "mbti-content" : "search-content"}
       tabIndex={tab.mode === mode ? 0 : -1}
       onClick={() => selectTab(index)}
       onKeyDown={(event) => onTabKeyDown(event, index)}
@@ -161,14 +166,14 @@ export function SearchPanel() {
   );
 
   return (
-    <div className={`search-panel${condition ? " condition-mode" : ""}`}>
+    <div className={`search-panel${condition ? " condition-mode" : ""}${mbti ? " mbti-mode" : ""}`}>
       <div ref={tabList} className="search-tabs" role="tablist" aria-label="여행 검색 방식">
         <div className="tab-pair">{TABS.slice(0, 2).map((tab, i) => renderTab(tab, i))}</div>
         <div className="tab-pair">{TABS.slice(2).map((tab, i) => renderTab(tab, i + 2))}</div>
         <span ref={indicator} className="tab-indicator" aria-hidden="true" />
       </div>
 
-      <div id="search-content" role="tabpanel" aria-labelledby={activeTab.id} hidden={condition}>
+      <div id="search-content" role="tabpanel" aria-labelledby={activeTab.id} hidden={condition || mbti}>
         <form className="prompt-form" onSubmit={submitPrompt}>
           <Img name="imgSparkleIcon.svg" />
           <label className="sr-only" htmlFor="travel-prompt">여행 조건</label>
@@ -201,11 +206,39 @@ export function SearchPanel() {
         </div>
       </div>
 
+      {/* MBTI 검색은 시안만 적용했다(API 미연결). 제출하면 안내만 띄운다. */}
+      <div id="mbti-content" role="tabpanel" aria-labelledby="tab-mbti" hidden={!mbti}>
+        <h2 className="mbti-title">나의 MBTI로 찾는 여행지</h2>
+        <div className="mbti-grid" role="radiogroup" aria-label="MBTI 유형 선택">
+          {MBTI_TYPES.map((type) => (
+            <button
+              key={type}
+              className={`mbti-option${type === mbtiType ? " is-selected" : ""}`}
+              type="button"
+              role="radio"
+              aria-checked={type === mbtiType}
+              onClick={() => setMbtiType(type)}
+            >
+              {type}
+            </button>
+          ))}
+        </div>
+        <button
+          className="mbti-submit"
+          type="button"
+          onClick={() => show(`${mbtiType} 맞춤 여행지`, "MBTI 여행지 추천은 준비 중입니다. 지금은 AI 검색이나 조건 검색을 이용해 주세요.")}
+        >
+          <span className="search-glyph" aria-hidden="true" />
+          <span>가보자 GO</span>
+        </button>
+      </div>
+
       <div id="condition-content" role="tabpanel" aria-labelledby="tab-condition" hidden={!condition}>
         <ConditionSearch notify={notify} />
       </div>
 
       {dialog}
+      {ai.dialog}
       {toast}
     </div>
   );

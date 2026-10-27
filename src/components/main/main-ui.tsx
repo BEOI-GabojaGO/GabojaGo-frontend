@@ -26,6 +26,40 @@ export function useIsMobile() {
 
 export const prefersReducedMotion = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
 
+const closingDialogs = new WeakMap<HTMLDialogElement, Promise<void>>();
+
+/**
+ * 닫힘 애니메이션(login-fade-out)이 끝난 뒤 dialog를 닫는다. minWidth보다 좁거나 동작 줄이기 설정이면 바로 닫는다.
+ * 로그인·AI 검색 다이얼로그가 함께 쓴다.
+ */
+export function closeDialogAnimated(dialog: HTMLDialogElement | null, minWidth: number) {
+  if (!dialog?.open) return Promise.resolve();
+  const pending = closingDialogs.get(dialog);
+  if (pending) return pending;
+  if (!matchMedia(`(min-width: ${minWidth}px)`).matches || prefersReducedMotion()) {
+    dialog.close();
+    return Promise.resolve();
+  }
+  const closing = new Promise<void>((resolve) => {
+    const finish = () => {
+      window.clearTimeout(timer);
+      dialog.removeEventListener("animationend", onEnd);
+      dialog.close();
+      dialog.classList.remove("is-closing");
+      closingDialogs.delete(dialog);
+      resolve();
+    };
+    const onEnd = (event: AnimationEvent) => {
+      if (event.target === dialog && event.animationName === "login-fade-out") finish();
+    };
+    const timer = window.setTimeout(finish, 260);
+    dialog.addEventListener("animationend", onEnd);
+    dialog.classList.add("is-closing");
+  });
+  closingDialogs.set(dialog, closing);
+  return closing;
+}
+
 /** dialog 바깥(backdrop)을 눌렀을 때만 true. */
 export function isBackdropClick(event: MouseEvent<HTMLDialogElement>) {
   if (event.target !== event.currentTarget) return false;

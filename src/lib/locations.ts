@@ -104,15 +104,38 @@ const MAX_RESULTS = 10;
  */
 export function searchLocations(keyword: string): LocationOption[] {
   const query = keyword.trim().toLowerCase();
+  return query ? candidates(query, false) : [];
+}
 
-  if (!query) return [];
+/**
+ * 백엔드 `LocationService.resolve`와 같은 규칙으로 지명 하나를 확정한다(채팅 조건의 "인천"·"오사카" 등).
+ * 공항 코드 → 도시 이름 → 공항 이름 → 도시 코드 순으로 정확히 일치하는 것이 하나뿐이면 그것, 아니면 후보가 하나일 때만.
+ * 후보가 여럿이거나 없으면 null(추측하지 않는다).
+ */
+export function resolveLocation(expression: string): LocationOption | null {
+  const query = expression.trim().toLowerCase();
+  if (!query) return null;
+  const list = candidates(query, true);
+  const same = (value: string) => value.toLowerCase() === query;
+  const rules = [
+    list.filter((o) => o.type === "AIRPORT" && same(o.code)),
+    list.filter((o) => o.type === "CITY" && (same(o.nameKo) || same(o.nameEn))),
+    list.filter((o) => o.type === "AIRPORT" && (same(o.nameKo) || same(o.nameEn))),
+    list.filter((o) => o.type === "CITY" && same(o.code)),
+    list,
+  ];
+  const hit = rules.find((rule) => rule.length) ?? [];
+  return hit.length === 1 ? hit[0] : null;
+}
 
+/** 백엔드 도시·공항 검색 쿼리와 같은 부분 일치. 도시를 먼저, 그다음 공항, 최대 10건. */
+function candidates(query: string, includeSingleAirportCities: boolean): LocationOption[] {
   const matches = (code: string, ...names: string[]) =>
     code.toLowerCase() === query || names.some((name) => name.toLowerCase().includes(query));
 
   const cities = CITIES.filter(
     ([code, nameKo, nameEn, country, , airports]) =>
-      airports.length > 1 && matches(code, nameKo, nameEn, country),
+      (includeSingleAirportCities || airports.length > 1) && matches(code, nameKo, nameEn, country),
   ).map(toCityOption);
 
   const airports = CITIES.flatMap((city) => {
