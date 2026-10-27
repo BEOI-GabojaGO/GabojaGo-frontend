@@ -1,5 +1,6 @@
 /* eslint-disable @next/next/no-img-element -- API의 항공사 로고 URL과 디자인 원본 SVG를 그대로 쓴다. */
 // 클라이언트 컴포넌트 전용(React 훅 포함). 서버 컴포넌트에서는 import하지 않는다.
+import { useRouter } from "next/navigation";
 import { Fragment, useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { airlinesOf, FlightHeart } from "@/components/flight/flight-list-ui";
 import { closeDialogAnimated, Img, isBackdropClick, useToast } from "@/components/main/main-ui";
@@ -15,10 +16,12 @@ import type {
   FlexibleFlightSearchResponse,
 } from "@/lib/chat-types";
 import { formatMinutes, formatPrice, postJson, requestJson } from "@/lib/flight-client";
+import { toSearchQuery } from "@/lib/flight-search-params";
 import type { FlightOption, RoundTripCombination, RoundTripSearchResponse, TravelClass } from "@/lib/flight-types";
+import { resolveLocation } from "@/lib/locations";
 
 const MAX_MESSAGE = 1000;
-/** 결과는 3장씩 보여 준다. "더 많은 항공권 찾기"는 같은 결과를 더 펼친다(추가 호출 없음, 결정 3.2 (a)). */
+/** 다이얼로그에는 3장만 보여 준다. "더 많은 항공권 찾기"는 같은 조건으로 조건 검색 화면으로 넘긴다(결정 3.2 (b)). */
 const PAGE = 3;
 
 type SearchView = { conditions: ChatConditions; dateMode: "EXACT" | "FLEXIBLE"; data: ChatSearchResult };
@@ -71,7 +74,6 @@ export function useAiSearch() {
   const [error, setError] = useState("");
   const [searching, setSearching] = useState(false);
   const [search, setSearch] = useState<SearchView | null>(null);
-  const [visible, setVisible] = useState(PAGE);
   /** 세션이 만료돼 새 대화를 시작해야 하는 상태. */
   const [expired, setExpired] = useState(false);
   /** 검색 한도(429)를 넘으면 같은 화면에서 다시 검색하지 않게 확인 버튼을 숨긴다. */
@@ -79,6 +81,7 @@ export function useAiSearch() {
   /** 새로고침 전 세션을 이어 쓰는 첫 응답에 한 번 안내한다. */
   const [resumed, setResumed] = useState(false);
   const { notify, toast } = useToast();
+  const router = useRouter();
 
   function open() {
     if (ref.current?.open) return;
@@ -193,7 +196,6 @@ export function useAiSearch() {
       const conditions = turn.conditions ?? {};
       const show = (data: ChatSearchResult) => {
         setSearch({ conditions, dateMode: conditions.dateMode ?? "EXACT", data });
-        setVisible(PAGE);
       };
       const result = await requestJson<ChatSearchResult>(`${base}/search`, { method: "POST" });
       if (result.ok) return show(result.data);
@@ -232,6 +234,31 @@ export function useAiSearch() {
     setError("검색이 오래 걸리고 있어요. 잠시 후 다시 확인해 주세요.");
   }
 
+  /** 더 많은 항공권: 같은 조건으로 조건 검색(왕복 항공권 목록)으로 넘긴다. 목록 화면이 다시 검색한다(SerpApi 재호출, 팀 결정). */
+  async function openFlightList() {
+    if (!search || !results) return;
+    const c = search.conditions;
+    // 채팅 조건의 지명은 표시용 이름이라, 백엔드와 같은 규칙으로 하나로 확정될 때만 넘긴다.
+    const origin = resolveLocation(c.origin ?? "");
+    const destination = resolveLocation(c.destination ?? "");
+    if (!origin || !destination) {
+      setError("출발지/도착지를 항공권 목록에서 찾지 못했어요. 조건 검색에서 직접 골라 주세요.");
+      return;
+    }
+    // FLEXIBLE은 날짜가 기간이라 화면 첫 카드(가장 싼 옵션)의 날짜로 넘긴다.
+    const { outboundDate, returnDate } = results.items[0]?.dates ?? c;
+    if (!outboundDate || !returnDate) {
+      setError("여행 날짜가 정해지지 않아 항공권 목록으로 넘길 수 없어요.");
+      return;
+    }
+    const query = toSearchQuery(
+      { origin: origin.airportCodes, destination: destination.airportCodes, outboundDate, returnDate, ...passengersOf(c) },
+      { origin, destination },
+    );
+    await close();
+    router.push(`/flights/round-trip/step?${query}`);
+  }
+
   /** 메인 입력창에서 AI 검색을 요청할 때. 다이얼로그를 열고 같은 대화에 이어 보낸다. */
   function ask(text: string) {
     open();
@@ -247,7 +274,6 @@ export function useAiSearch() {
   // 문장(reply)과 관계없이 서버가 계산한 상태로 판단한다. 최종 판단은 서버가 다시 한다.
   const canSearch = turn?.state === "AWAITING_CONFIRMATION" && !turn.missingFields.length && !turn.ambiguousFields.length && !search && !quotaExceeded && !expired;
   const results = search ? resultItems(search) : null;
-  const hasMore = !!results && results.items.length > visible;
 
   const dialog = (
     <dialog
@@ -320,7 +346,7 @@ export function useAiSearch() {
         {results && (
           <div className="ai-flight-list" aria-label="추천 항공권">
             {results.notice && <p className="ai-result-notice">{results.notice}</p>}
-            {results.items.slice(0, visible).map(({ key, combination, showDate }) => (
+            {results.items.slice(0, PAGE).map(({ key, combination, showDate }) => (
               <AiFlightCard
                 key={key}
                 combination={combination}
@@ -365,8 +391,8 @@ export function useAiSearch() {
             <span className="ai-action-label-mobile">조건 수정</span>
             <span className="ai-action-label-desktop">조건 수정하기</span>
           </button>
-          {hasMore && (
-            <button className="ai-more-flights" type="button" onClick={() => setVisible((n) => n + PAGE)}>
+          {results && (
+            <button className="ai-more-flights" type="button" onClick={() => void openFlightList()}>
               <span className="search-glyph ai-action-label-desktop" aria-hidden="true" />
               <svg className="ai-action-icon" aria-hidden="true" width="20" height="20" viewBox="0 0 20 20" fill="none">
                 <circle cx="8.75" cy="8.75" r="5.583" stroke="currentColor" strokeWidth="1.5" />
@@ -452,7 +478,13 @@ function TripSummary({ turn }: { turn: Pick<ChatMessageResponse, "conditions" | 
   );
 }
 
-type ResultItem = { key: string; combination: RoundTripCombination; showDate?: boolean };
+type ResultItem = {
+  key: string;
+  combination: RoundTripCombination;
+  showDate?: boolean;
+  /** FLEXIBLE 옵션의 날짜. 조건 검색으로 넘길 때 쓴다. */
+  dates?: { outboundDate: string; returnDate: string };
+};
 
 /** EXACT는 combinations, FLEXIBLE은 예산을 적용한 priceSelection.options를 쓴다(원본 results를 최종 목록으로 쓰지 않음). */
 function resultItems({ dateMode, data }: SearchView): { items: ResultItem[]; notice: string } {
@@ -462,6 +494,7 @@ function resultItems({ dateMode, data }: SearchView): { items: ResultItem[]; not
       key: `${option.searchId}-${option.combination.outboundId}-${option.combination.returnId}`,
       combination: option.combination,
       showDate: true,
+      dates: { outboundDate: option.outboundDate, returnDate: option.returnDate },
     }));
     const failed = flexible.failedDates.length ? ` 일부 날짜(${flexible.failedDates.length}개)는 조회하지 못했어요.` : "";
     // 최저가는 실제로 찾아본 날짜 후보 중 최저가다(기간 전체의 절대 최저가가 아님).
