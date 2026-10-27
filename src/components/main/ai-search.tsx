@@ -123,6 +123,8 @@ export function useAiSearch() {
     setQuestion(message);
     setPending(true);
     setError("");
+    // 만료 뒤 "새 대화 시작"을 누르지 않고 바로 보내도 새 세션으로 이어지므로 만료 표시를 푼다.
+    setExpired(false);
     // 이어쓰기 안내는 새로고침 뒤 첫 응답에만 보여 준다.
     setResumed(false);
     try {
