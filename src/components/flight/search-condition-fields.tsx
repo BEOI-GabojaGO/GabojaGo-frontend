@@ -11,10 +11,11 @@ import type {
 } from "@/lib/flight-types";
 
 export const TRAVEL_CLASS_OPTIONS = [
-  { value: 1, label: "이코노미" },
-  { value: 2, label: "프리미엄 이코노미" },
-  { value: 3, label: "비즈니스" },
-  { value: 4, label: "퍼스트" },
+  // 메인 조건 검색(search-panel CABINS)과 같은 이름. 팀 결정으로 "일반석"으로 통일(2026-10-28).
+  { value: 1, label: "일반석" },
+  { value: 2, label: "프리미엄 일반석" },
+  { value: 3, label: "비즈니스석" },
+  { value: 4, label: "일등석" },
 ];
 
 export type TripType = "round-trip" | "one-way";

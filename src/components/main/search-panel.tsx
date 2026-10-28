@@ -7,8 +7,8 @@ import { cityName } from "@/components/flight/search-condition-fields";
 import { useAiSearch } from "@/components/main/ai-search";
 import { Img, prefersReducedMotion, useInfoDialog, useIsMobile, useToast } from "@/components/main/main-ui";
 import { formatLocation } from "@/lib/flight-client";
-import { toSearchQuery } from "@/lib/flight-search-params";
-import type { LocationOption, TravelClass } from "@/lib/flight-types";
+import { toSearchQuery, type InitialSearch } from "@/lib/flight-search-params";
+import type { LocationOption, OneWaySearchRequest, TravelClass } from "@/lib/flight-types";
 import { findLocation, searchLocations } from "@/lib/locations";
 
 type Mode = "AI" | "조건" | "사주" | "MBTI";
@@ -65,8 +65,10 @@ const SUGGESTIONS = ["가성비 좋은 일본 온천 여행", "아이와 함께 
 
 const MBTI_TYPES = ["INTJ", "INTP", "INFJ", "INFP", "ISTJ", "ISTP", "ISFJ", "ISFP", "ENTJ", "ENTP", "ENFJ", "ENFP", "ESTJ", "ESTP", "ESFJ", "ESFP"];
 
-export function SearchPanel() {
-  const [mode, setMode] = useState<Mode>("AI");
+type InitialCondition = InitialSearch<OneWaySearchRequest & { returnDate?: string }>;
+
+export function SearchPanel({ initialCondition }: { initialCondition?: InitialCondition | null }) {
+  const [mode, setMode] = useState<Mode>(initialCondition ? "조건" : "AI");
   const [prompt, setPrompt] = useState("");
   const isMobile = useIsMobile();
   const promptInput = useRef<HTMLInputElement>(null);
@@ -234,7 +236,7 @@ export function SearchPanel() {
       </div>
 
       <div id="condition-content" role="tabpanel" aria-labelledby="tab-condition" hidden={!condition}>
-        <ConditionSearch notify={notify} />
+        <ConditionSearch notify={notify} initial={initialCondition} />
       </div>
 
       {dialog}
@@ -299,20 +301,40 @@ type Condition = {
 const dateKey = (d: Date) => [d.getFullYear(), String(d.getMonth() + 1).padStart(2, "0"), String(d.getDate()).padStart(2, "0")].join("-");
 const formatDate = (value: string) => value.slice(5).replace("-", ".");
 
-function ConditionSearch({ notify }: { notify: (text: string) => void }) {
+/** 항공권 목록에서 넘어온 조건 → 조건 검색 칸. 유아는 좌석이 하나라도 있으면 좌석, 아니면 무릎으로 본다. */
+function conditionFrom({ request, locations }: InitialCondition): Condition {
+  return {
+    trip: request.returnDate ? "round" : "oneway",
+    origin: locations.origin,
+    destination: locations.destination,
+    depart: request.outboundDate,
+    return: request.returnDate ?? null,
+    adults: request.adults,
+    children: request.children,
+    infants: request.infantsInSeat + request.infantsOnLap,
+    infantSeat: request.infantsInSeat > 0 ? "seat" : "lap",
+    cabin: CABINS[request.travelClass - 1] ?? CABINS[0],
+  };
+}
+
+function ConditionSearch({ notify, initial }: { notify: (text: string) => void; initial?: InitialCondition | null }) {
   const router = useRouter();
-  const [state, setState] = useState<Condition>(() => ({
-    trip: "round",
-    origin: findLocation("AIRPORT", "ICN"),
-    destination: findLocation("AIRPORT", "OKA"),
-    depart: null,
-    return: null,
-    adults: 1,
-    children: 0,
-    infants: 0,
-    infantSeat: "lap",
-    cabin: "일반석",
-  }));
+  const [state, setState] = useState<Condition>(() =>
+    initial
+      ? conditionFrom(initial)
+      : {
+          trip: "round",
+          origin: findLocation("AIRPORT", "ICN"),
+          destination: findLocation("AIRPORT", "OKA"),
+          depart: null,
+          return: null,
+          adults: 1,
+          children: 0,
+          infants: 0,
+          infantSeat: "lap",
+          cabin: "일반석",
+        },
+  );
   const [picker, setPicker] = useState<PickerType | null>(null);
   const [closing, setClosing] = useState(false);
   const [error, setError] = useState("");

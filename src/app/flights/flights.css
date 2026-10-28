@@ -536,6 +536,8 @@
   /* 시안 메뉴 높이는 항목 4개 기준이라 "비싼 가격순"을 넣은 5개에 맞춰 늘린다. */
   .sort-menu { height: auto; }
   .flight-card[aria-disabled="true"] { cursor: progress; }
+  /* 시안의 한국 국기 크기(111%×74%)는 3:2 원본(raw-07.png)용이다. 우리는 정사각 /main/flag-korea.png라 일본처럼 칸을 채운다. */
+  .route-title .flag-korea img, .route-title .flag.flag-korea img { width: 100%; height: 100%; object-fit: cover; }
   /* API 로고가 없을 때: 항공사 이름 첫 글자(시안은 항공사별 색 로고 목업). */
   .logo-fallback { background: #b9bcc6; font-size: 14px; }
   .heart-button:disabled { opacity: .5; cursor: progress; }

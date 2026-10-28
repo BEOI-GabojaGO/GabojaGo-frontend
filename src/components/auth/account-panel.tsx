@@ -112,7 +112,7 @@ export function AccountPanel() {
             </dl>
 
             <Link
-              href="/flights"
+              href="/"
               className="mt-7 flex h-12 w-full items-center justify-center rounded-xl bg-blue-600 text-sm font-bold text-white shadow-sm transition hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-200"
             >
               항공권 검색하러 가기

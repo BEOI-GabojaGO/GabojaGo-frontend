@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import { BookingOptionsPanel } from "@/components/flight/booking-options-panel";
 import {
@@ -23,7 +24,7 @@ import {
 import { useToast } from "@/components/main/main-ui";
 import { SiteLoader } from "@/components/site-loader";
 import { FLIGHT_SEARCH_NOT_FOUND, postJson, requestJson } from "@/lib/flight-client";
-import type { InitialSearch } from "@/lib/flight-search-params";
+import { conditionSearchHref, type InitialSearch } from "@/lib/flight-search-params";
 import type {
   FlightOption,
   FlightSearchRequest,
@@ -51,6 +52,14 @@ export function RoundTripStepFlow({ initial }: { initial?: InitialSearch<FlightS
   const [booking, setBooking] = useState(false);
   const filter = useFlightFilter();
   const { notify, toast } = useToast();
+  const router = useRouter();
+
+  /** 같은 조건으로 처음부터 다시 검색한다(검색 실패·만료). 옛 조건 입력 폼으로 돌아가지 않는다. */
+  function retry() {
+    if (!request || !locations) return;
+    reset();
+    void runSearch(request, locations);
+  }
 
   function reset() {
     setSearch(null);
@@ -152,6 +161,27 @@ export function RoundTripStepFlow({ initial }: { initial?: InitialSearch<FlightS
   // 첫 렌더는 자동 검색 effect보다 먼저라 pending이 아직 false다. 그때도 폼 대신 로더를 보인다.
   const loader = (pending || (initial && !search && !error)) && <SiteLoader busy label="항공권을 찾는 중" />;
 
+  // 검색이 실패해도 디자인된 목록 화면(조건 바 유지)에 오류와 "다시 검색하기"를 보여 준다.
+  if (!search && request && locations && error && !pending) {
+    return (
+      <>
+        <FlightListLayout
+          request={request}
+          locations={locations}
+          filter={filter}
+          airlines={[]}
+          legs={["outbound"]}
+          onEdit={() => router.push(conditionSearchHref(request, locations))}
+          locked
+        >
+          <ListAlert message={error} onRetry={retry} />
+        </FlightListLayout>
+        {toast}
+      </>
+    );
+  }
+
+  // 조건 없이 주소로만 들어온 경우의 옛 조건 입력 폼(연결된 곳 없음, 기능 정리 때 삭제 예정).
   if (!search || !request || !locations) {
     if (loader) return loader;
     return (
@@ -186,10 +216,10 @@ export function RoundTripStepFlow({ initial }: { initial?: InitialSearch<FlightS
         airlines={airlines}
         // 시안처럼 지금 고르는 편의 출발 시간 필터만 보여 준다.
         legs={[outbound ? "inbound" : "outbound"]}
-        onEdit={reset}
+        onEdit={() => router.push(conditionSearchHref(request, locations))}
         locked={complete}
       >
-        <ListAlert message={error} onRetry={expired ? reset : undefined} />
+        <ListAlert message={error} onRetry={expired ? retry : undefined} />
 
         {outbound && inbound && (
           <>
@@ -224,7 +254,7 @@ export function RoundTripStepFlow({ initial }: { initial?: InitialSearch<FlightS
                   searchId={search.searchId}
                   outboundId={outbound.id}
                   returnId={inbound.id}
-                  onExpired={reset}
+                  onExpired={retry}
                 />
               </section>
             )}

@@ -1,6 +1,6 @@
 // 백엔드 flight DTO(`GabojaGoBack/.../flight/dto`)를 그대로 옮긴 타입.
 
-/** 1 이코노미 / 2 프리미엄 이코노미 / 3 비즈니스 / 4 퍼스트 */
+/** 1 일반석 / 2 프리미엄 일반석 / 3 비즈니스석 / 4 일등석(화면 표기) */
 export type TravelClass = 1 | 2 | 3 | 4;
 
 export type FlightSearchRequest = {

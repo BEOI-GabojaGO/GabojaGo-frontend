@@ -116,7 +116,7 @@ function FlightWishlist() {
       {items.length === 0 ? (
         <EmptyMessage>
           아직 담은 항공권이 없습니다.{" "}
-          <Link href="/flights" className="font-bold text-blue-700 underline">
+          <Link href="/" className="font-bold text-blue-700 underline">
             항공권 검색하기
           </Link>
         </EmptyMessage>
