@@ -529,6 +529,7 @@ export function FinalSelection({
   onChangeOutbound,
   onChangeReturn,
   onBook,
+  roundTripPrice,
 }: {
   request: OneWaySearchRequest & { returnDate: string };
   locations: SelectedLocations;
@@ -538,8 +539,14 @@ export function FinalSelection({
   onChangeOutbound: () => void;
   onChangeReturn: () => void;
   onBook: () => void;
+  /**
+   * AI 왕복 조합처럼 편별 가격 없이 왕복 총액만 있을 때. 가는편 카드는 가격을 비우고 오는편 카드에 총액을 보여 준다
+   * (조건 검색 흐름의 오는편 price도 같은 왕복 총액이다).
+   */
+  roundTripPrice?: number | null;
 }) {
   const { dates, nights, people, travelClass } = querySummary(request);
+  const total = roundTripPrice !== undefined;
   return (
     <section className="final-selection" aria-live="polite">
       <div className="final-leg">
@@ -553,7 +560,13 @@ export function FinalSelection({
           </button>
         </div>
         {/* 가는편 price는 목록과 같은 "최저 가능 왕복 총액"이라 시안처럼 '부터'를 붙인다. */}
-        <FlightCard option={outbound} priceSuffix="부터" />
+        {/* 하트 자리를 비워 두어 오는편 카드와 시각 위치를 맞춘다. */}
+        <FlightCard
+          option={outbound}
+          priceSuffix="부터"
+          hidePrice={total}
+          heart={<span className="heart-button" aria-hidden="true" style={{ visibility: "hidden" }} />}
+        />
       </div>
       <div className="final-leg">
         <div className="final-leg-heading">
@@ -565,7 +578,7 @@ export function FinalSelection({
             변경하기
           </button>
         </div>
-        <FlightCard option={inbound} heart={heart} />
+        <FlightCard option={total ? { ...inbound, price: roundTripPrice } : inbound} heart={heart} />
       </div>
       <div className="final-trip-summary">
         <div className="final-trip-copy">
@@ -609,9 +622,12 @@ export function FlightCard({
   disabled = false,
   chosen = false,
   heart,
+  hidePrice = false,
 }: {
   option: FlightOption;
   priceSuffix?: string;
+  /** 편별 가격이 없는 경우(AI 왕복 조합의 가는편) 가격 칸을 비운다. */
+  hidePrice?: boolean;
   onSelect?: () => void;
   disabled?: boolean;
   chosen?: boolean;
@@ -669,9 +685,18 @@ export function FlightCard({
         </span>
       </span>
       <span className="card-action">
+        {/* 가격을 비워도 칸은 남겨 다른 카드와 시각 위치를 맞춘다. */}
         <span className="price">
-          <strong>{option.price == null ? "가격 정보 없음" : `${option.price.toLocaleString("ko-KR")} 원`}</strong>
-          {priceSuffix && option.price != null && <small>{priceSuffix}</small>}
+          {hidePrice ? (
+            <strong aria-hidden="true" style={{ visibility: "hidden" }}>
+              -
+            </strong>
+          ) : (
+            <>
+              <strong>{option.price == null ? "가격 정보 없음" : `${option.price.toLocaleString("ko-KR")} 원`}</strong>
+              {priceSuffix && option.price != null && <small>{priceSuffix}</small>}
+            </>
+          )}
         </span>
         {heart}
       </span>

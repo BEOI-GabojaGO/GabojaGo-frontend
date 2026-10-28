@@ -1,8 +1,9 @@
 /* eslint-disable @next/next/no-img-element -- API의 항공사 로고 URL과 디자인 원본 SVG를 그대로 쓴다. */
 // 클라이언트 컴포넌트 전용(React 훅 포함). 서버 컴포넌트에서는 import하지 않는다.
 import { useRouter } from "next/navigation";
-import { Fragment, useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
+import { Fragment, useEffect, useRef, useState, type FormEvent, type KeyboardEvent, type ReactNode } from "react";
 import { airlinesOf, FlightHeart } from "@/components/flight/flight-list-ui";
+import { saveSelectedTrip } from "@/components/flight/selected-trip";
 import { closeDialogAnimated, Img, isBackdropClick, useToast } from "@/components/main/main-ui";
 import { SiteLoader } from "@/components/site-loader";
 import type {
@@ -242,27 +243,61 @@ export function useAiSearch() {
   }
 
   /** 더 많은 항공권: 같은 조건으로 조건 검색(왕복·편도 항공권 목록)으로 넘긴다. 목록 화면이 다시 검색한다(SerpApi 재호출, 팀 결정). */
-  async function openFlightList() {
-    if (!search || !results) return;
+  /**
+   * 채팅 조건 → 항공권 검색 요청. 지명은 표시용 이름이라 백엔드와 같은 규칙으로 하나로 확정될 때만 쓴다.
+   * FLEXIBLE은 날짜가 기간이라 그 카드(없으면 첫 카드, 가장 싼 옵션)의 날짜를 쓴다. 안 되면 안내하고 null.
+   */
+  function flightRequest(item?: ResultItem) {
+    if (!search || !results) return null;
     const c = search.conditions;
-    // 채팅 조건의 지명은 표시용 이름이라, 백엔드와 같은 규칙으로 하나로 확정될 때만 넘긴다.
     const origin = resolveLocation(c.origin ?? "");
     const destination = resolveLocation(c.destination ?? "");
     if (!origin || !destination) {
       setError("출발지/도착지를 항공권 목록에서 찾지 못했어요. 조건 검색에서 직접 골라 주세요.");
-      return;
+      return null;
     }
-    // FLEXIBLE은 날짜가 기간이라 화면 첫 카드(가장 싼 옵션)의 날짜로 넘긴다.
-    const { outboundDate, returnDate } = results.items[0]?.dates ?? c;
+    const { outboundDate, returnDate } = (item ?? results.items[0])?.dates ?? c;
     const oneWay = search.tripType === "ONE_WAY";
     if (!outboundDate || (!oneWay && !returnDate)) {
       setError("여행 날짜가 정해지지 않아 항공권 목록으로 넘길 수 없어요.");
-      return;
+      return null;
     }
     const request = { origin: origin.airportCodes, destination: destination.airportCodes, outboundDate, ...passengersOf(c) };
-    const query = toSearchQuery(oneWay ? request : { ...request, returnDate: returnDate! }, { origin, destination });
+    return { oneWay, request, returnDate, locations: { origin, destination } };
+  }
+
+  /** 더 많은 항공권: 같은 조건으로 조건 검색(왕복·편도 항공권 목록)으로 넘긴다. 목록 화면이 다시 검색한다(SerpApi 재호출, 팀 결정). */
+  async function openFlightList() {
+    const target = flightRequest();
+    if (!target) return;
+    const { oneWay, request, returnDate, locations } = target;
+    const query = toSearchQuery(oneWay ? request : { ...request, returnDate: returnDate! }, locations);
     await close();
     router.push(`${oneWay ? "/flights/one-way" : "/flights/round-trip/step"}?${query}`);
+  }
+
+  /** 왕복 카드 선택: 시안의 최종 선택 요약(/flights/round-trip/selected)으로 넘긴다. 편도는 8단계 예약하기에서 연결. */
+  async function selectTrip(item: ResultItem) {
+    const target = flightRequest(item);
+    if (!target || !item.inbound || !item.returnId) return;
+    const saved = saveSelectedTrip({
+      searchId: item.searchId,
+      outboundId: item.outboundId,
+      returnId: item.returnId,
+      outbound: item.outbound,
+      inbound: item.inbound,
+      price: item.price,
+      stayMinutes: item.stayMinutes ?? null,
+      sameAirline: item.sameAirline ?? null,
+      request: { ...target.request, returnDate: target.returnDate! },
+      locations: target.locations,
+    });
+    if (!saved) {
+      setError("선택한 항공권을 넘기지 못했어요. 브라우저 저장소 설정을 확인해 주세요.");
+      return;
+    }
+    await close();
+    router.push("/flights/round-trip/selected");
   }
 
   /** 메인 입력창에서 AI 검색을 요청할 때. 다이얼로그를 열고 같은 대화에 이어 보낸다. */
@@ -352,10 +387,11 @@ export function useAiSearch() {
         {results && (
           <div className="ai-flight-list" aria-label="추천 항공권">
             {results.notice && <p className="ai-result-notice">{results.notice}</p>}
-            {results.items.slice(0, PAGE).map(({ key, ...item }) => (
+            {results.items.slice(0, PAGE).map((item) => (
               <AiFlightCard
-                key={key}
+                key={item.key}
                 item={item}
+                onSelect={item.inbound ? () => void selectTrip(item) : undefined}
                 heart={
                   <FlightHeart
                     className="ai-flight-heart"
@@ -494,6 +530,11 @@ function tripTypeOf(c: ChatConditions): ChatTripType | null {
 /** 카드 한 장. 왕복은 조합(가는편·오는편·왕복 총액), 편도는 항공편 하나(편도 요금). */
 type ResultItem = {
   key: string;
+  /** 판매처 조회(/itineraries)에 쓰는 검색 ID. FLEXIBLE은 옵션마다 다르다. */
+  searchId: string;
+  outboundId: string;
+  /** 왕복 조합의 returnId(가는편마다 새로 매겨짐). 편도는 없음. */
+  returnId?: string;
   outbound: FlightOption;
   inbound?: FlightOption;
   price: number | null;
@@ -515,6 +556,7 @@ function resultItems({ dateMode, tripType, data }: SearchView): { items: ResultI
     const flexible = data as FlexibleFlightSearchResponse;
     const items = flexible.priceSelection.options.map((option) => ({
       key: `${option.searchId}-${option.combination.outboundId}-${option.combination.returnId}`,
+      searchId: option.searchId,
       ...pair(option.combination),
       showDate: true,
       dates: { outboundDate: option.outboundDate, returnDate: option.returnDate },
@@ -526,12 +568,19 @@ function resultItems({ dateMode, tripType, data }: SearchView): { items: ResultI
   }
   if (tripType === "ONE_WAY") {
     const oneWay = data as OneWaySearchResponse;
-    const items = oneWay.flights.map((flight) => ({ key: `${oneWay.searchId}-${flight.id}`, outbound: flight, price: flight.price }));
+    const items = oneWay.flights.map((flight) => ({
+      key: `${oneWay.searchId}-${flight.id}`,
+      searchId: oneWay.searchId,
+      outboundId: flight.id,
+      outbound: flight,
+      price: flight.price,
+    }));
     return { items, notice: empty(oneWay.noNonstopFlight, items.length) };
   }
   const exact = data as RoundTripSearchResponse;
   const items = exact.combinations.map((combination) => ({
     key: `${exact.searchId}-${combination.outboundId}-${combination.returnId}`,
+    searchId: exact.searchId,
     ...pair(combination),
   }));
   return { items, notice: empty(exact.noNonstopFlight, items.length) };
@@ -539,6 +588,8 @@ function resultItems({ dateMode, tripType, data }: SearchView): { items: ResultI
 
 /** 왕복 조합 → 카드 항목. 가격은 조합 price(왕복 총액)다. */
 const pair = (c: RoundTripSearchResponse["combinations"][number]) => ({
+  outboundId: c.outboundId,
+  returnId: c.returnId,
   outbound: c.outbound,
   inbound: c.inbound,
   price: c.price,
@@ -561,14 +612,25 @@ function passengersOf(c: ChatConditions) {
  * 시안 AI 항공권 카드. 왕복은 가격이 조합 price(왕복 총액)라 가는편·오는편을 편마다 한 줄씩 보여 준다.
  * 편도는 시안처럼 한 줄이고 가격은 편도 요금이다.
  */
-function AiFlightCard({ item, heart }: { item: Omit<ResultItem, "key">; heart: ReactNode }) {
+function AiFlightCard({ item, heart, onSelect }: { item: ResultItem; heart: ReactNode; onSelect?: () => void }) {
   const { outbound, inbound, price, showDate } = item;
+  const interactive = onSelect && {
+    role: "button",
+    tabIndex: 0,
+    onClick: onSelect,
+    onKeyDown: (event: KeyboardEvent) => {
+      if (event.target !== event.currentTarget || (event.key !== "Enter" && event.key !== " ")) return;
+      event.preventDefault();
+      onSelect();
+    },
+  };
   const describe = (label: string, leg: FlightOption) =>
     `${label} ${airlinesOf(leg).join(", ") || "항공사 정보 없음"} ${leg.segments[0]?.departure?.localTime ?? ""} 출발`;
   return (
     <article
       className={`ai-flight-card${inbound ? "" : " is-one-way"}`}
       aria-label={inbound ? `${describe("가는편", outbound)}, ${describe("오는편", inbound)}` : describe("편도", outbound)}
+      {...interactive}
     >
       <div className="ai-flight-legs">
         <FlightLeg leg={outbound} label={inbound ? "가는편" : "편도"} showDate={showDate} />
