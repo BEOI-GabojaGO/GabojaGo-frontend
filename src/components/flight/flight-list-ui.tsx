@@ -15,14 +15,15 @@ import type {
   SelectedLocations,
 } from "@/lib/flight-types";
 
-// 항공권 목록 디자인(가보자GO-항공권 목록-디자인) 조각. 스타일은 src/app/flights/flights.css.
+// 항공권 목록 시안(가보자GO (1)/가보자GO-항공권 목록) 조각. 스타일은 src/app/flights/flights.css.
 
 type Leg = "outbound" | "inbound";
-type Sort = "default" | "price" | "depart" | "duration";
+type Sort = "default" | "price" | "price-desc" | "depart" | "duration";
 
 const SORT_OPTIONS: { value: Sort; label: string }[] = [
   { value: "default", label: "추천순" },
   { value: "price", label: "가격 낮은순" },
+  { value: "price-desc", label: "비싼 가격순" },
   { value: "depart", label: "출발 시간순" },
   { value: "duration", label: "소요 시간순" },
 ];
@@ -51,13 +52,13 @@ export function passengersOf(request: OneWaySearchRequest) {
 /* ---------- 필터·정렬 ---------- */
 
 type FilterState = {
-  /** 체크를 푼 항공사. 새로 나타난 항공사는 기본으로 체크된 상태가 된다. */
-  excludedAirlines: string[];
+  /** 고른 항공사. 비어 있으면 전체(시안: 아무것도 체크하지 않은 상태가 기본). */
+  airlines: string[];
   /** 고른 시간대 시작 시각. 비어 있으면 전체. */
   times: Record<Leg, number[]>;
 };
 
-const EMPTY_FILTER: FilterState = { excludedAirlines: [], times: { outbound: [], inbound: [] } };
+const EMPTY_FILTER: FilterState = { airlines: [], times: { outbound: [], inbound: [] } };
 
 /** 받은 목록을 브라우저에서 거르고 정렬한다. 다시 검색하지 않는다(SerpApi 쿼터). */
 export function useFlightFilter() {
@@ -67,20 +68,25 @@ export function useFlightFilter() {
   function apply(list: FlightOption[], leg: Leg) {
     const times = filter.times[leg];
     const filtered = list.filter((option) => {
-      if (airlinesOf(option).some((name) => filter.excludedAirlines.includes(name))) return false;
+      if (filter.airlines.length && !airlinesOf(option).some((name) => filter.airlines.includes(name))) return false;
       const hour = departHour(option);
       return !times.length || hour === null || times.some((start) => hour >= start && hour < start + 4);
     });
     if (sort === "default") return filtered;
 
     const key = (option: FlightOption) =>
-      sort === "price" ? option.price : sort === "duration" ? option.totalDurationMinutes : option.segments[0]?.departure?.localTime;
-    // 값이 없는 항목은 뒤로 보낸다.
+      sort === "price" || sort === "price-desc"
+        ? option.price
+        : sort === "duration"
+          ? option.totalDurationMinutes
+          : option.segments[0]?.departure?.localTime;
+    const direction = sort === "price-desc" ? -1 : 1;
+    // 값이 없는 항목은 정렬 방향과 관계없이 뒤로 보낸다.
     return filtered.toSorted((a, b) => {
       const x = key(a);
       const y = key(b);
       if (x == null || y == null) return x == null ? (y == null ? 0 : 1) : -1;
-      return x < y ? -1 : x > y ? 1 : 0;
+      return (x < y ? -1 : x > y ? 1 : 0) * direction;
     });
   }
 
@@ -105,9 +111,7 @@ function FilterGroups({
   const toggleAirline = (name: string) =>
     onChange({
       ...value,
-      excludedAirlines: value.excludedAirlines.includes(name)
-        ? value.excludedAirlines.filter((item) => item !== name)
-        : [...value.excludedAirlines, name],
+      airlines: value.airlines.includes(name) ? value.airlines.filter((item) => item !== name) : [...value.airlines, name],
     });
   const toggleTime = (leg: Leg, start: number) => {
     const current = value.times[leg];
@@ -126,7 +130,7 @@ function FilterGroups({
               <input
                 id={`${idPrefix}-airline-${name}`}
                 type="checkbox"
-                checked={!value.excludedAirlines.includes(name)}
+                checked={value.airlines.includes(name)}
                 onChange={() => toggleAirline(name)}
               />
               <span>{name}</span>
@@ -156,18 +160,52 @@ function FilterGroups({
   );
 }
 
-function SortSelect({ filter, className = "" }: { filter: FlightFilter; className?: string }) {
+/** 시안 정렬 메뉴(버튼 + 목록). 바깥을 누르거나 포커스가 빠지거나 Esc를 누르면 닫는다. */
+function SortMenu({ filter, className = "" }: { filter: FlightFilter; className?: string }) {
+  const [open, setOpen] = useState(false);
+  const current = SORT_OPTIONS.find((option) => option.value === filter.sort) ?? SORT_OPTIONS[0];
+
   return (
-    <label className={`sort-control ${className}`}>
-      <span className="sr-only">정렬 기준</span>
-      <select value={filter.sort} onChange={(event) => filter.setSort(event.target.value as Sort)}>
+    <div
+      className={`sort-control ${className}${open ? " is-open" : ""}`}
+      data-sort-menu
+      onBlur={(event) => !event.currentTarget.contains(event.relatedTarget) && setOpen(false)}
+      onKeyDown={(event) => {
+        if (event.key !== "Escape" || !open) return;
+        setOpen(false);
+        event.currentTarget.querySelector<HTMLButtonElement>(".sort-trigger")?.focus();
+      }}
+    >
+      <button
+        className="sort-trigger"
+        type="button"
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        aria-label={`정렬 기준: ${current.label}`}
+        onClick={() => setOpen(!open)}
+      >
+        <span className="sort-label">{current.label}</span>
+        <img src="/flight/dropdown.svg" alt="" />
+      </button>
+      <div className="sort-menu" role="listbox" aria-label="정렬 기준" aria-hidden={!open}>
         {SORT_OPTIONS.map(({ value, label }) => (
-          <option key={value} value={value}>
+          <button
+            key={value}
+            className={`sort-option${value === filter.sort ? " is-active" : ""}`}
+            type="button"
+            role="option"
+            aria-selected={value === filter.sort}
+            tabIndex={open ? 0 : -1}
+            onClick={() => {
+              filter.setSort(value);
+              setOpen(false);
+            }}
+          >
             {label}
-          </option>
+          </button>
         ))}
-      </select>
-    </label>
+      </div>
+    </div>
   );
 }
 
@@ -183,8 +221,8 @@ function FilterDrawer({ filter, airlines, legs, onClose }: { filter: FlightFilte
 
   return (
     <>
-      <div className="modal-backdrop" onClick={onClose} />
-      <div className="filter-panel" role="dialog" aria-modal="true" aria-labelledby="filter-title">
+      <div className="modal-backdrop is-open" onClick={onClose} />
+      <div className="filter-panel is-open" role="dialog" aria-modal="true" aria-labelledby="filter-title">
         <div className="filter-head">
           <h2 id="filter-title">필터</h2>
           <button className="close-filter" type="button" aria-label="필터 닫기" onClick={onClose}>
@@ -266,6 +304,11 @@ export function FlightListLayout({
   const [drawerOpen, setDrawerOpen] = useState(false);
   const { dates, nights, people, travelClass } = querySummary(request);
   const route = `${placeLabel(locations.origin)} → ${placeLabel(locations.destination)}`;
+  const divider = (
+    <span className="query-divider" aria-hidden="true">
+      ·
+    </span>
+  );
   const trip = request.returnDate ? "왕복" : "편도";
 
   return (
@@ -273,16 +316,24 @@ export function FlightListLayout({
       <section className="desktop-query-bar" aria-label="현재 검색 조건">
         <div className="query-inner">
           <span className="query-item query-route">
-            <span className="search-icon" aria-hidden="true" />
-            {route}
+            <img className="query-search-icon" src="/flight/search.svg" alt="" />
+            <span>{placeLabel(locations.origin)}</span>
+            <span className="query-route-arrow" aria-hidden="true">
+              →
+            </span>
+            <span>{placeLabel(locations.destination)}</span>
           </span>
-          <span className="query-accent">{trip}</span>
-          <span className="query-item">
-            {dates}
-            {nights !== null && ` (${nights}박 ${nights + 1}일)`}
-          </span>
-          <span className="query-item">{people}</span>
-          <span className="query-accent">{travelClass}</span>
+          <span className="query-badge">{trip}</span>
+          {divider}
+          <span className="query-item query-date">{dates}</span>
+          {nights !== null && (
+            <span className="query-item query-date-description">
+              ({nights}박 {nights + 1}일)
+            </span>
+          )}
+          {divider}
+          <span className="query-item query-passenger">{people}</span>
+          <span className="query-badge">{travelClass}</span>
           <button className="edit-search" type="button" onClick={onEdit}>
             수정하기
           </button>
@@ -310,9 +361,10 @@ export function FlightListLayout({
         <section className="results-column">
           <div className="compact-toolbar">
             <button className="filter-trigger" type="button" onClick={() => setDrawerOpen(true)}>
+              <span className="filter-icon" aria-hidden="true" />
               필터
             </button>
-            <SortSelect filter={filter} />
+            <SortMenu filter={filter} />
           </div>
           {children}
         </section>
@@ -327,7 +379,11 @@ function Place({ option }: { option: LocationOption }) {
   const flag = FLAGS[option.countryNameKo];
   return (
     <>
-      {flag && <img className="flag" src={`/main/${flag}`} alt={option.countryNameKo} />}
+      {flag && (
+        <span className={`flag ${flag.replace(".png", "")}`}>
+          <img src={`/main/${flag}`} alt={option.countryNameKo} />
+        </span>
+      )}
       <span>{cityName(option)}</span>
       <span className="code">({option.code})</span>
     </>
@@ -339,11 +395,11 @@ export function RouteHeading({ from, to, leg, filter }: { from: LocationOption; 
     <div className="results-heading">
       <h1 className="route-title">
         <Place option={from} />
-        <span className="arrow">→</span>
+        <img className="route-arrow" src="/flight/route-arrow.svg" alt="" />
         <Place option={to} />
         <span className="leg">{leg}</span>
       </h1>
-      <SortSelect filter={filter} className="desktop-sort" />
+      <SortMenu filter={filter} className="desktop-sort" />
     </div>
   );
 }
@@ -424,6 +480,8 @@ export function FlightCard({
   const first = option.segments[0];
   const last = option.segments[option.segments.length - 1];
   const airlines = airlinesOf(option).join(", ") || "항공사 정보 없음";
+  // 편 전체 로고가 비어 있는 응답이 있어 첫 구간 로고로 대신한다(AI 카드와 같은 규칙).
+  const logo = option.airlineLogo ?? first?.airlineLogo;
   const select = () => !disabled && onSelect?.();
   const onKeyDown = (event: KeyboardEvent) => {
     if (event.target !== event.currentTarget || (event.key !== "Enter" && event.key !== " ")) return;
@@ -437,31 +495,46 @@ export function FlightCard({
   return (
     <article className={`flight-card${chosen ? " is-chosen" : ""}`} aria-label={`${airlines} ${first?.departure?.localTime ?? ""} 출발`} {...interactive}>
       <span className="airline">
-        {option.airlineLogo && <img className="airline-logo" src={option.airlineLogo} alt="" />}
+        {logo ? (
+          <span className="airline-logo">
+            <img src={logo} alt="" />
+          </span>
+        ) : (
+          // 로고가 없으면 시안의 대체 로고처럼 항공사 이름 첫 글자를 보여 준다.
+          <span className="airline-logo logo-fallback" aria-hidden="true">
+            {airlines.slice(0, 1)}
+          </span>
+        )}
         <span className="airline-copy">
           <span className="airline-name">{airlines}</span>
           <small>{option.stops === 0 ? "직항" : `경유 ${option.stops}회`}</small>
         </span>
       </span>
-      <span className="airport departure">
-        <time>{first?.departure?.localTime?.slice(11) ?? "-"}</time>
-        <span>{first?.departure?.code}</span>
-      </span>
-      <span className="journey">
-        <span className="journey-visual">
-          <img src="/flight/airplane.svg" alt="" />
+      <span className="flight-route">
+        <span className="airport departure">
+          <time>{first?.departure?.localTime?.slice(11) ?? "-"}</time>
+          <span>{first?.departure?.code}</span>
+        </span>
+        <span className="route-line" aria-hidden="true" />
+        <span className="journey-info">
+          <span className="journey-plane">
+            <img src="/flight/airplane.svg" alt="" />
+          </span>
+          <span className="duration">{formatMinutes(option.totalDurationMinutes)}</span>
+        </span>
+        <span className="route-line" aria-hidden="true" />
+        <span className="airport arrival">
+          <time>{last?.arrival?.localTime?.slice(11) ?? "-"}</time>
+          <span>{last?.arrival?.code}</span>
         </span>
       </span>
-      <span className="airport arrival">
-        <time>{last?.arrival?.localTime?.slice(11) ?? "-"}</time>
-        <span>{last?.arrival?.code}</span>
+      <span className="card-action">
+        <span className="price">
+          <strong>{option.price == null ? "가격 정보 없음" : `${option.price.toLocaleString("ko-KR")} 원`}</strong>
+          {priceSuffix && option.price != null && <small>{priceSuffix}</small>}
+        </span>
+        {heart}
       </span>
-      <span className="price">
-        <strong>{option.price == null ? "가격 정보 없음" : `${option.price.toLocaleString("ko-KR")} 원`}</strong>
-        {priceSuffix && option.price != null && <small>{priceSuffix}</small>}
-      </span>
-      {heart}
-      <span className="duration">{formatMinutes(option.totalDurationMinutes)}</span>
     </article>
   );
 }

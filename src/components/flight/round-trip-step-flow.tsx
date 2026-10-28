@@ -171,7 +171,8 @@ export function RoundTripStepFlow({ initial }: { initial?: InitialSearch<FlightS
         locations={locations}
         filter={filter}
         airlines={airlines}
-        legs={["outbound", "inbound"]}
+        // 시안처럼 지금 고르는 편의 출발 시간 필터만 보여 준다.
+        legs={[outbound ? "inbound" : "outbound"]}
         onEdit={reset}
       >
         <ListAlert message={error} onRetry={expired ? reset : undefined} />
