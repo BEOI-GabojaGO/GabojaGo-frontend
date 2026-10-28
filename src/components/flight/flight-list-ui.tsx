@@ -161,7 +161,7 @@ function FilterGroups({
 }
 
 /** 시안 정렬 메뉴(버튼 + 목록). 바깥을 누르거나 포커스가 빠지거나 Esc를 누르면 닫는다. */
-function SortMenu({ filter, className = "" }: { filter: FlightFilter; className?: string }) {
+function SortMenu({ filter, className = "", disabled = false }: { filter: FlightFilter; className?: string; disabled?: boolean }) {
   const [open, setOpen] = useState(false);
   const current = SORT_OPTIONS.find((option) => option.value === filter.sort) ?? SORT_OPTIONS[0];
 
@@ -182,6 +182,7 @@ function SortMenu({ filter, className = "" }: { filter: FlightFilter; className?
         aria-haspopup="listbox"
         aria-expanded={open}
         aria-label={`정렬 기준: ${current.label}`}
+        disabled={disabled}
         onClick={() => setOpen(!open)}
       >
         <span className="sort-label">{current.label}</span>
@@ -291,6 +292,7 @@ export function FlightListLayout({
   airlines,
   legs,
   onEdit,
+  locked = false,
   children,
 }: {
   request: QueryRequest;
@@ -299,6 +301,8 @@ export function FlightListLayout({
   airlines: string[];
   legs: Leg[];
   onEdit: () => void;
+  /** 왕복 최종 선택 요약을 보여 주는 동안 필터·정렬을 잠근다(시안 .is-disabled). */
+  locked?: boolean;
   children: ReactNode;
 }) {
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -349,7 +353,7 @@ export function FlightListLayout({
           </span>
         </button>
 
-        <aside className="desktop-filter" aria-label="항공권 필터">
+        <aside className={`desktop-filter${locked ? " is-disabled" : ""}`} aria-label="항공권 필터" inert={locked}>
           <div className="filter-top">
             <button className="reset-link" type="button" onClick={filter.reset}>
               필터 초기화
@@ -360,11 +364,11 @@ export function FlightListLayout({
 
         <section className="results-column">
           <div className="compact-toolbar">
-            <button className="filter-trigger" type="button" onClick={() => setDrawerOpen(true)}>
+            <button className="filter-trigger" type="button" disabled={locked} onClick={() => setDrawerOpen(true)}>
               <span className="filter-icon" aria-hidden="true" />
               필터
             </button>
-            <SortMenu filter={filter} />
+            <SortMenu filter={filter} disabled={locked} />
           </div>
           {children}
         </section>
@@ -490,6 +494,109 @@ export function DateShiftStrip({
         <img src="/flight/chevron-right.svg" alt="" />
       </button>
     </nav>
+  );
+}
+
+/* ---------- 왕복 최종 선택 요약 ---------- */
+
+/** 시안 요약 화살표(final-trip-arrow). */
+const TRIP_ARROW = "M7.3 0 0 7l7.3 7 1.8-1.9L3.9 8.3h24.2l-5.2 3.8 1.8 1.9L32 7l-7.3-7-1.8 1.9 5.2 3.8H3.9l5.2-3.8L7.3 0Z";
+
+function FinalCountry({ option }: { option: LocationOption }) {
+  const flag = FLAGS[option.countryNameKo];
+  return (
+    <span className="final-country">
+      {flag && (
+        <span className={`final-flag final-${flag.replace(".png", "")}`}>
+          <img src={`/main/${flag}`} alt={option.countryNameKo} />
+        </span>
+      )}
+      <strong>{cityName(option)}</strong>
+    </span>
+  );
+}
+
+/**
+ * 시안 왕복 최종 선택(#finalSelection). 오는편까지 고르면 목록 대신 보여 준다.
+ * 카드는 누를 수 없고, 하트는 왕복 한 쌍을 담으므로 오는편 카드에만 둔다(목록과 같은 규칙).
+ */
+export function FinalSelection({
+  request,
+  locations,
+  outbound,
+  inbound,
+  heart,
+  onChangeOutbound,
+  onChangeReturn,
+  onBook,
+}: {
+  request: OneWaySearchRequest & { returnDate: string };
+  locations: SelectedLocations;
+  outbound: FlightOption;
+  inbound: FlightOption;
+  heart?: ReactNode;
+  onChangeOutbound: () => void;
+  onChangeReturn: () => void;
+  onBook: () => void;
+}) {
+  const { dates, nights, people, travelClass } = querySummary(request);
+  return (
+    <section className="final-selection" aria-live="polite">
+      <div className="final-leg">
+        <div className="final-leg-heading">
+          <div className="final-leg-title">
+            <h2>{cityName(locations.destination)} 가는편</h2>
+            <time dateTime={request.outboundDate}>{stripDay(request.outboundDate)}</time>
+          </div>
+          <button type="button" className="final-change" onClick={onChangeOutbound}>
+            변경하기
+          </button>
+        </div>
+        {/* 가는편 price는 목록과 같은 "최저 가능 왕복 총액"이라 시안처럼 '부터'를 붙인다. */}
+        <FlightCard option={outbound} priceSuffix="부터" />
+      </div>
+      <div className="final-leg">
+        <div className="final-leg-heading">
+          <div className="final-leg-title">
+            <h2>{cityName(locations.origin)} 오는편</h2>
+            <time dateTime={request.returnDate}>{stripDay(request.returnDate)}</time>
+          </div>
+          <button type="button" className="final-change" onClick={onChangeReturn}>
+            변경하기
+          </button>
+        </div>
+        <FlightCard option={inbound} heart={heart} />
+      </div>
+      <div className="final-trip-summary">
+        <div className="final-trip-copy">
+          <div className="final-trip-route">
+            <FinalCountry option={locations.origin} />
+            <svg className="final-trip-arrow" viewBox="0 0 32 14" aria-hidden="true">
+              <path fill="#ccc" d={TRIP_ARROW} />
+            </svg>
+            <FinalCountry option={locations.destination} />
+            <span className="final-trip-badge">왕복</span>
+          </div>
+          <div className="final-trip-meta">
+            <span className="final-meta-group">
+              <span>{dates}</span>
+              <span className="final-meta-dot" aria-hidden="true" />
+              <span className="final-meta-secondary">
+                {nights}박 {(nights ?? 0) + 1}일
+              </span>
+            </span>
+            <span className="final-meta-group">
+              <span>{people}</span>
+              <span className="final-meta-dot" aria-hidden="true" />
+              <span className="final-meta-secondary">{travelClass}</span>
+            </span>
+          </div>
+        </div>
+        <button className="booking-cta" type="button" onClick={onBook}>
+          <span>예약하자 GO</span>
+        </button>
+      </div>
+    </section>
   );
 }
 

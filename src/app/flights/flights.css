@@ -540,6 +540,12 @@
   .logo-fallback { background: #b9bcc6; font-size: 14px; }
   .heart-button:disabled { opacity: .5; cursor: progress; }
 
+  /* 시안 모바일·태블릿: 최종 선택 요약(과 예약 옵션)을 필터·정렬 줄보다 위에 둔다. */
+  @media (max-width: 899px) {
+    .results-column:has(.final-selection) { display: flex; flex-direction: column; }
+    .final-selection, .booking-section { order: -1; }
+  }
+
   @media (max-width: 599px) {
     padding-top: 56px;
     .site-header { height: 56px; }
