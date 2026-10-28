@@ -2,7 +2,7 @@
 
 /* eslint-disable @next/next/no-img-element -- 디자인 원본 아이콘과 SerpApi 항공사 로고를 그대로 쓴다. */
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useState, type KeyboardEvent, type ReactNode } from "react";
+import { Fragment, useEffect, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
 import { cityName, TRAVEL_CLASS_OPTIONS } from "@/components/flight/search-condition-fields";
 import { loginHref } from "@/lib/auth-client";
 import { formatMinutes, postJson, requestJson } from "@/lib/flight-client";
@@ -404,8 +404,25 @@ export function RouteHeading({ from, to, leg, filter }: { from: LocationOption; 
   );
 }
 
-/** 왕복 일정 띠. 출발일은 그대로 두고 박수만 바꿔 다시 검색한다(누를 때마다 SerpApi 1회). */
-export function NightsStrip({
+const SHIFT_DAYS = 4;
+const isoDate = (date: Date) =>
+  [date.getFullYear(), String(date.getMonth() + 1).padStart(2, "0"), String(date.getDate()).padStart(2, "0")].join("-");
+const addDays = (value: string, days: number) => {
+  const date = parseDate(value);
+  date.setDate(date.getDate() + days);
+  return isoDate(date);
+};
+/** 시안 표기: "10. 1 목" */
+const stripDay = (value: string) => {
+  const date = parseDate(value);
+  return `${date.getMonth() + 1}. ${date.getDate()} ${WEEKDAYS[date.getDay()]}`;
+};
+
+/**
+ * 왕복 일정 띠(시안). 박수는 그대로 두고 출발일을 하루씩 옮긴 구간을 앞뒤 4개씩 보여 준다.
+ * 구간을 누르면 그 날짜로 다시 검색한다(누를 때마다 SerpApi 1회). 화살표는 띠만 옆으로 넘긴다(검색 없음).
+ */
+export function DateShiftStrip({
   outboundDate,
   returnDate,
   disabled,
@@ -414,49 +431,65 @@ export function NightsStrip({
   outboundDate: string;
   returnDate: string;
   disabled: boolean;
-  onPick: (returnDate: string) => void;
+  onPick: (outboundDate: string, returnDate: string) => void;
 }) {
-  const current = nightsBetween(outboundDate, returnDate);
-  // 화살표는 다시 검색하지 않고 보이는 박수 범위만 옮긴다.
-  const [first, setFirst] = useState(Math.max(1, current - 3));
-  const nights = Array.from({ length: 7 }, (_, index) => first + index);
-  const back = (n: number) => {
-    const date = parseDate(outboundDate);
-    date.setDate(date.getDate() + n);
-    return [date.getFullYear(), String(date.getMonth() + 1).padStart(2, "0"), String(date.getDate()).padStart(2, "0")].join("-");
+  const ref = useRef<HTMLDivElement>(null);
+  const [edges, setEdges] = useState({ start: true, end: true });
+  const today = isoDate(new Date());
+  const ranges = Array.from({ length: SHIFT_DAYS * 2 + 1 }, (_, index) => index - SHIFT_DAYS).map((shift) => ({
+    shift,
+    outbound: addDays(outboundDate, shift),
+    back: addDays(returnDate, shift),
+  }));
+
+  const syncEdges = () => {
+    const box = ref.current;
+    if (!box) return;
+    setEdges({ start: box.scrollLeft <= 1, end: box.scrollLeft >= box.scrollWidth - box.clientWidth - 1 });
   };
 
+  // 지금 구간을 가운데로 맞춘다(시안 centerActiveDate).
+  useEffect(() => {
+    const box = ref.current;
+    const active = box?.querySelector<HTMLElement>(".date-option.is-active");
+    if (!box || !active) return;
+    const [b, r] = [box.getBoundingClientRect(), active.getBoundingClientRect()];
+    box.scrollLeft += r.left + r.width / 2 - (b.left + b.width / 2);
+    syncEdges();
+  }, [outboundDate, returnDate]);
+
+  const move = (direction: 1 | -1) => ref.current?.scrollBy({ left: direction * ref.current.clientWidth * 0.7 });
+
   return (
-    <>
-      <nav className="date-strip" aria-label="여행 일정 바꾸기">
-        <button className="date-arrow" type="button" aria-label="더 짧은 일정" disabled={first <= 1} onClick={() => setFirst(first - 1)}>
-          ‹
-        </button>
-        <div className="date-options">
-          {nights.map((n) => (
-            <button
-              key={n}
-              className={`date-option${n === current ? " is-active" : ""}`}
-              type="button"
-              aria-current={n === current ? "true" : undefined}
-              disabled={disabled || n === current}
-              onClick={() => onPick(back(n))}
-            >
-              <strong>
-                {n}박 {n + 1}일
-              </strong>
-              <span>
-                {shortDate(outboundDate)} - {shortDate(back(n))}
+    <nav className="date-strip" aria-label="여행 날짜별로 다시 검색">
+      <button className="date-arrow previous" type="button" aria-label="이전 날짜" disabled={edges.start} onClick={() => move(-1)}>
+        <img src="/flight/chevron-left.svg" alt="" />
+      </button>
+      <div className="date-options" ref={ref} onScroll={syncEdges}>
+        <div className="date-options-track">
+          {ranges.map(({ shift, outbound, back }) => (
+            <Fragment key={shift}>
+              <span className="date-separator" aria-hidden="true">
+                |
               </span>
-            </button>
+              <button
+                className={`date-option${shift === 0 ? " is-active" : ""}`}
+                type="button"
+                aria-pressed={shift === 0}
+                // 지난 날짜로는 검색할 수 없다.
+                disabled={disabled || shift === 0 || outbound < today}
+                onClick={() => onPick(outbound, back)}
+              >
+                {stripDay(outbound)} - {stripDay(back)}
+              </button>
+            </Fragment>
           ))}
         </div>
-        <button className="date-arrow" type="button" aria-label="더 긴 일정" onClick={() => setFirst(first + 1)}>
-          ›
-        </button>
-      </nav>
-      <p className="date-note">다른 일정을 누르면 새로 검색합니다.</p>
-    </>
+      </div>
+      <button className="date-arrow next" type="button" aria-label="다음 날짜" disabled={edges.end} onClick={() => move(1)}>
+        <img src="/flight/chevron-right.svg" alt="" />
+      </button>
+    </nav>
   );
 }
 

@@ -8,7 +8,7 @@ import {
   FlightHeart,
   FlightListLayout,
   ListAlert,
-  NightsStrip,
+  DateShiftStrip,
   passengersOf,
   RouteHeading,
   useFlightFilter,
@@ -91,15 +91,15 @@ export function RoundTripStepFlow({ initial }: { initial?: InitialSearch<FlightS
 
   useAutoSearchOnce(initial, runSearch);
 
-  /** 일정 띠: 같은 조건에 오는 날만 바꿔 새로 검색한다. 결과가 올 때까지 기존 목록을 보여 준다. */
-  function changeReturnDate(returnDate: string) {
+  /** 일정 띠: 같은 박수로 날짜만 옮겨 새로 검색한다. 결과가 올 때까지 기존 목록을 보여 준다. */
+  function changeDates(outboundDate: string, returnDate: string) {
     if (!request || !locations) return;
     setOutbound(null);
     setInbound(null);
     setReturnsByOutbound({});
     setExpired(false);
     notify("새 일정으로 다시 검색합니다.");
-    void runSearch({ ...request, returnDate }, locations);
+    void runSearch({ ...request, outboundDate, returnDate }, locations);
   }
 
   async function selectOutbound(option: FlightOption) {
@@ -197,12 +197,11 @@ export function RoundTripStepFlow({ initial }: { initial?: InitialSearch<FlightS
         />
 
         {!outbound && (
-          <NightsStrip
-            key={request.returnDate}
+          <DateShiftStrip
             outboundDate={request.outboundDate}
             returnDate={request.returnDate}
             disabled={pending}
-            onPick={changeReturnDate}
+            onPick={changeDates}
           />
         )}
 
