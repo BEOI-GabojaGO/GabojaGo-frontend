@@ -8,7 +8,7 @@ const NETWORK_ERROR_MESSAGE =
   "서버에 연결할 수 없습니다. 백엔드 서버 상태를 확인해 주세요.";
 
 export type RequestResult<T> =
-  | { ok: true; data: T }
+  | { ok: true; status: number; data: T }
   | { ok: false; status: number; code?: string; message: string };
 
 export async function requestJson<T>(
@@ -30,7 +30,7 @@ export async function requestJson<T>(
     }
 
     const body = (await response.json()) as CommonResponse<T>;
-    return { ok: true, data: body.data };
+    return { ok: true, status: response.status, data: body.data };
   } catch (cause) {
     // 언마운트로 취소된 요청은 호출한 쪽에서 무시한다.
     if (cause instanceof DOMException && cause.name === "AbortError") throw cause;

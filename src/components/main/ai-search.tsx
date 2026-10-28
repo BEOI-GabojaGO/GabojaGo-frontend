@@ -9,22 +9,24 @@ import type {
   ChatConditions,
   ChatConfirmation,
   ChatMessageResponse,
+  ChatSearchAccepted,
   ChatSearchResult,
   ChatSearchStatus,
   ChatSessionCreated,
   ChatSessionState,
+  ChatTripType,
   FlexibleFlightSearchResponse,
 } from "@/lib/chat-types";
 import { formatMinutes, formatPrice, postJson, requestJson } from "@/lib/flight-client";
 import { toSearchQuery } from "@/lib/flight-search-params";
-import type { FlightOption, RoundTripCombination, RoundTripSearchResponse, TravelClass } from "@/lib/flight-types";
+import type { FlightOption, OneWaySearchResponse, RoundTripSearchResponse, TravelClass } from "@/lib/flight-types";
 import { resolveLocation } from "@/lib/locations";
 
 const MAX_MESSAGE = 1000;
 /** 다이얼로그에는 3장만 보여 준다. "더 많은 항공권 찾기"는 같은 조건으로 조건 검색 화면으로 넘긴다(결정 3.2 (b)). */
 const PAGE = 3;
 
-type SearchView = { conditions: ChatConditions; dateMode: "EXACT" | "FLEXIBLE"; data: ChatSearchResult };
+type SearchView = { conditions: ChatConditions; dateMode: "EXACT" | "FLEXIBLE"; tripType: ChatTripType; data: ChatSearchResult };
 
 /** 탭 단위로 대화를 이어가려고 세션 ID만 보관한다. 메시지 이력은 서버에도 없어 복원하지 않는다. */
 const SESSION_KEY = "gabojago.aiChatSessionId";
@@ -46,9 +48,12 @@ const storage = {
   },
 };
 
-/** 검색 응답이 불명확할 때 상태 GET 간격·횟수 상한. 재POST는 하지 않는다(인계 문서 5절). */
+/**
+ * 상태 GET 간격·횟수 상한(3초 × 60 = 3분). FLEXIBLE은 202 접수 뒤 날짜 후보마다 SerpApi를 불러 오래 걸릴 수 있다.
+ * 재POST는 하지 않는다(인계 문서 5절).
+ */
 const STATUS_POLL_MS = 3000;
-const STATUS_POLL_LIMIT = 10;
+const STATUS_POLL_LIMIT = 60;
 
 const SEARCH_FAILURES: Record<string, string> = {
   SERPAPI_QUOTA_EXCEEDED: "항공권 검색 한도를 모두 썼어요. 잠시 후 다시 시도해 주세요.",
@@ -195,10 +200,12 @@ export function useAiSearch() {
       // 결과에 dateMode가 없을 수 있어 승인한 조건의 dateMode로 구분한다.
       const conditions = turn.conditions ?? {};
       const show = (data: ChatSearchResult) => {
-        setSearch({ conditions, dateMode: conditions.dateMode ?? "EXACT", data });
+        setSearch({ conditions, dateMode: conditions.dateMode ?? "EXACT", tripType: tripTypeOf(conditions) ?? "ROUND_TRIP", data });
       };
-      const result = await requestJson<ChatSearchResult>(`${base}/search`, { method: "POST" });
-      if (result.ok) return show(result.data);
+      const result = await requestJson<ChatSearchResult | ChatSearchAccepted>(`${base}/search`, { method: "POST" });
+      // FLEXIBLE은 202로 작업만 접수한다(결과 없음). 결과는 상태 GET으로 받는다.
+      if (result.ok && result.status === 202) return await checkSearch(base, show);
+      if (result.ok) return show(result.data as ChatSearchResult);
       // 응답이 불명확하면(연결 끊김, 검색 실패·진행 중) 다시 POST하지 않고 최신 검색 상태로 확인한다.
       if (result.status === 0 || result.status >= 500 || result.code === "CHAT_SEARCH_IN_PROGRESS") await checkSearch(base, show);
       else failed(result);
@@ -234,7 +241,7 @@ export function useAiSearch() {
     setError("검색이 오래 걸리고 있어요. 잠시 후 다시 확인해 주세요.");
   }
 
-  /** 더 많은 항공권: 같은 조건으로 조건 검색(왕복 항공권 목록)으로 넘긴다. 목록 화면이 다시 검색한다(SerpApi 재호출, 팀 결정). */
+  /** 더 많은 항공권: 같은 조건으로 조건 검색(왕복·편도 항공권 목록)으로 넘긴다. 목록 화면이 다시 검색한다(SerpApi 재호출, 팀 결정). */
   async function openFlightList() {
     if (!search || !results) return;
     const c = search.conditions;
@@ -247,16 +254,15 @@ export function useAiSearch() {
     }
     // FLEXIBLE은 날짜가 기간이라 화면 첫 카드(가장 싼 옵션)의 날짜로 넘긴다.
     const { outboundDate, returnDate } = results.items[0]?.dates ?? c;
-    if (!outboundDate || !returnDate) {
+    const oneWay = search.tripType === "ONE_WAY";
+    if (!outboundDate || (!oneWay && !returnDate)) {
       setError("여행 날짜가 정해지지 않아 항공권 목록으로 넘길 수 없어요.");
       return;
     }
-    const query = toSearchQuery(
-      { origin: origin.airportCodes, destination: destination.airportCodes, outboundDate, returnDate, ...passengersOf(c) },
-      { origin, destination },
-    );
+    const request = { origin: origin.airportCodes, destination: destination.airportCodes, outboundDate, ...passengersOf(c) };
+    const query = toSearchQuery(oneWay ? request : { ...request, returnDate: returnDate! }, { origin, destination });
     await close();
-    router.push(`/flights/round-trip/step?${query}`);
+    router.push(`${oneWay ? "/flights/one-way" : "/flights/round-trip/step"}?${query}`);
   }
 
   /** 메인 입력창에서 AI 검색을 요청할 때. 다이얼로그를 열고 같은 대화에 이어 보낸다. */
@@ -346,21 +352,21 @@ export function useAiSearch() {
         {results && (
           <div className="ai-flight-list" aria-label="추천 항공권">
             {results.notice && <p className="ai-result-notice">{results.notice}</p>}
-            {results.items.slice(0, PAGE).map(({ key, combination, showDate }) => (
+            {results.items.slice(0, PAGE).map(({ key, ...item }) => (
               <AiFlightCard
                 key={key}
-                combination={combination}
-                showDate={showDate}
+                item={item}
                 heart={
                   <FlightHeart
                     className="ai-flight-heart"
+                    // 편도는 inbound가 없어 그 항공편 하나를 담는다(위시리스트 편도 형식).
                     request={{
                       ...passengersOf(search!.conditions),
-                      price: combination.price,
-                      stayMinutes: combination.stayMinutes,
-                      sameAirline: combination.sameAirline,
-                      outbound: combination.outbound,
-                      inbound: combination.inbound,
+                      price: item.price,
+                      stayMinutes: item.stayMinutes,
+                      sameAirline: item.sameAirline,
+                      outbound: item.outbound,
+                      inbound: item.inbound,
                     }}
                     notify={notify}
                   />
@@ -437,6 +443,7 @@ type SummaryCell = "period" | "passengers" | "tripType" | "budget" | "route" | "
 
 /** missingFields·ambiguousFields 항목명 → 조건 카드 칸. 백엔드 ChatTurnDecisionMaker의 항목명 기준. */
 const FIELD_CELL: Record<string, SummaryCell> = {
+  tripType: "tripType",
   dateMode: "period",
   outboundDate: "period",
   returnDate: "period",
@@ -468,8 +475,7 @@ function TripSummary({ turn }: { turn: Pick<ChatMessageResponse, "conditions" | 
     <section className="ai-trip-summary" aria-label="검색 조건 요약">
       {cell("period", "여행 기간", tripPeriod(c))}
       {cell("passengers", "탑승객", passengers(c))}
-      {/* 채팅 API는 왕복만 검색한다. */}
-      {cell("tripType", "여행 유형", "왕복")}
+      {cell("tripType", "여행 유형", TRIP_LABEL[tripTypeOf(c) ?? "UNKNOWN"])}
       {cell("budget", "예산", c.maxBudgetKrw ? `${formatBudget(c.maxBudgetKrw)} 이하` : "제한 없음")}
       {cell("route", "출발지 / 도착지", `${c.origin ?? "미정"} / ${c.destination ?? "미정"}`)}
       {/* API에 없는 항목(미연결). */}
@@ -478,21 +484,38 @@ function TripSummary({ turn }: { turn: Pick<ChatMessageResponse, "conditions" | 
   );
 }
 
+const TRIP_LABEL: Record<ChatTripType | "UNKNOWN", string> = { ONE_WAY: "편도", ROUND_TRIP: "왕복", UNKNOWN: "미정" };
+
+/** 백엔드 ChatTurnDecisionMaker.resolvedTripType과 같다: 값이 없으면 오는 날·박수가 있을 때 왕복으로 본다. */
+function tripTypeOf(c: ChatConditions): ChatTripType | null {
+  return c.tripType ?? (c.returnDate || c.nights ? "ROUND_TRIP" : null);
+}
+
+/** 카드 한 장. 왕복은 조합(가는편·오는편·왕복 총액), 편도는 항공편 하나(편도 요금). */
 type ResultItem = {
   key: string;
-  combination: RoundTripCombination;
+  outbound: FlightOption;
+  inbound?: FlightOption;
+  price: number | null;
+  stayMinutes?: number | null;
+  sameAirline?: boolean | null;
   showDate?: boolean;
   /** FLEXIBLE 옵션의 날짜. 조건 검색으로 넘길 때 쓴다. */
   dates?: { outboundDate: string; returnDate: string };
 };
 
-/** EXACT는 combinations, FLEXIBLE은 예산을 적용한 priceSelection.options를 쓴다(원본 results를 최종 목록으로 쓰지 않음). */
-function resultItems({ dateMode, data }: SearchView): { items: ResultItem[]; notice: string } {
+/**
+ * EXACT 왕복은 combinations, EXACT 편도는 flights, FLEXIBLE은 예산을 적용한 priceSelection.options를 쓴다
+ * (원본 results를 최종 목록으로 쓰지 않음). 편도 FLEXIBLE은 백엔드가 지원하지 않는다(409).
+ */
+function resultItems({ dateMode, tripType, data }: SearchView): { items: ResultItem[]; notice: string } {
+  const empty = (noNonstop: boolean, count: number) =>
+    noNonstop ? "이 노선에는 직항 항공편이 없어요." : count ? "" : "조건에 맞는 항공권이 없어요.";
   if (dateMode === "FLEXIBLE") {
     const flexible = data as FlexibleFlightSearchResponse;
     const items = flexible.priceSelection.options.map((option) => ({
       key: `${option.searchId}-${option.combination.outboundId}-${option.combination.returnId}`,
-      combination: option.combination,
+      ...pair(option.combination),
       showDate: true,
       dates: { outboundDate: option.outboundDate, returnDate: option.returnDate },
     }));
@@ -501,14 +524,27 @@ function resultItems({ dateMode, data }: SearchView): { items: ResultItem[]; not
     const notice = flexible.priceSelection.cheapest ? `찾아본 날짜 중 가격이 낮은 순서예요.${failed}` : `조건에 맞는 추천 결과가 없어요.${failed}`;
     return { items, notice };
   }
+  if (tripType === "ONE_WAY") {
+    const oneWay = data as OneWaySearchResponse;
+    const items = oneWay.flights.map((flight) => ({ key: `${oneWay.searchId}-${flight.id}`, outbound: flight, price: flight.price }));
+    return { items, notice: empty(oneWay.noNonstopFlight, items.length) };
+  }
   const exact = data as RoundTripSearchResponse;
   const items = exact.combinations.map((combination) => ({
     key: `${exact.searchId}-${combination.outboundId}-${combination.returnId}`,
-    combination,
+    ...pair(combination),
   }));
-  const notice = exact.noNonstopFlight ? "이 노선에는 직항 항공편이 없어요." : items.length ? "" : "조건에 맞는 항공권이 없어요.";
-  return { items, notice };
+  return { items, notice: empty(exact.noNonstopFlight, items.length) };
 }
+
+/** 왕복 조합 → 카드 항목. 가격은 조합 price(왕복 총액)다. */
+const pair = (c: RoundTripSearchResponse["combinations"][number]) => ({
+  outbound: c.outbound,
+  inbound: c.inbound,
+  price: c.price,
+  stayMinutes: c.stayMinutes,
+  sameAirline: c.sameAirline,
+});
 
 /** 위시리스트에 담을 인원·좌석 등급. 말하지 않은 값은 항공권 검색 기본값(성인 1명, 일반석)이다. */
 function passengersOf(c: ChatConditions) {
@@ -521,19 +557,25 @@ function passengersOf(c: ChatConditions) {
   };
 }
 
-/** 시안 AI 항공권 카드. 시안은 한 줄이지만 가격이 조합 price(왕복 총액)라 가는편·오는편을 편마다 한 줄씩 보여 준다. */
-function AiFlightCard({ combination, showDate, heart }: { combination: RoundTripCombination; showDate?: boolean; heart: ReactNode }) {
-  const { outbound, inbound } = combination;
+/**
+ * 시안 AI 항공권 카드. 왕복은 가격이 조합 price(왕복 총액)라 가는편·오는편을 편마다 한 줄씩 보여 준다.
+ * 편도는 시안처럼 한 줄이고 가격은 편도 요금이다.
+ */
+function AiFlightCard({ item, heart }: { item: Omit<ResultItem, "key">; heart: ReactNode }) {
+  const { outbound, inbound, price, showDate } = item;
   const describe = (label: string, leg: FlightOption) =>
     `${label} ${airlinesOf(leg).join(", ") || "항공사 정보 없음"} ${leg.segments[0]?.departure?.localTime ?? ""} 출발`;
   return (
-    <article className="ai-flight-card" aria-label={`${describe("가는편", outbound)}, ${describe("오는편", inbound)}`}>
+    <article
+      className={`ai-flight-card${inbound ? "" : " is-one-way"}`}
+      aria-label={inbound ? `${describe("가는편", outbound)}, ${describe("오는편", inbound)}` : describe("편도", outbound)}
+    >
       <div className="ai-flight-legs">
-        <FlightLeg leg={outbound} label="가는편" showDate={showDate} />
-        <FlightLeg leg={inbound} label="오는편" showDate={showDate} />
+        <FlightLeg leg={outbound} label={inbound ? "가는편" : "편도"} showDate={showDate} />
+        {inbound && <FlightLeg leg={inbound} label="오는편" showDate={showDate} />}
       </div>
       <strong className="ai-flight-price">
-        {combination.price == null ? "가격 정보 없음" : `${combination.price.toLocaleString("ko-KR")}원`} <small>왕복</small>
+        {price == null ? "가격 정보 없음" : `${price.toLocaleString("ko-KR")}원`} <small>{inbound ? "왕복" : "편도"}</small>
       </strong>
       {heart}
     </article>
