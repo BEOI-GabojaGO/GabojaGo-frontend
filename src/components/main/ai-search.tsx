@@ -9,6 +9,7 @@ import type {
   ChatConditions,
   ChatConfirmation,
   ChatMessageResponse,
+  ChatSearchAccepted,
   ChatSearchResult,
   ChatSearchStatus,
   ChatSessionCreated,
@@ -46,9 +47,12 @@ const storage = {
   },
 };
 
-/** 검색 응답이 불명확할 때 상태 GET 간격·횟수 상한. 재POST는 하지 않는다(인계 문서 5절). */
+/**
+ * 상태 GET 간격·횟수 상한(3초 × 60 = 3분). FLEXIBLE은 202 접수 뒤 날짜 후보마다 SerpApi를 불러 오래 걸릴 수 있다.
+ * 재POST는 하지 않는다(인계 문서 5절).
+ */
 const STATUS_POLL_MS = 3000;
-const STATUS_POLL_LIMIT = 10;
+const STATUS_POLL_LIMIT = 60;
 
 const SEARCH_FAILURES: Record<string, string> = {
   SERPAPI_QUOTA_EXCEEDED: "항공권 검색 한도를 모두 썼어요. 잠시 후 다시 시도해 주세요.",
@@ -197,8 +201,10 @@ export function useAiSearch() {
       const show = (data: ChatSearchResult) => {
         setSearch({ conditions, dateMode: conditions.dateMode ?? "EXACT", data });
       };
-      const result = await requestJson<ChatSearchResult>(`${base}/search`, { method: "POST" });
-      if (result.ok) return show(result.data);
+      const result = await requestJson<ChatSearchResult | ChatSearchAccepted>(`${base}/search`, { method: "POST" });
+      // FLEXIBLE은 202로 작업만 접수한다(결과 없음). 결과는 상태 GET으로 받는다.
+      if (result.ok && result.status === 202) return await checkSearch(base, show);
+      if (result.ok) return show(result.data as ChatSearchResult);
       // 응답이 불명확하면(연결 끊김, 검색 실패·진행 중) 다시 POST하지 않고 최신 검색 상태로 확인한다.
       if (result.status === 0 || result.status >= 500 || result.code === "CHAT_SEARCH_IN_PROGRESS") await checkSearch(base, show);
       else failed(result);

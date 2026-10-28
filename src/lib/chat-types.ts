@@ -82,6 +82,14 @@ export type FlexibleFlightSearchResponse = {
 export type ChatSearchResult = RoundTripSearchResponse | FlexibleFlightSearchResponse;
 
 /** GET .../search. 결과는 result에 한 단계 더 감싸진다. */
+/** FLEXIBLE 검색 POST는 202로 작업만 접수한다. 결과는 GET .../search(statusUrl)로 받는다. */
+export type ChatSearchAccepted = {
+  searchJobId: string;
+  chatSessionId: string;
+  dateMode: "FLEXIBLE";
+  statusUrl: string;
+};
+
 export type ChatSearchStatus = {
   searchJobId: string;
   chatSessionId: string;
