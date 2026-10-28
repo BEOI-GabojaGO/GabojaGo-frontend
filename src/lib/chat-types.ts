@@ -1,11 +1,15 @@
-import type { RoundTripCombination, RoundTripSearchResponse } from "@/lib/flight-types";
+import type { OneWaySearchResponse, RoundTripCombination, RoundTripSearchResponse } from "@/lib/flight-types";
 
 // 채팅 API 타입. 백엔드 chat/dto, ai/dto/FlightSearchConditions와 docs/CHAT-FRONTEND-HANDOFF.md 기준.
 
 export type ChatState = "IDLE" | "COLLECTING" | "AWAITING_CONFIRMATION" | "SEARCHING" | "RESULTS";
 
 /** 누적된 전체 조건. 값이 없는 필드는 응답에서 빠진다. 지명은 표시 문자열(IATA 아님). */
+export type ChatTripType = "ONE_WAY" | "ROUND_TRIP";
+
 export type ChatConditions = {
+  /** 백엔드가 비어 있으면 오는 날·박수로 왕복을 추론한다. 그래도 모르면 missingFields에 tripType이 들어간다. */
+  tripType?: ChatTripType;
   origin?: string;
   destination?: string;
   dateMode?: "EXACT" | "FLEXIBLE";
@@ -79,9 +83,9 @@ export type FlexibleFlightSearchResponse = {
 };
 
 /** 검색 POST의 data. 승인한 조건의 dateMode로 구분한다(EXACT면 RoundTripSearchResponse). */
-export type ChatSearchResult = RoundTripSearchResponse | FlexibleFlightSearchResponse;
+/** EXACT 왕복은 RoundTripSearchResponse, EXACT 편도는 OneWaySearchResponse, FLEXIBLE(왕복만)은 FlexibleFlightSearchResponse. */
+export type ChatSearchResult = RoundTripSearchResponse | OneWaySearchResponse | FlexibleFlightSearchResponse;
 
-/** GET .../search. 결과는 result에 한 단계 더 감싸진다. */
 /** FLEXIBLE 검색 POST는 202로 작업만 접수한다. 결과는 GET .../search(statusUrl)로 받는다. */
 export type ChatSearchAccepted = {
   searchJobId: string;
@@ -90,11 +94,13 @@ export type ChatSearchAccepted = {
   statusUrl: string;
 };
 
+/** GET .../search. 결과는 result에 한 단계 더 감싸진다. */
 export type ChatSearchStatus = {
   searchJobId: string;
   chatSessionId: string;
   status: "PENDING" | "RUNNING" | "COMPLETED" | "FAILED";
   dateMode: "EXACT" | "FLEXIBLE" | null;
+  tripType: ChatTripType | null;
   conditionVersion: number;
   result: ChatSearchResult | null;
   failureCode: string | null;
