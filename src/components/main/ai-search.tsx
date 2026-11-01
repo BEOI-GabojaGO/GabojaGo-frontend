@@ -276,10 +276,10 @@ export function useAiSearch() {
     router.push(`${oneWay ? "/flights/one-way" : "/flights/round-trip/step"}?${query}`);
   }
 
-  /** 왕복 카드 선택: 시안의 최종 선택 요약(/flights/round-trip/selected)으로 넘긴다. 편도는 8단계 예약하기에서 연결. */
+  /** 카드 선택: 왕복·편도 모두 시안의 최종 선택 요약(/flights/round-trip/selected)으로 넘긴다. */
   async function selectTrip(item: ResultItem) {
     const target = flightRequest(item);
-    if (!target || !item.inbound || !item.returnId) return;
+    if (!target) return;
     const saved = saveSelectedTrip({
       searchId: item.searchId,
       outboundId: item.outboundId,
@@ -289,7 +289,7 @@ export function useAiSearch() {
       price: item.price,
       stayMinutes: item.stayMinutes ?? null,
       sameAirline: item.sameAirline ?? null,
-      request: { ...target.request, returnDate: target.returnDate! },
+      request: item.inbound ? { ...target.request, returnDate: target.returnDate! } : target.request,
       locations: target.locations,
     });
     if (!saved) {
@@ -391,7 +391,7 @@ export function useAiSearch() {
               <AiFlightCard
                 key={item.key}
                 item={item}
-                onSelect={item.inbound ? () => void selectTrip(item) : undefined}
+                onSelect={() => void selectTrip(item)}
                 heart={
                   <FlightHeart
                     className="ai-flight-heart"
@@ -612,25 +612,22 @@ function passengersOf(c: ChatConditions) {
  * 시안 AI 항공권 카드. 왕복은 가격이 조합 price(왕복 총액)라 가는편·오는편을 편마다 한 줄씩 보여 준다.
  * 편도는 시안처럼 한 줄이고 가격은 편도 요금이다.
  */
-function AiFlightCard({ item, heart, onSelect }: { item: ResultItem; heart: ReactNode; onSelect?: () => void }) {
+function AiFlightCard({ item, heart, onSelect }: { item: ResultItem; heart: ReactNode; onSelect: () => void }) {
   const { outbound, inbound, price, showDate } = item;
-  const interactive = onSelect && {
-    role: "button",
-    tabIndex: 0,
-    onClick: onSelect,
-    onKeyDown: (event: KeyboardEvent) => {
-      if (event.target !== event.currentTarget || (event.key !== "Enter" && event.key !== " ")) return;
-      event.preventDefault();
-      onSelect();
-    },
-  };
   const describe = (label: string, leg: FlightOption) =>
     `${label} ${airlinesOf(leg).join(", ") || "항공사 정보 없음"} ${leg.segments[0]?.departure?.localTime ?? ""} 출발`;
   return (
     <article
       className={`ai-flight-card${inbound ? "" : " is-one-way"}`}
       aria-label={inbound ? `${describe("가는편", outbound)}, ${describe("오는편", inbound)}` : describe("편도", outbound)}
-      {...interactive}
+      role="button"
+      tabIndex={0}
+      onClick={onSelect}
+      onKeyDown={(event: KeyboardEvent) => {
+        if (event.target !== event.currentTarget || (event.key !== "Enter" && event.key !== " ")) return;
+        event.preventDefault();
+        onSelect();
+      }}
     >
       <div className="ai-flight-legs">
         <FlightLeg leg={outbound} label={inbound ? "가는편" : "편도"} showDate={showDate} />

@@ -513,6 +513,8 @@ export function DateShiftStrip({
 
 /** 시안 요약 화살표(final-trip-arrow). */
 const TRIP_ARROW = "M7.3 0 0 7l7.3 7 1.8-1.9L3.9 8.3h24.2l-5.2 3.8 1.8 1.9L32 7l-7.3-7-1.8 1.9 5.2 3.8H3.9l5.2-3.8L7.3 0Z";
+/** 편도: 같은 화살표의 오른쪽 머리만. */
+const ONE_WAY_ARROW = "M24.7 0 32 7l-7.3 7-1.8-1.9 5.2-3.8H0V5.7h28.1l-5.2-3.8L24.7 0Z";
 
 function FinalCountry({ option }: { option: LocationOption }) {
   const flag = FLAGS[option.countryNameKo];
@@ -543,13 +545,14 @@ export function FinalSelection({
   onBook,
   roundTripPrice,
 }: {
-  request: OneWaySearchRequest & { returnDate: string };
+  request: OneWaySearchRequest & { returnDate?: string };
   locations: SelectedLocations;
   outbound: FlightOption;
-  inbound: FlightOption;
+  /** 편도는 없다(가는편 카드 1장, 하트는 그 카드에). */
+  inbound?: FlightOption;
   heart?: ReactNode;
   onChangeOutbound: () => void;
-  onChangeReturn: () => void;
+  onChangeReturn?: () => void;
   onBook: () => void;
   /**
    * AI 왕복 조합처럼 편별 가격 없이 왕복 총액만 있을 때. 가는편 카드는 가격을 비우고 오는편 카드에 총액을 보여 준다
@@ -558,7 +561,7 @@ export function FinalSelection({
   roundTripPrice?: number | null;
 }) {
   const { dates, nights, people, travelClass } = querySummary(request);
-  const total = roundTripPrice !== undefined;
+  const total = roundTripPrice !== undefined && !!inbound;
   return (
     <section className="final-selection" aria-live="polite">
       <div className="final-leg">
@@ -575,40 +578,46 @@ export function FinalSelection({
         {/* 하트 자리를 비워 두어 오는편 카드와 시각 위치를 맞춘다. */}
         <FlightCard
           option={outbound}
-          priceSuffix="부터"
+          priceSuffix={inbound ? "부터" : undefined}
           hidePrice={total}
-          heart={<span className="heart-button" aria-hidden="true" style={{ visibility: "hidden" }} />}
+          heart={inbound ? <span className="heart-button" aria-hidden="true" style={{ visibility: "hidden" }} /> : heart}
         />
       </div>
-      <div className="final-leg">
-        <div className="final-leg-heading">
-          <div className="final-leg-title">
-            <h2>{cityName(locations.origin)} 오는편</h2>
-            <time dateTime={request.returnDate}>{stripDay(request.returnDate)}</time>
+      {inbound && request.returnDate && (
+        <div className="final-leg">
+          <div className="final-leg-heading">
+            <div className="final-leg-title">
+              <h2>{cityName(locations.origin)} 오는편</h2>
+              <time dateTime={request.returnDate}>{stripDay(request.returnDate)}</time>
+            </div>
+            <button type="button" className="final-change" onClick={onChangeReturn}>
+              변경하기
+            </button>
           </div>
-          <button type="button" className="final-change" onClick={onChangeReturn}>
-            변경하기
-          </button>
+          <FlightCard option={total ? { ...inbound, price: roundTripPrice } : inbound} heart={heart} />
         </div>
-        <FlightCard option={total ? { ...inbound, price: roundTripPrice } : inbound} heart={heart} />
-      </div>
+      )}
       <div className="final-trip-summary">
         <div className="final-trip-copy">
           <div className="final-trip-route">
             <FinalCountry option={locations.origin} />
             <svg className="final-trip-arrow" viewBox="0 0 32 14" aria-hidden="true">
-              <path fill="#ccc" d={TRIP_ARROW} />
+              <path fill="#ccc" d={inbound ? TRIP_ARROW : ONE_WAY_ARROW} />
             </svg>
             <FinalCountry option={locations.destination} />
-            <span className="final-trip-badge">왕복</span>
+            <span className="final-trip-badge">{inbound ? "왕복" : "편도"}</span>
           </div>
           <div className="final-trip-meta">
             <span className="final-meta-group">
               <span>{dates}</span>
-              <span className="final-meta-dot" aria-hidden="true" />
-              <span className="final-meta-secondary">
-                {nights}박 {(nights ?? 0) + 1}일
-              </span>
+              {nights != null && (
+                <>
+                  <span className="final-meta-dot" aria-hidden="true" />
+                  <span className="final-meta-secondary">
+                    {nights}박 {nights + 1}일
+                  </span>
+                </>
+              )}
             </span>
             <span className="final-meta-group">
               <span>{people}</span>

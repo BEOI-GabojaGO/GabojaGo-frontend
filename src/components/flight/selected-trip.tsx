@@ -7,20 +7,21 @@ import { saveBooking } from "@/components/flight/booking-page";
 import { airlinesOf, FinalSelection, FlightHeart, FlightListLayout, passengersOf, useFlightFilter } from "@/components/flight/flight-list-ui";
 import { useToast } from "@/components/main/main-ui";
 import { conditionSearchHref, toSearchQuery } from "@/lib/flight-search-params";
-import type { FlightOption, FlightSearchRequest, SelectedLocations } from "@/lib/flight-types";
+import type { FlightOption, OneWaySearchRequest, SelectedLocations } from "@/lib/flight-types";
 
-/** AI 검색 카드에서 고른 왕복 한 쌍. 채팅 검색 결과라 오는편 목록을 다시 받을 수 없어 쌍째로 넘긴다. */
+/** AI 검색 카드에서 고른 왕복 한 쌍(편도는 항공편 하나). 채팅 검색 결과라 오는편 목록을 다시 받을 수 없어 쌍째로 넘긴다. */
 export type SelectedTrip = {
   searchId: string;
   outboundId: string;
-  returnId: string;
+  /** 편도는 없다. */
+  returnId?: string;
   outbound: FlightOption;
-  inbound: FlightOption;
-  /** 조합 price(왕복 총액) */
+  inbound?: FlightOption;
+  /** 왕복은 조합 price(왕복 총액), 편도는 편도 요금 */
   price: number | null;
   stayMinutes: number | null;
   sameAirline: boolean | null;
-  request: FlightSearchRequest;
+  request: OneWaySearchRequest & { returnDate?: string };
   locations: SelectedLocations;
 };
 
@@ -57,8 +58,8 @@ function parseSelectedTrip(raw: string | null): SelectedTrip | null {
 const noSubscribe = () => () => {};
 
 /**
- * /flights/round-trip/selected: AI 카드에서 고른 왕복을 시안 최종 선택 요약으로 보여 준다.
- * 변경하기·수정하기는 같은 조건으로 조건 검색(/flights/round-trip/step)에서 다시 고르게 한다.
+ * /flights/round-trip/selected: AI 카드에서 고른 왕복(또는 편도)을 시안 최종 선택 요약으로 보여 준다.
+ * 변경하기·수정하기는 같은 조건으로 조건 검색(/flights/round-trip/step, 편도는 /flights/one-way)에서 다시 고르게 한다.
  */
 export function SelectedTripView() {
   const router = useRouter();
@@ -82,7 +83,8 @@ export function SelectedTripView() {
   }
 
   const { request, locations, outbound, inbound } = trip;
-  const research = () => router.push(`/flights/round-trip/step?${toSearchQuery(request, locations)}`);
+  const research = () =>
+    router.push(`${inbound ? "/flights/round-trip/step" : "/flights/one-way"}?${toSearchQuery(request, locations)}`);
 
   return (
     <>
@@ -91,8 +93,8 @@ export function SelectedTripView() {
         request={request}
         locations={locations}
         filter={filter}
-        airlines={[...new Set([...airlinesOf(outbound), ...airlinesOf(inbound)])]}
-        legs={["inbound"]}
+        airlines={[...new Set([...airlinesOf(outbound), ...(inbound ? airlinesOf(inbound) : [])])]}
+        legs={[inbound ? "inbound" : "outbound"]}
         onEdit={() => router.push(conditionSearchHref(request, locations))}
         locked
       >
@@ -112,13 +114,13 @@ export function SelectedTripView() {
           onBook={() => {
             // AI 조합의 returnId·채팅 searchId로 예약하기 화면에서 판매처를 조회한다(실제 확인함).
             const { searchId, outboundId, returnId } = trip;
-            if (saveBooking({ searchId, outboundId, returnId, outbound, inbound: { ...inbound, price: trip.price }, request, locations })) {
+            if (saveBooking({ searchId, outboundId, returnId, outbound, inbound: inbound && { ...inbound, price: trip.price }, request, locations })) {
               router.push("/flights/booking");
             } else {
               notify("선택한 항공권을 넘기지 못했어요. 브라우저 저장소 설정을 확인해 주세요.");
             }
           }}
-          roundTripPrice={trip.price}
+          roundTripPrice={inbound ? trip.price : undefined}
         />
       </FlightListLayout>
       {toast}

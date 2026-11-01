@@ -2,9 +2,10 @@
 
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
-import { BookingOptionsPanel } from "@/components/flight/booking-options-panel";
+import { saveBooking } from "@/components/flight/booking-page";
 import {
   airlinesOf,
+  FinalSelection,
   FlightCard,
   FlightHeart,
   FlightListLayout,
@@ -30,8 +31,8 @@ import type {
 } from "@/lib/flight-types";
 
 /**
- * 편도 조회: 조건 입력 → 항공편 선택 → 예약 옵션.
- * 백엔드 POST /flight-searches/one-way → POST /itineraries(returnId 생략)
+ * 편도 조회: 조건 입력 → 항공편 선택 → 최종 선택 요약 → 예약하자 GO → 예약하기 화면(/flights/booking).
+ * 백엔드 POST /flight-searches/one-way → (예약하기 화면에서) POST /itineraries(returnId 생략)
  */
 export function OneWayFlow({ initial }: { initial?: InitialSearch<OneWaySearchRequest> | null }) {
   const [request, setRequest] = useState<OneWaySearchRequest | null>(initial?.request ?? null);
@@ -145,50 +146,60 @@ export function OneWayFlow({ initial }: { initial?: InitialSearch<OneWaySearchRe
         airlines={[...new Set(search.flights.flatMap(airlinesOf))]}
         legs={["outbound"]}
         onEdit={() => router.push(conditionSearchHref(request, locations))}
+        locked={!!selected}
       >
         <ListAlert message={error} />
-        <RouteHeading from={locations.origin} to={locations.destination} leg="편도" filter={filter} />
 
-        <div className="flight-list" aria-live="polite">
-          {list.length === 0 && (
-            <p className="empty-result">
-              {search.flights.length > 0
-                ? "필터 조건에 맞는 항공권이 없습니다."
-                : search.noNonstopFlight
-                  ? "이 노선에는 직항 항공편이 없습니다."
-                  : "조건에 맞는 항공편이 없습니다."}
-            </p>
-          )}
-          {list.map((flight) => (
-            <FlightCard
-              key={flight.id}
-              option={flight}
-              chosen={selected?.id === flight.id}
-              onSelect={() => {
-                setSelected(flight);
-                notify("항공편을 선택했습니다. 아래에서 예약 옵션을 확인하세요.");
-              }}
-              heart={
-                <FlightHeart
-                  request={{ ...passengersOf(request), price: flight.price, outbound: flight }}
-                  notify={notify}
-                />
-              }
-            />
-          ))}
-        </div>
-
+        {/* 왕복과 같이 고른 항공편을 요약으로 한 번 더 보여 주고, 예약하자 GO로 예약하기 화면에 간다. */}
         {selected && (
-          // ponytail: 예약 옵션은 시안이 없어 기존 스타일 그대로. 시안이 나오면 바꾼다.
-          <section className="booking-section">
-            <h2>예약 옵션</h2>
-            <BookingOptionsPanel
-              key={selected.id}
-              searchId={search.searchId}
-              outboundId={selected.id}
-              onExpired={retry}
-            />
-          </section>
+          <FinalSelection
+            request={request}
+            locations={locations}
+            outbound={selected}
+            heart={
+              <FlightHeart request={{ ...passengersOf(request), price: selected.price, outbound: selected }} notify={notify} />
+            }
+            onChangeOutbound={() => {
+              setSelected(null);
+              notify("항공편을 다시 선택해 주세요.");
+            }}
+            onBook={() => {
+              const selection = { searchId: search.searchId, outboundId: selected.id, outbound: selected, request, locations };
+              if (saveBooking(selection)) router.push("/flights/booking");
+              else notify("선택한 항공권을 넘기지 못했어요. 브라우저 저장소 설정을 확인해 주세요.");
+            }}
+          />
+        )}
+
+        {!selected && (
+          <>
+            <RouteHeading from={locations.origin} to={locations.destination} leg="편도" filter={filter} />
+
+            <div className="flight-list" aria-live="polite">
+              {list.length === 0 && (
+                <p className="empty-result">
+                  {search.flights.length > 0
+                    ? "필터 조건에 맞는 항공권이 없습니다."
+                    : search.noNonstopFlight
+                      ? "이 노선에는 직항 항공편이 없습니다."
+                      : "조건에 맞는 항공편이 없습니다."}
+                </p>
+              )}
+              {list.map((flight) => (
+                <FlightCard
+                  key={flight.id}
+                  option={flight}
+                  onSelect={() => setSelected(flight)}
+                  heart={
+                    <FlightHeart
+                      request={{ ...passengersOf(request), price: flight.price, outbound: flight }}
+                      notify={notify}
+                    />
+                  }
+                />
+              ))}
+            </div>
+          </>
         )}
       </FlightListLayout>
       {toast}
