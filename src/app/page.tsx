@@ -4,6 +4,7 @@ import { FooterNav } from "@/components/main/footer-nav";
 import { LoginDialog } from "@/components/main/login-dialog";
 import { MainCarousels } from "@/components/main/main-carousels";
 import { SearchPanel } from "@/components/main/search-panel";
+import { readConditionSearchParams } from "@/lib/flight-search-params";
 import "./main.css";
 // 로그인 다이얼로그 규칙이 main.css의 input:focus-visible 외곽선을 덮어야 하므로 뒤에 둔다.
 import "./auth.css";
@@ -23,7 +24,11 @@ const HERO_IMAGES = [
   ...[1, 2, 3, 4].map((n) => `/main/hero/hero-banner-${n}.webp`),
 ];
 
-export default function Home() {
+export default async function Home({ searchParams }: PageProps<"/">) {
+  // 항공권 목록 "수정하기"에서 오면(?search=condition&…) 조건 검색 탭을 그 조건으로 연다.
+  const params = await searchParams;
+  const initialCondition = readConditionSearchParams(params);
+
   return (
     <div className={`main-page auth-ui ${notoSansKr.variable}`}>
       <header className="header">
@@ -63,7 +68,7 @@ export default function Home() {
               <p>예산, 일정, 취향만 알려주면 가보자GO에서 숨은 비용 없는 최적의 여행지를 5초 만에 찾아드려요.</p>
             </div>
           </div>
-          <SearchPanel />
+          <SearchPanel initialCondition={initialCondition} conditionTab={params.search === "condition"} />
         </section>
 
         <div className="content">

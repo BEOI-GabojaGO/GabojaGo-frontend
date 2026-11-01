@@ -475,3 +475,6 @@ footer{position:relative;z-index:3}
 /* AI 편도 카드는 한 줄이라 시안 원래 높이(900px대 120px, 모바일 117px)로 돌린다. */
 @media(min-width:700px) and (max-width:1199px){.ai-flight-card.is-one-way{height:120px;min-height:120px}}
 @media(max-width:699px){.ai-flight-card.is-one-way{height:117px;min-height:117px}}
+/* AI 왕복 카드는 눌러서 최종 선택 요약으로 간다. */
+.ai-flight-card[role=button]{cursor:pointer}
+.ai-flight-card[role=button]:focus-visible{outline:2px solid var(--pink);outline-offset:2px}

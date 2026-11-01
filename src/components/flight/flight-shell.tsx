@@ -16,7 +16,7 @@ export function FlightShell({ title, description, children }: FlightShellProps) 
       <section className="relative h-fit w-full max-w-3xl rounded-3xl border border-white/80 bg-white/95 p-7 shadow-[0_24px_70px_-30px_rgba(31,72,145,0.45)] sm:p-10">
         <div className="mb-8 flex items-center justify-between gap-4">
           <Link
-            href="/flights"
+            href="/"
             className="inline-flex items-center gap-2 text-xl font-black tracking-tight text-blue-700"
           >
             <span className="grid size-9 place-items-center rounded-xl bg-blue-600 text-sm text-white shadow-sm">

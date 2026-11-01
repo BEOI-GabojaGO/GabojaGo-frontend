@@ -1,6 +1,6 @@
 // 백엔드 flight DTO(`GabojaGoBack/.../flight/dto`)를 그대로 옮긴 타입.
 
-/** 1 이코노미 / 2 프리미엄 이코노미 / 3 비즈니스 / 4 퍼스트 */
+/** 1 일반석 / 2 프리미엄 일반석 / 3 비즈니스석 / 4 일등석(화면 표기) */
 export type TravelClass = 1 | 2 | 3 | 4;
 
 export type FlightSearchRequest = {
@@ -46,8 +46,6 @@ export type OneWaySearchResponse = {
   priceInsights: PriceInsights | null;
 };
 
-export type RoundTripSort = "PRICE" | "DURATION" | "STAY";
-
 export type RoundTripCombination = {
   outboundId: string;
   /** 가는편마다 새로 매겨져 outboundId와 짝으로만 유일하다. */
@@ -82,23 +80,6 @@ export type RoundTripSearchResponse = {
   filterOptions: RoundTripFilterOptions;
   /** 필터 조회 응답에서는 항상 null이다. */
   priceInsights: PriceInsights | null;
-};
-
-export type TimeWindowKey =
-  | "outboundDepart"
-  | "outboundArrive"
-  | "inboundDepart"
-  | "inboundArrive";
-
-/** 필터 폼 상태. 쿼리 변환은 `toRoundTripQuery`가 담당한다. */
-export type RoundTripFilter = {
-  sort: RoundTripSort;
-  /** 입력값 그대로(일 단위). 빈 문자열이면 미적용. */
-  minStayDays: string;
-  /** `HH:mm` 문자열. 빈 문자열이면 미적용. */
-  timeWindows: Record<TimeWindowKey, { from: string; to: string }>;
-  includeAirlines: string[];
-  excludeAirlines: string[];
 };
 
 export type Airport = {
