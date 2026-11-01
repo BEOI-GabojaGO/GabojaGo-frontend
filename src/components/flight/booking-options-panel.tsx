@@ -26,12 +26,11 @@ type BookingOptionsPanelProps = ItineraryRequest & {
   onExpired?: () => void;
 };
 
-export function BookingOptionsPanel({
-  searchId,
-  outboundId,
-  returnId,
-  onExpired,
-}: BookingOptionsPanelProps) {
+/**
+ * 판매처 조회(POST /itineraries, 1회)와 판매처 이동(POST /handoffs → 중계 페이지). 예약하기 화면과 이 패널이 함께 쓴다.
+ * expired: 검색 세션 만료(FLIGHT_SEARCH_NOT_FOUND). 호출한 쪽이 다시 검색하게 한다.
+ */
+export function useItinerary({ searchId, outboundId, returnId }: ItineraryRequest) {
   const [itinerary, setItinerary] = useState<ItineraryResponse | null>(null);
   const [error, setError] = useState("");
   const [expired, setExpired] = useState(false);
@@ -102,6 +101,17 @@ export function BookingOptionsPanel({
       window.location.assign(url);
     }
   }
+
+  return { itinerary, error, expired, pendingKey, bookingError, book };
+}
+
+export function BookingOptionsPanel({
+  searchId,
+  outboundId,
+  returnId,
+  onExpired,
+}: BookingOptionsPanelProps) {
+  const { itinerary, error, expired, pendingKey, bookingError, book } = useItinerary({ searchId, outboundId, returnId });
 
   if (error) {
     return (
@@ -223,6 +233,6 @@ export function BookingOptionsPanel({
 }
 
 // 분리 발권이면 같은 optionIndex가 구간별로 나뉘어 오므로 leg까지 묶어 식별한다.
-function optionKey(option: BookingOption) {
+export function optionKey(option: BookingOption) {
   return `${option.optionIndex}-${option.leg}`;
 }

@@ -2,9 +2,9 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useMemo, useState, useSyncExternalStore } from "react";
-import { BookingOptionsPanel } from "@/components/flight/booking-options-panel";
-import { airlinesOf, FinalSelection, FlightHeart, FlightListLayout, ListAlert, passengersOf, useFlightFilter } from "@/components/flight/flight-list-ui";
+import { useMemo, useSyncExternalStore } from "react";
+import { saveBooking } from "@/components/flight/booking-page";
+import { airlinesOf, FinalSelection, FlightHeart, FlightListLayout, passengersOf, useFlightFilter } from "@/components/flight/flight-list-ui";
 import { useToast } from "@/components/main/main-ui";
 import { conditionSearchHref, toSearchQuery } from "@/lib/flight-search-params";
 import type { FlightOption, FlightSearchRequest, SelectedLocations } from "@/lib/flight-types";
@@ -65,8 +65,6 @@ export function SelectedTripView() {
   // 저장소는 브라우저에만 있다. 서버·하이드레이션 중에는 undefined(아직 읽기 전)로 둔다.
   const raw = useSyncExternalStore(noSubscribe, readSelectedTrip, () => undefined);
   const trip = useMemo(() => (raw === undefined ? undefined : parseSelectedTrip(raw)), [raw]);
-  const [booking, setBooking] = useState(false);
-  const [expired, setExpired] = useState(false);
   const filter = useFlightFilter();
   const { notify, toast } = useToast();
 
@@ -98,7 +96,6 @@ export function SelectedTripView() {
         onEdit={() => router.push(conditionSearchHref(request, locations))}
         locked
       >
-        <ListAlert message={expired ? "검색 결과가 만료됐어요. 같은 조건으로 다시 검색해 주세요." : ""} onRetry={expired ? research : undefined} />
         <FinalSelection
           request={request}
           locations={locations}
@@ -112,16 +109,17 @@ export function SelectedTripView() {
           }
           onChangeOutbound={research}
           onChangeReturn={research}
-          onBook={() => setBooking(true)}
+          onBook={() => {
+            // AI 조합의 returnId·채팅 searchId로 예약하기 화면에서 판매처를 조회한다(실제 확인함).
+            const { searchId, outboundId, returnId } = trip;
+            if (saveBooking({ searchId, outboundId, returnId, outbound, inbound: { ...inbound, price: trip.price }, request, locations })) {
+              router.push("/flights/booking");
+            } else {
+              notify("선택한 항공권을 넘기지 못했어요. 브라우저 저장소 설정을 확인해 주세요.");
+            }
+          }}
           roundTripPrice={trip.price}
         />
-        {booking && !expired && (
-          // ponytail: 8단계 예약하기 화면 전까지 기존 예약 옵션 패널을 요약 아래에 펼친다(조건 검색 흐름과 같음).
-          <section className="booking-section">
-            <h2>예약 옵션</h2>
-            <BookingOptionsPanel searchId={trip.searchId} outboundId={trip.outboundId} returnId={trip.returnId} onExpired={() => setExpired(true)} />
-          </section>
-        )}
       </FlightListLayout>
       {toast}
     </>

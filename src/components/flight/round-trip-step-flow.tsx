@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
-import { BookingOptionsPanel } from "@/components/flight/booking-options-panel";
+import { saveBooking } from "@/components/flight/booking-page";
 import {
   airlinesOf,
   FinalSelection,
@@ -48,8 +48,6 @@ export function RoundTripStepFlow({ initial }: { initial?: InitialSearch<FlightS
   const [pending, setPending] = useState(false);
   const [error, setError] = useState("");
   const [expired, setExpired] = useState(false);
-  /** 최종 선택 요약에서 "예약하자 GO"를 눌렀는지. 8단계 예약하기 화면이 생기면 화면 이동으로 바꾼다. */
-  const [booking, setBooking] = useState(false);
   const filter = useFlightFilter();
   const { notify, toast } = useToast();
   const router = useRouter();
@@ -147,14 +145,12 @@ export function RoundTripStepFlow({ initial }: { initial?: InitialSearch<FlightS
   function backToOutbounds() {
     setOutbound(null);
     setInbound(null);
-    setBooking(false);
     setError("");
   }
 
   /** 요약의 오는편 변경하기: 같은 가는편의 오는편 목록으로 돌아간다(오는편 결과는 보관돼 있어 다시 부르지 않음). */
   function backToReturns() {
     setInbound(null);
-    setBooking(false);
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
@@ -243,21 +239,15 @@ export function RoundTripStepFlow({ initial }: { initial?: InitialSearch<FlightS
                 backToReturns();
                 notify("오는편을 다시 선택해 주세요.");
               }}
-              onBook={() => setBooking(true)}
+              onBook={() => {
+                // 예약하기 화면(시안)으로 넘긴다. 단계별 조회의 오는편 id가 판매처 조회의 returnId다.
+                if (saveBooking({ searchId: search.searchId, outboundId: outbound.id, returnId: inbound.id, outbound, inbound, request, locations })) {
+                  router.push("/flights/booking");
+                } else {
+                  notify("선택한 항공권을 넘기지 못했어요. 브라우저 저장소 설정을 확인해 주세요.");
+                }
+              }}
             />
-            {booking && (
-              // ponytail: 8단계 예약하기 화면 전까지 기존 예약 옵션 패널을 요약 아래에 펼친다. 8단계에서 화면 이동으로 바꾼다.
-              <section className="booking-section">
-                <h2>예약 옵션</h2>
-                <BookingOptionsPanel
-                  key={`${outbound.id}-${inbound.id}`}
-                  searchId={search.searchId}
-                  outboundId={outbound.id}
-                  returnId={inbound.id}
-                  onExpired={retry}
-                />
-              </section>
-            )}
           </>
         )}
 
@@ -309,7 +299,6 @@ export function RoundTripStepFlow({ initial }: { initial?: InitialSearch<FlightS
                 chosen={inbound?.id === option.id}
                 onSelect={() => {
                   setInbound(option);
-                  setBooking(false);
                   window.scrollTo({ top: 0, behavior: "smooth" });
                   notify("왕복 항공권을 선택했습니다.");
                 }}

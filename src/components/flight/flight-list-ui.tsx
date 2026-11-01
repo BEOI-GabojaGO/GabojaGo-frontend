@@ -33,7 +33,7 @@ const TIME_SLOTS = [0, 4, 8, 12, 16, 20].map((start) => ({
   label: `${String(start).padStart(2, "0")}시 - ${String(start + 4).padStart(2, "0")}시`,
 }));
 
-const FLAGS: Record<string, string> = { 대한민국: "flag-korea.png", 일본: "flag-japan.png", 중국: "flag-china.png" };
+export const FLAGS: Record<string, string> = { 대한민국: "flag-korea.png", 일본: "flag-japan.png", 중국: "flag-china.png" };
 
 const departHour = (option: FlightOption) => {
   const time = option.segments[0]?.departure?.localTime;
@@ -160,10 +160,22 @@ function FilterGroups({
   );
 }
 
-/** 시안 정렬 메뉴(버튼 + 목록). 바깥을 누르거나 포커스가 빠지거나 Esc를 누르면 닫는다. */
-function SortMenu({ filter, className = "", disabled = false }: { filter: FlightFilter; className?: string; disabled?: boolean }) {
+/** 시안 정렬 메뉴(버튼 + 목록). 바깥을 누르거나 포커스가 빠지거나 Esc를 누르면 닫는다. 예약하기 화면도 쓴다. */
+export function SortMenu<T extends string>({
+  options,
+  value,
+  onChange,
+  className = "",
+  disabled = false,
+}: {
+  options: { value: T; label: string }[];
+  value: T;
+  onChange: (value: T) => void;
+  className?: string;
+  disabled?: boolean;
+}) {
   const [open, setOpen] = useState(false);
-  const current = SORT_OPTIONS.find((option) => option.value === filter.sort) ?? SORT_OPTIONS[0];
+  const current = options.find((option) => option.value === value) ?? options[0];
 
   return (
     <div
@@ -189,20 +201,20 @@ function SortMenu({ filter, className = "", disabled = false }: { filter: Flight
         <img src="/flight/dropdown.svg" alt="" />
       </button>
       <div className="sort-menu" role="listbox" aria-label="정렬 기준" aria-hidden={!open}>
-        {SORT_OPTIONS.map(({ value, label }) => (
+        {options.map((option) => (
           <button
-            key={value}
-            className={`sort-option${value === filter.sort ? " is-active" : ""}`}
+            key={option.value}
+            className={`sort-option${option.value === value ? " is-active" : ""}`}
             type="button"
             role="option"
-            aria-selected={value === filter.sort}
+            aria-selected={option.value === value}
             tabIndex={open ? 0 : -1}
             onClick={() => {
-              filter.setSort(value);
+              onChange(option.value);
               setOpen(false);
             }}
           >
-            {label}
+            {option.label}
           </button>
         ))}
       </div>
@@ -268,7 +280,7 @@ const dayLabel = (value: string) => `${shortDate(value)} ${WEEKDAYS[parseDate(va
 const nightsBetween = (from: string, to: string) => Math.round((parseDate(to).getTime() - parseDate(from).getTime()) / 86_400_000);
 const placeLabel = (option: LocationOption) => `${cityName(option)}(${option.code})`;
 
-function querySummary(request: QueryRequest) {
+export function querySummary(request: QueryRequest) {
   const dates = request.returnDate
     ? `${dayLabel(request.outboundDate)} - ${dayLabel(request.returnDate)}`
     : dayLabel(request.outboundDate);
@@ -368,7 +380,7 @@ export function FlightListLayout({
               <span className="filter-icon" aria-hidden="true" />
               필터
             </button>
-            <SortMenu filter={filter} disabled={locked} />
+            <SortMenu options={SORT_OPTIONS} value={filter.sort} onChange={filter.setSort} disabled={locked} />
           </div>
           {children}
         </section>
@@ -403,7 +415,7 @@ export function RouteHeading({ from, to, leg, filter }: { from: LocationOption; 
         <Place option={to} />
         <span className="leg">{leg}</span>
       </h1>
-      <SortMenu filter={filter} className="desktop-sort" />
+      <SortMenu options={SORT_OPTIONS} value={filter.sort} onChange={filter.setSort} className="desktop-sort" />
     </div>
   );
 }
