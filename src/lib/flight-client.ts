@@ -77,14 +77,3 @@ export function formatLocation(option: LocationOption) {
     ? `${option.nameKo} (모든 공항)`
     : `${option.nameKo} (${option.code})`;
 }
-
-/** 백엔드가 날짜에 `@Future`를 걸어 오늘은 허용하지 않으므로 내일부터 선택 가능하다. */
-export function tomorrow() {
-  const date = new Date();
-  date.setDate(date.getDate() + 1);
-
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-
-  return `${date.getFullYear()}-${month}-${day}`;
-}

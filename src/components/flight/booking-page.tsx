@@ -3,15 +3,23 @@
 /* eslint-disable @next/next/no-img-element -- 시안 아이콘·광고 이미지와 SerpApi 항공사 로고를 그대로 쓴다. */
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Fragment, useMemo, useState, useSyncExternalStore } from "react";
-import { optionKey, useItinerary } from "@/components/flight/booking-options-panel";
+import { Fragment, useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { airlinesOf, FLAGS, querySummary, SortMenu } from "@/components/flight/flight-list-ui";
 import { cityName } from "@/components/flight/search-condition-fields";
 import { useToast } from "@/components/main/main-ui";
 import { SiteLoader } from "@/components/site-loader";
-import { formatMinutes, formatPrice } from "@/lib/flight-client";
+import { FLIGHT_SEARCH_NOT_FOUND, formatMinutes, formatPrice, postJson } from "@/lib/flight-client";
 import { toSearchQuery } from "@/lib/flight-search-params";
-import type { BookingOption, FlightOption, OneWaySearchRequest, SelectedLocations } from "@/lib/flight-types";
+import type {
+  BookingOption,
+  FlightOption,
+  HandoffRequest,
+  HandoffResponse,
+  ItineraryRequest,
+  ItineraryResponse,
+  OneWaySearchRequest,
+  SelectedLocations,
+} from "@/lib/flight-types";
 
 /** 예약하기 화면으로 넘기는 선택. 왕복은 한 쌍, 편도는 가는편만. */
 export type BookingSelection = {
@@ -75,6 +83,90 @@ export function BookingView() {
     );
   }
   return <Booking selection={selection} />;
+}
+
+/**
+ * 판매처 조회(POST /itineraries, 1회)와 판매처 이동(POST /handoffs → 중계 페이지). 예약하기 화면이 쓴다.
+ * expired: 검색 세션 만료(FLIGHT_SEARCH_NOT_FOUND). 호출한 쪽이 다시 검색하게 한다.
+ */
+function useItinerary({ searchId, outboundId, returnId }: ItineraryRequest) {
+  const [itinerary, setItinerary] = useState<ItineraryResponse | null>(null);
+  const [error, setError] = useState("");
+  const [expired, setExpired] = useState(false);
+  const [pendingKey, setPendingKey] = useState("");
+  const [bookingError, setBookingError] = useState("");
+
+  useEffect(() => {
+    const controller = new AbortController();
+
+    async function loadItinerary() {
+      try {
+        const result = await postJson<ItineraryResponse>(
+          "/api/v1/itineraries",
+          { searchId, outboundId, returnId } satisfies ItineraryRequest,
+          controller.signal,
+        );
+
+        if (!result.ok) {
+          setExpired(result.code === FLIGHT_SEARCH_NOT_FOUND);
+          setError(result.message);
+          return;
+        }
+
+        setItinerary(result.data);
+      } catch {
+        // 언마운트로 취소된 요청
+      }
+    }
+
+    void loadItinerary();
+
+    return () => controller.abort();
+  }, [searchId, outboundId, returnId]);
+
+  async function book(option: BookingOption) {
+    // 팝업 차단을 피하려고 클릭 직후 창부터 연다.
+    const popup = window.open("", "_blank");
+    const key = optionKey(option);
+
+    setPendingKey(key);
+    setBookingError("");
+
+    const result = await postJson<HandoffResponse>("/api/v1/handoffs", {
+      searchId,
+      outboundId,
+      returnId,
+      optionIndex: option.optionIndex,
+      leg: option.leg,
+    } satisfies HandoffRequest);
+
+    setPendingKey("");
+
+    if (!result.ok) {
+      popup?.close();
+      setBookingError(result.message);
+      return;
+    }
+
+    const url = `/api/v1/handoffs/${encodeURIComponent(result.data.handoffId)}`;
+
+    if (popup) {
+      popup.opener = null;
+      popup.location.href = url;
+    } else {
+      // 팝업이 차단된 경우 현재 탭에서 이동한다. 대상은 Next 페이지가 아니라
+      // 판매처 HTML을 중계하는 Route Handler라 router.push로는 열 수 없다.
+      // eslint-disable-next-line @next/next/no-location-assign-relative-destination
+      window.location.assign(url);
+    }
+  }
+
+  return { itinerary, error, expired, pendingKey, bookingError, book };
+}
+
+// 분리 발권이면 같은 optionIndex가 구간별로 나뉘어 오므로 leg까지 묶어 식별한다.
+function optionKey(option: BookingOption) {
+  return `${option.optionIndex}-${option.leg}`;
 }
 
 type Sort = "low" | "high" | "name";

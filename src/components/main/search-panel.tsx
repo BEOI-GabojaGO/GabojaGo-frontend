@@ -67,8 +67,9 @@ const MBTI_TYPES = ["INTJ", "INTP", "INFJ", "INFP", "ISTJ", "ISTP", "ISFJ", "ISF
 
 type InitialCondition = InitialSearch<OneWaySearchRequest & { returnDate?: string }>;
 
-export function SearchPanel({ initialCondition }: { initialCondition?: InitialCondition | null }) {
-  const [mode, setMode] = useState<Mode>(initialCondition ? "조건" : "AI");
+/** conditionTab: ?search=condition으로 오면 조건이 없어도 조건 검색 탭을 연다(항공권 목록에 조건 없이 들어온 경우). */
+export function SearchPanel({ initialCondition, conditionTab }: { initialCondition?: InitialCondition | null; conditionTab?: boolean }) {
+  const [mode, setMode] = useState<Mode>(initialCondition || conditionTab ? "조건" : "AI");
   const [prompt, setPrompt] = useState("");
   const isMobile = useIsMobile();
   const promptInput = useRef<HTMLInputElement>(null);

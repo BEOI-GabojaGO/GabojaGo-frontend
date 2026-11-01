@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState, type FormEvent } from "react";
+import { useState } from "react";
 import { saveBooking } from "@/components/flight/booking-page";
 import {
   airlinesOf,
@@ -14,11 +14,7 @@ import {
   RouteHeading,
   useFlightFilter,
 } from "@/components/flight/flight-list-ui";
-import { ErrorAlert, PrimaryButton, useAutoSearchOnce } from "@/components/flight/flow-ui";
-import {
-  readOneWaySearchForm,
-  SearchConditionFields,
-} from "@/components/flight/search-condition-fields";
+import { useAutoSearchOnce } from "@/components/flight/flow-ui";
 import { useToast } from "@/components/main/main-ui";
 import { SiteLoader } from "@/components/site-loader";
 import { postJson } from "@/lib/flight-client";
@@ -31,12 +27,12 @@ import type {
 } from "@/lib/flight-types";
 
 /**
- * 편도 조회: 조건 입력 → 항공편 선택 → 최종 선택 요약 → 예약하자 GO → 예약하기 화면(/flights/booking).
+ * 편도 조회: 메인 조건 검색 → 항공편 선택 → 최종 선택 요약 → 예약하자 GO → 예약하기 화면(/flights/booking).
  * 백엔드 POST /flight-searches/one-way → (예약하기 화면에서) POST /itineraries(returnId 생략)
  */
-export function OneWayFlow({ initial }: { initial?: InitialSearch<OneWaySearchRequest> | null }) {
-  const [request, setRequest] = useState<OneWaySearchRequest | null>(initial?.request ?? null);
-  const [locations, setLocations] = useState<SelectedLocations | null>(initial?.locations ?? null);
+export function OneWayFlow({ initial }: { initial: InitialSearch<OneWaySearchRequest> }) {
+  const [request, setRequest] = useState<OneWaySearchRequest | null>(initial.request);
+  const [locations, setLocations] = useState<SelectedLocations | null>(initial.locations);
   const [search, setSearch] = useState<OneWaySearchResponse | null>(null);
   const [selected, setSelected] = useState<FlightOption | null>(null);
   const [pending, setPending] = useState(false);
@@ -56,19 +52,6 @@ export function OneWayFlow({ initial }: { initial?: InitialSearch<OneWaySearchRe
     setSearch(null);
     setSelected(null);
     setError("");
-  }
-
-  async function handleSearch(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-
-    const form = readOneWaySearchForm(new FormData(event.currentTarget));
-
-    if (form.error !== undefined) {
-      setError(form.error);
-      return;
-    }
-
-    await runSearch(form.request, form.locations);
   }
 
   async function runSearch(nextRequest: OneWaySearchRequest, nextLocations: SelectedLocations) {
@@ -94,8 +77,8 @@ export function OneWayFlow({ initial }: { initial?: InitialSearch<OneWaySearchRe
 
   useAutoSearchOnce(initial, runSearch);
 
-  // 첫 렌더는 자동 검색 effect보다 먼저라 pending이 아직 false다. 그때도 폼 대신 로더를 보인다.
-  if (pending || (initial && !search && !error)) return <SiteLoader busy label="항공편을 찾는 중" />;
+  // 첫 렌더는 자동 검색 effect보다 먼저라 pending이 아직 false다. 그때도 로더를 보인다.
+  if (pending || (!search && !error)) return <SiteLoader busy label="항공편을 찾는 중" />;
 
   // 검색이 실패해도 디자인된 목록 화면(조건 바 유지)에 오류와 "다시 검색하기"를 보여 준다.
   if (!search && request && locations && error) {
@@ -117,23 +100,7 @@ export function OneWayFlow({ initial }: { initial?: InitialSearch<OneWaySearchRe
     );
   }
 
-  // 조건 없이 주소로만 들어온 경우의 옛 조건 입력 폼(연결된 곳 없음, 기능 정리 때 삭제 예정).
-  if (!search || !request || !locations) {
-    return (
-      <div className="search-form-wrap">
-        <h1>편도 항공권 검색</h1>
-        <div className="space-y-5">
-          <ErrorAlert message={error} />
-          <form onSubmit={handleSearch} className="space-y-5">
-            <SearchConditionFields tripType="one-way" defaultValues={request} defaultLocations={locations} />
-            <PrimaryButton type="submit" disabled={pending}>
-              편도 항공편 조회
-            </PrimaryButton>
-          </form>
-        </div>
-      </div>
-    );
-  }
+  if (!search || !request || !locations) return null;
 
   const list = filter.apply(search.flights, "outbound");
 

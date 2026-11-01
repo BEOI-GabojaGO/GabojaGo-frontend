@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState, type FormEvent } from "react";
+import { useState } from "react";
 import { saveBooking } from "@/components/flight/booking-page";
 import {
   airlinesOf,
@@ -15,12 +15,8 @@ import {
   RouteHeading,
   useFlightFilter,
 } from "@/components/flight/flight-list-ui";
-import { ErrorAlert, PrimaryButton, useAutoSearchOnce } from "@/components/flight/flow-ui";
-import {
-  cityName,
-  readFlightSearchForm,
-  SearchConditionFields,
-} from "@/components/flight/search-condition-fields";
+import { useAutoSearchOnce } from "@/components/flight/flow-ui";
+import { cityName } from "@/components/flight/search-condition-fields";
 import { useToast } from "@/components/main/main-ui";
 import { SiteLoader } from "@/components/site-loader";
 import { FLIGHT_SEARCH_NOT_FOUND, postJson, requestJson } from "@/lib/flight-client";
@@ -37,9 +33,9 @@ import type {
  * 왕복 단계별 조회: 가는편 선택 → 오는편 선택 → 예약 옵션.
  * 백엔드 POST /flight-searches → GET /outbounds/{id}/returns → POST /itineraries
  */
-export function RoundTripStepFlow({ initial }: { initial?: InitialSearch<FlightSearchRequest> | null }) {
-  const [request, setRequest] = useState<FlightSearchRequest | null>(initial?.request ?? null);
-  const [locations, setLocations] = useState<SelectedLocations | null>(initial?.locations ?? null);
+export function RoundTripStepFlow({ initial }: { initial: InitialSearch<FlightSearchRequest> }) {
+  const [request, setRequest] = useState<FlightSearchRequest | null>(initial.request);
+  const [locations, setLocations] = useState<SelectedLocations | null>(initial.locations);
   const [search, setSearch] = useState<FlightSearchResponse | null>(null);
   const [outbound, setOutbound] = useState<FlightOption | null>(null);
   const [inbound, setInbound] = useState<FlightOption | null>(null);
@@ -66,19 +62,6 @@ export function RoundTripStepFlow({ initial }: { initial?: InitialSearch<FlightS
     setReturnsByOutbound({});
     setError("");
     setExpired(false);
-  }
-
-  async function handleSearch(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-
-    const form = readFlightSearchForm(new FormData(event.currentTarget));
-
-    if (form.error !== undefined) {
-      setError(form.error);
-      return;
-    }
-
-    await runSearch(form.request, form.locations);
   }
 
   async function runSearch(nextRequest: FlightSearchRequest, nextLocations: SelectedLocations) {
@@ -154,8 +137,8 @@ export function RoundTripStepFlow({ initial }: { initial?: InitialSearch<FlightS
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
-  // 첫 렌더는 자동 검색 effect보다 먼저라 pending이 아직 false다. 그때도 폼 대신 로더를 보인다.
-  const loader = (pending || (initial && !search && !error)) && <SiteLoader busy label="항공권을 찾는 중" />;
+  // 첫 렌더는 자동 검색 effect보다 먼저라 pending이 아직 false다. 그때도 로더를 보인다.
+  const loader = (pending || (!search && !error)) && <SiteLoader busy label="항공권을 찾는 중" />;
 
   // 검색이 실패해도 디자인된 목록 화면(조건 바 유지)에 오류와 "다시 검색하기"를 보여 준다.
   if (!search && request && locations && error && !pending) {
@@ -177,24 +160,7 @@ export function RoundTripStepFlow({ initial }: { initial?: InitialSearch<FlightS
     );
   }
 
-  // 조건 없이 주소로만 들어온 경우의 옛 조건 입력 폼(연결된 곳 없음, 기능 정리 때 삭제 예정).
-  if (!search || !request || !locations) {
-    if (loader) return loader;
-    return (
-      <div className="search-form-wrap">
-        <h1>왕복 항공권 검색</h1>
-        <div className="space-y-5">
-          <ErrorAlert message={error} />
-          <form onSubmit={handleSearch} className="space-y-5">
-            <SearchConditionFields tripType="round-trip" defaultValues={request} defaultLocations={locations} />
-            <PrimaryButton type="submit" disabled={pending}>
-              가는편 조회
-            </PrimaryButton>
-          </form>
-        </div>
-      </div>
-    );
-  }
+  if (!search || !request || !locations) return loader || null;
 
   const returns = outbound ? returnsByOutbound[outbound.id] : undefined;
   const source = outbound ? returns : search.outbounds;

@@ -26,7 +26,8 @@ const HERO_IMAGES = [
 
 export default async function Home({ searchParams }: PageProps<"/">) {
   // 항공권 목록 "수정하기"에서 오면(?search=condition&…) 조건 검색 탭을 그 조건으로 연다.
-  const initialCondition = readConditionSearchParams(await searchParams);
+  const params = await searchParams;
+  const initialCondition = readConditionSearchParams(params);
 
   return (
     <div className={`main-page auth-ui ${notoSansKr.variable}`}>
@@ -67,7 +68,7 @@ export default async function Home({ searchParams }: PageProps<"/">) {
               <p>예산, 일정, 취향만 알려주면 가보자GO에서 숨은 비용 없는 최적의 여행지를 5초 만에 찾아드려요.</p>
             </div>
           </div>
-          <SearchPanel initialCondition={initialCondition} />
+          <SearchPanel initialCondition={initialCondition} conditionTab={params.search === "condition"} />
         </section>
 
         <div className="content">

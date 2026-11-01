@@ -100,12 +100,12 @@ export function ChatDemo() {
     <main className="min-h-screen bg-[#f4f7fb] px-4 pb-10 pt-5 text-slate-800 sm:px-6 sm:pt-8">
       <div className="mx-auto max-w-6xl">
         <header className="mb-6 flex flex-wrap items-center justify-between gap-3">
-          <Link href="/flights" className="inline-flex items-center gap-3 font-black tracking-tight text-blue-700">
+          <Link href="/" className="inline-flex items-center gap-3 font-black tracking-tight text-blue-700">
             <span className="grid size-10 place-items-center rounded-2xl bg-blue-600 text-sm text-white shadow-sm">GO</span>
             <span className="text-xl">가보자GO</span>
           </Link>
           <div className="flex items-center gap-3 text-sm">
-            <Link href="/flights" className="font-semibold text-slate-500 hover:text-blue-700">항공권 찾기</Link>
+            <Link href="/" className="font-semibold text-slate-500 hover:text-blue-700">항공권 찾기</Link>
             <Link href="/account" className="font-semibold text-slate-500 hover:text-blue-700">내 계정</Link>
           </div>
         </header>

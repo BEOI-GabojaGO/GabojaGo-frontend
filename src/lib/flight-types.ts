@@ -46,8 +46,6 @@ export type OneWaySearchResponse = {
   priceInsights: PriceInsights | null;
 };
 
-export type RoundTripSort = "PRICE" | "DURATION" | "STAY";
-
 export type RoundTripCombination = {
   outboundId: string;
   /** 가는편마다 새로 매겨져 outboundId와 짝으로만 유일하다. */
@@ -82,23 +80,6 @@ export type RoundTripSearchResponse = {
   filterOptions: RoundTripFilterOptions;
   /** 필터 조회 응답에서는 항상 null이다. */
   priceInsights: PriceInsights | null;
-};
-
-export type TimeWindowKey =
-  | "outboundDepart"
-  | "outboundArrive"
-  | "inboundDepart"
-  | "inboundArrive";
-
-/** 필터 폼 상태. 쿼리 변환은 `toRoundTripQuery`가 담당한다. */
-export type RoundTripFilter = {
-  sort: RoundTripSort;
-  /** 입력값 그대로(일 단위). 빈 문자열이면 미적용. */
-  minStayDays: string;
-  /** `HH:mm` 문자열. 빈 문자열이면 미적용. */
-  timeWindows: Record<TimeWindowKey, { from: string; to: string }>;
-  includeAirlines: string[];
-  excludeAirlines: string[];
 };
 
 export type Airport = {
