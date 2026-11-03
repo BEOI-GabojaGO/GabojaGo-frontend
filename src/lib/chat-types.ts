@@ -1,4 +1,4 @@
-import type { OneWaySearchResponse, RoundTripCombination, RoundTripSearchResponse } from "@/lib/flight-types";
+import type { LocationOption, OneWaySearchResponse, RoundTripCombination, RoundTripSearchResponse } from "@/lib/flight-types";
 
 // 채팅 API 타입. 백엔드 chat/dto, ai/dto/FlightSearchConditions와 docs/CHAT-FRONTEND-HANDOFF.md 기준.
 
@@ -43,7 +43,23 @@ export type ChatMessageResponse = {
   conditions: ChatConditions | null;
   missingFields: string[];
   ambiguousFields: string[];
+  /** 출발지·목적지를 서버 기준 데이터로 해석한 결과. 이 필드가 없던 배포본도 있어 선택 항목으로 둔다. */
+  locationResolutions?: ChatLocationResolution[];
   conditionVersion: number;
+};
+
+/**
+ * 백엔드 chat/dto/ChatLocationResolution. 후보(candidates)는 GET /locations와 같은 LocationResponse다.
+ * AMBIGUOUS면 후보 중 하나를 다음 메시지로 고른다(선택 API 없음). 주변 공항 거리는 직선거리라 이동 시간이 아니다.
+ */
+export type ChatLocationResolution = {
+  field: "origin" | "destination";
+  expression: string;
+  status: "RESOLVED" | "AMBIGUOUS" | "NOT_FOUND";
+  airportCodes: string | null;
+  candidates: LocationOption[];
+  distanceBasis: "STRAIGHT_LINE_KM" | null;
+  nearbyAirportCandidates: { location: LocationOption; straightLineDistanceKm: number }[];
 };
 
 export type ChatSessionState = {

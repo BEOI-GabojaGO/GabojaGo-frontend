@@ -9,6 +9,7 @@ import { SiteLoader } from "@/components/site-loader";
 import type {
   ChatConditions,
   ChatConfirmation,
+  ChatLocationResolution,
   ChatMessageResponse,
   ChatSearchAccepted,
   ChatSearchResult,
@@ -359,6 +360,10 @@ export function useAiSearch() {
                 </div>
                 {/* 답변마다 그때의 조건을 보여 준다(여행 대화 제외). 마지막 카드는 409 갱신을 반영하려고 최신 turn을 쓴다. */}
                 {hasCard(message) && <TripSummary turn={index === lastCard && turn ? turn : message.turn} />}
+                {/* 장소 후보는 지금 고를 수 있는 마지막 카드에만 보여 준다. */}
+                {index === lastCard && turn && (
+                  <LocationChips resolutions={turn.locationResolutions} disabled={pending} onPick={(text) => void send(text)} />
+                )}
               </Fragment>
             ),
           )}
@@ -508,7 +513,7 @@ const FIELD_CELL: Record<string, SummaryCell> = {
 };
 
 /** 조건 요약 카드. 아직 없거나 애매한 칸은 분홍색으로 강조한다. */
-function TripSummary({ turn }: { turn: Pick<ChatMessageResponse, "conditions" | "missingFields" | "ambiguousFields"> }) {
+function TripSummary({ turn }: { turn: Pick<ChatMessageResponse, "conditions" | "missingFields" | "ambiguousFields" | "locationResolutions"> }) {
   const c = turn.conditions ?? {};
   const flagged = new Set([...turn.missingFields, ...turn.ambiguousFields].map((field) => FIELD_CELL[field]));
   const cell = (key: SummaryCell, label: string, value: ReactNode) => (
@@ -523,10 +528,61 @@ function TripSummary({ turn }: { turn: Pick<ChatMessageResponse, "conditions" | 
       {cell("passengers", "탑승객", passengers(c))}
       {cell("tripType", "여행 유형", TRIP_LABEL[tripTypeOf(c) ?? "UNKNOWN"])}
       {cell("budget", "예산", c.maxBudgetKrw ? `${formatBudget(c.maxBudgetKrw)} 이하` : "제한 없음")}
-      {cell("route", "출발지 / 도착지", `${c.origin ?? "미정"} / ${c.destination ?? "미정"}`)}
+      {cell("route", "출발지 / 도착지", `${placeName(turn, "origin", c.origin)} / ${placeName(turn, "destination", c.destination)}`)}
       {/* API에 없는 항목(미연결). */}
       {cell("style", "여행 스타일", "-")}
     </section>
+  );
+}
+
+/** 서버가 확정한(RESOLVED) 장소는 그 이름으로, 아니면 사용자 표현 그대로 보여 준다. */
+function placeName(turn: Pick<ChatMessageResponse, "locationResolutions">, field: ChatLocationResolution["field"], expression?: string) {
+  const resolved = turn.locationResolutions?.find((r) => r.field === field && r.status === "RESOLVED")?.candidates[0];
+  if (!resolved) return expression ?? "미정";
+  return resolved.type === "AIRPORT" ? `${resolved.nameKo}(${resolved.code})` : resolved.nameKo;
+}
+
+const FIELD_LABEL: Record<ChatLocationResolution["field"], string> = { origin: "출발지", destination: "목적지" };
+
+/** 받침이 있으면 "으로", 없거나 ㄹ 받침이면 "로". 한글이 아니면(영문·코드) "로". */
+function toParticle(word: string) {
+  const code = word.charCodeAt(word.length - 1) - 0xac00;
+  if (code < 0 || code > 11171) return "로";
+  const final = code % 28;
+  return final === 0 || final === 8 ? "로" : "으로";
+}
+
+/**
+ * 장소 후보 칩(시안 없음, 메인 조건 검색 칩 모양). 후보가 여러 개(AMBIGUOUS)일 때만 보여 주고,
+ * 누르면 "출발지는 청주국제공항으로 할게"를 다음 메시지로 보낸다(서버에 후보 선택 API가 없음).
+ * 주변 공항 거리는 직선거리라 이동 시간처럼 표현하지 않는다.
+ */
+function LocationChips({ resolutions, disabled, onPick }: { resolutions?: ChatLocationResolution[]; disabled: boolean; onPick: (text: string) => void }) {
+  const ambiguous = resolutions?.filter((r) => r.status === "AMBIGUOUS") ?? [];
+  if (!ambiguous.length) return null;
+  return (
+    <div className="ai-location-picks">
+      {ambiguous.map((r) => {
+        const options = r.nearbyAirportCandidates.length
+          ? r.nearbyAirportCandidates.map(({ location, straightLineDistanceKm }) => ({ location, note: ` · 직선거리 약 ${straightLineDistanceKm}km` }))
+          : r.candidates.map((location) => ({ location, note: "" }));
+        return (
+          <div key={r.field} className="ai-location-chips" role="group" aria-label={`${FIELD_LABEL[r.field]} 후보`}>
+            <span>{FIELD_LABEL[r.field]} 후보</span>
+            {options.map(({ location, note }) => (
+              <button
+                key={location.code}
+                type="button"
+                disabled={disabled}
+                onClick={() => onPick(`${FIELD_LABEL[r.field]}는 ${location.nameKo}${toParticle(location.nameKo)} 할게`)}
+              >
+                {location.nameKo}({location.code}){note}
+              </button>
+            ))}
+          </div>
+        );
+      })}
+    </div>
   );
 }
 
