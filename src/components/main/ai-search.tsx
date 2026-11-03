@@ -28,7 +28,14 @@ const MAX_MESSAGE = 1000;
 /** 다이얼로그에는 3장만 보여 준다. "더 많은 항공권 찾기"는 같은 조건으로 조건 검색 화면으로 넘긴다(결정 3.2 (b)). */
 const PAGE = 3;
 
-type SearchView = { conditions: ChatConditions; dateMode: "EXACT" | "FLEXIBLE"; tripType: ChatTripType; data: ChatSearchResult };
+/** resolutions: 검색할 때의 장소 해석 결과. 목록·요약으로 넘길 때 서버가 확정한 장소를 쓴다. */
+type SearchView = {
+  conditions: ChatConditions;
+  resolutions?: ChatLocationResolution[];
+  dateMode: "EXACT" | "FLEXIBLE";
+  tripType: ChatTripType;
+  data: ChatSearchResult;
+};
 
 /** 탭 단위로 대화를 이어가려고 세션 ID만 보관한다. 메시지 이력은 서버에도 없어 복원하지 않는다. */
 const SESSION_KEY = "gabojago.aiChatSessionId";
@@ -205,7 +212,7 @@ export function useAiSearch() {
       // 결과에 dateMode가 없을 수 있어 승인한 조건의 dateMode로 구분한다.
       const conditions = turn.conditions ?? {};
       const show = (data: ChatSearchResult) => {
-        setSearch({ conditions, dateMode: conditions.dateMode ?? "EXACT", tripType: tripTypeOf(conditions) ?? "ROUND_TRIP", data });
+        setSearch({ conditions, resolutions: turn.locationResolutions, dateMode: conditions.dateMode ?? "EXACT", tripType: tripTypeOf(conditions) ?? "ROUND_TRIP", data });
       };
       const result = await requestJson<ChatSearchResult | ChatSearchAccepted>(`${base}/search`, { method: "POST" });
       // FLEXIBLE은 202로 작업만 접수한다(결과 없음). 결과는 상태 GET으로 받는다.
@@ -246,16 +253,16 @@ export function useAiSearch() {
     setError("검색이 오래 걸리고 있어요. 잠시 후 다시 확인해 주세요.");
   }
 
-  /** 더 많은 항공권: 같은 조건으로 조건 검색(왕복·편도 항공권 목록)으로 넘긴다. 목록 화면이 다시 검색한다(SerpApi 재호출, 팀 결정). */
   /**
-   * 채팅 조건 → 항공권 검색 요청. 지명은 표시용 이름이라 백엔드와 같은 규칙으로 하나로 확정될 때만 쓴다.
+   * 채팅 조건 → 항공권 검색 요청. 장소는 서버가 확정한(RESOLVED) 후보를 쓰고(도시면 소속 공항 전체),
+   * 해석 결과가 없을 때만(이 필드가 없던 배포본·409 갱신) 지명을 백엔드와 같은 규칙으로 하나로 확정될 때 쓴다.
    * FLEXIBLE은 날짜가 기간이라 그 카드(없으면 첫 카드, 가장 싼 옵션)의 날짜를 쓴다. 안 되면 안내하고 null.
    */
   function flightRequest(item?: ResultItem) {
     if (!search || !results) return null;
     const c = search.conditions;
-    const origin = resolveLocation(c.origin ?? "");
-    const destination = resolveLocation(c.destination ?? "");
+    const origin = resolvedPlace(search.resolutions, "origin") ?? resolveLocation(c.origin ?? "");
+    const destination = resolvedPlace(search.resolutions, "destination") ?? resolveLocation(c.destination ?? "");
     if (!origin || !destination) {
       setError("출발지/도착지를 항공권 목록에서 찾지 못했어요. 조건 검색에서 직접 골라 주세요.");
       return null;
@@ -537,9 +544,14 @@ function TripSummary({ turn }: { turn: Pick<ChatMessageResponse, "conditions" | 
 
 /** 서버가 확정한(RESOLVED) 장소는 그 이름으로, 아니면 사용자 표현 그대로 보여 준다. */
 function placeName(turn: Pick<ChatMessageResponse, "locationResolutions">, field: ChatLocationResolution["field"], expression?: string) {
-  const resolved = turn.locationResolutions?.find((r) => r.field === field && r.status === "RESOLVED")?.candidates[0];
+  const resolved = resolvedPlace(turn.locationResolutions, field);
   if (!resolved) return expression ?? "미정";
   return resolved.type === "AIRPORT" ? `${resolved.nameKo}(${resolved.code})` : resolved.nameKo;
+}
+
+/** 서버가 하나로 확정한 장소(GET /locations와 같은 형태). 없으면 null. */
+function resolvedPlace(resolutions: ChatLocationResolution[] | undefined, field: ChatLocationResolution["field"]) {
+  return resolutions?.find((r) => r.field === field && r.status === "RESOLVED")?.candidates[0] ?? null;
 }
 
 const FIELD_LABEL: Record<ChatLocationResolution["field"], string> = { origin: "출발지", destination: "목적지" };
