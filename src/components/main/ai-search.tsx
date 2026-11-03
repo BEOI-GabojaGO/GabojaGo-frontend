@@ -163,11 +163,14 @@ export function useAiSearch() {
         failed(result);
         return false;
       }
-      // conditions는 누적 전체 조건이라 이전 값과 합치지 않고 교체한다. 조건이 바뀌었으니 이전 결과도 지운다.
       setMessages((list) => [...list, { role: "user", text: message }, { role: "ai", turn: result.data }]);
-      setTurn(result.data);
-      setSearch(null);
-      setQuotaExceeded(false);
+      // 여행 대화·지원하지 않는 요청은 조건을 바꾸지 않는다. 빈 모호 항목으로 덮지 않도록 최신 조건 카드·확인 버튼·결과를 그대로 둔다.
+      if (changesConditions(result.data)) {
+        // conditions는 누적 전체 조건이라 이전 값과 합치지 않고 교체한다. 조건이 바뀌었으니 이전 결과도 지운다.
+        setTurn(result.data);
+        setSearch(null);
+        setQuotaExceeded(false);
+      }
       sent = true;
       return true;
     } finally {
@@ -311,7 +314,7 @@ export function useAiSearch() {
     if (await send(draft)) setDraft("");
   }
 
-  const lastAi = messages.findLastIndex((message) => message.role === "ai");
+  const lastCard = messages.findLastIndex(hasCard);
   // 문장(reply)과 관계없이 서버가 계산한 상태로 판단한다. 최종 판단은 서버가 다시 한다.
   const canSearch = turn?.state === "AWAITING_CONFIRMATION" && !turn.missingFields.length && !turn.ambiguousFields.length && !search && !quotaExceeded && !expired;
   const results = search ? resultItems(search) : null;
@@ -354,8 +357,8 @@ export function useAiSearch() {
                   {/* reply는 텍스트로만 그린다(HTML 삽입 금지). */}
                   <p>{message.turn.reply}</p>
                 </div>
-                {/* 답변마다 그때의 조건을 보여 준다. 마지막 카드는 409 갱신을 반영하려고 최신 turn을 쓴다. */}
-                <TripSummary turn={index === lastAi && turn ? turn : message.turn} />
+                {/* 답변마다 그때의 조건을 보여 준다(여행 대화 제외). 마지막 카드는 409 갱신을 반영하려고 최신 turn을 쓴다. */}
+                {hasCard(message) && <TripSummary turn={index === lastCard && turn ? turn : message.turn} />}
               </Fragment>
             ),
           )}
@@ -474,6 +477,13 @@ export function useAiSearch() {
 
 /** AI 답변 하나는 그때의 응답 전체(조건·누락·애매 항목)를 함께 보관한다. */
 type ChatEntry = { role: "user"; text: string } | { role: "ai"; turn: ChatMessageResponse };
+
+/**
+ * 조건을 바꿀 수 있는 답변. 여행 대화(TRAVEL_CHAT)·지원하지 않는 요청(UNSUPPORTED)은 서버가 조건·상태·버전을 그대로 두고
+ * 모호 항목을 빈 배열로 준다(ChatTurnDecisionMaker.preserve*). 이런 답변은 카드 없이 답변만 보여 준다.
+ */
+const changesConditions = (turn: ChatMessageResponse) => turn.intent !== "TRAVEL_CHAT" && turn.intent !== "UNSUPPORTED";
+const hasCard = (entry: ChatEntry) => entry.role === "ai" && changesConditions(entry.turn);
 
 type SummaryCell = "period" | "passengers" | "tripType" | "budget" | "route" | "style";
 

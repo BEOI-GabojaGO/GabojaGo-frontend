@@ -37,7 +37,8 @@ export type ChatSessionCreated = {
 export type ChatMessageResponse = {
   chatSessionId: string;
   state: ChatState;
-  intent: "FLIGHT_SEARCH" | "CONFIRM" | "CANCEL" | "UNSUPPORTED";
+  /** TRAVEL_CHAT: 검색 조건 없는 여행 대화. 서버는 조건·상태·버전을 그대로 두고 누락·모호 항목은 빈 배열로 준다. */
+  intent: "FLIGHT_SEARCH" | "TRAVEL_CHAT" | "CONFIRM" | "CANCEL" | "UNSUPPORTED";
   reply: string;
   conditions: ChatConditions | null;
   missingFields: string[];
