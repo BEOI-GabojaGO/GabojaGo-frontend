@@ -9,6 +9,7 @@ import { SiteLoader } from "@/components/site-loader";
 import type {
   ChatConditions,
   ChatConfirmation,
+  ChatLocationResolution,
   ChatMessageResponse,
   ChatSearchAccepted,
   ChatSearchResult,
@@ -27,7 +28,14 @@ const MAX_MESSAGE = 1000;
 /** 다이얼로그에는 3장만 보여 준다. "더 많은 항공권 찾기"는 같은 조건으로 조건 검색 화면으로 넘긴다(결정 3.2 (b)). */
 const PAGE = 3;
 
-type SearchView = { conditions: ChatConditions; dateMode: "EXACT" | "FLEXIBLE"; tripType: ChatTripType; data: ChatSearchResult };
+/** resolutions: 검색할 때의 장소 해석 결과. 목록·요약으로 넘길 때 서버가 확정한 장소를 쓴다. */
+type SearchView = {
+  conditions: ChatConditions;
+  resolutions?: ChatLocationResolution[];
+  dateMode: "EXACT" | "FLEXIBLE";
+  tripType: ChatTripType;
+  data: ChatSearchResult;
+};
 
 /** 탭 단위로 대화를 이어가려고 세션 ID만 보관한다. 메시지 이력은 서버에도 없어 복원하지 않는다. */
 const SESSION_KEY = "gabojago.aiChatSessionId";
@@ -56,9 +64,18 @@ const storage = {
 const STATUS_POLL_MS = 3000;
 const STATUS_POLL_LIMIT = 60;
 
+/** 서버 문구 대신 보여 줄 안내(오류 코드별). 어느 경우든 자동 재시도는 하지 않는다. */
 const SEARCH_FAILURES: Record<string, string> = {
   SERPAPI_QUOTA_EXCEEDED: "항공권 검색 한도를 모두 썼어요. 잠시 후 다시 시도해 주세요.",
   FLIGHT_SEARCH_FAILED: "항공권 검색에 실패했어요. 다시 검색하려면 버튼을 눌러 주세요.",
+  // 기간 검색 대기열 포화(503). 검색이 접수되지 않았다.
+  CHAT_SEARCH_BUSY: "검색 요청이 많아요. 잠시 후 다시 눌러 주세요.",
+  // 상태 GET의 FAILED 사유: 서버 재시작으로 중단. 조건은 남아 있어 같은 버튼으로 다시 검색할 수 있다.
+  CHAT_SEARCH_INTERRUPTED: "서버가 다시 시작돼 검색이 중단됐어요. 다시 검색해 주세요.",
+  AI_SERVICE_FAILED: "AI가 조건을 해석하지 못했어요. 입력한 문장은 그대로 두었으니 잠시 후 다시 보내 주세요.",
+  AI_SERVICE_TIMEOUT: "AI 응답이 늦어지고 있어요. 입력한 문장은 그대로 두었으니 잠시 후 다시 보내 주세요.",
+  // AI 호출 한도(429, 백엔드 PR #20부터 502 대신 이 코드로 온다).
+  AI_RATE_LIMITED: "AI 요청이 잠시 많아요. 입력한 문장은 그대로 두었으니 잠시 후 다시 보내 주세요.",
 };
 
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -163,11 +180,14 @@ export function useAiSearch() {
         failed(result);
         return false;
       }
-      // conditions는 누적 전체 조건이라 이전 값과 합치지 않고 교체한다. 조건이 바뀌었으니 이전 결과도 지운다.
       setMessages((list) => [...list, { role: "user", text: message }, { role: "ai", turn: result.data }]);
-      setTurn(result.data);
-      setSearch(null);
-      setQuotaExceeded(false);
+      // 여행 대화·지원하지 않는 요청은 조건을 바꾸지 않는다. 빈 모호 항목으로 덮지 않도록 최신 조건 카드·확인 버튼·결과를 그대로 둔다.
+      if (changesConditions(result.data)) {
+        // conditions는 누적 전체 조건이라 이전 값과 합치지 않고 교체한다. 조건이 바뀌었으니 이전 결과도 지운다.
+        setTurn(result.data);
+        setSearch(null);
+        setQuotaExceeded(false);
+      }
       sent = true;
       return true;
     } finally {
@@ -201,14 +221,16 @@ export function useAiSearch() {
       // 결과에 dateMode가 없을 수 있어 승인한 조건의 dateMode로 구분한다.
       const conditions = turn.conditions ?? {};
       const show = (data: ChatSearchResult) => {
-        setSearch({ conditions, dateMode: conditions.dateMode ?? "EXACT", tripType: tripTypeOf(conditions) ?? "ROUND_TRIP", data });
+        setSearch({ conditions, resolutions: turn.locationResolutions, dateMode: conditions.dateMode ?? "EXACT", tripType: tripTypeOf(conditions) ?? "ROUND_TRIP", data });
       };
       const result = await requestJson<ChatSearchResult | ChatSearchAccepted>(`${base}/search`, { method: "POST" });
       // FLEXIBLE은 202로 작업만 접수한다(결과 없음). 결과는 상태 GET으로 받는다.
       if (result.ok && result.status === 202) return await checkSearch(base, show);
       if (result.ok) return show(result.data as ChatSearchResult);
       // 응답이 불명확하면(연결 끊김, 검색 실패·진행 중) 다시 POST하지 않고 최신 검색 상태로 확인한다.
-      if (result.status === 0 || result.status >= 500 || result.code === "CHAT_SEARCH_IN_PROGRESS") await checkSearch(base, show);
+      // 대기열 포화(503 BUSY)는 접수 자체가 안 된 것이라 확인할 검색이 없다.
+      const unclear = result.status === 0 || result.status >= 500 || result.code === "CHAT_SEARCH_IN_PROGRESS";
+      if (unclear && result.code !== "CHAT_SEARCH_BUSY") await checkSearch(base, show);
       else failed(result);
     } finally {
       setSearching(false);
@@ -242,16 +264,16 @@ export function useAiSearch() {
     setError("검색이 오래 걸리고 있어요. 잠시 후 다시 확인해 주세요.");
   }
 
-  /** 더 많은 항공권: 같은 조건으로 조건 검색(왕복·편도 항공권 목록)으로 넘긴다. 목록 화면이 다시 검색한다(SerpApi 재호출, 팀 결정). */
   /**
-   * 채팅 조건 → 항공권 검색 요청. 지명은 표시용 이름이라 백엔드와 같은 규칙으로 하나로 확정될 때만 쓴다.
+   * 채팅 조건 → 항공권 검색 요청. 장소는 서버가 확정한(RESOLVED) 후보를 쓰고(도시면 소속 공항 전체),
+   * 해석 결과가 없을 때만(이 필드가 없던 배포본·409 갱신) 지명을 백엔드와 같은 규칙으로 하나로 확정될 때 쓴다.
    * FLEXIBLE은 날짜가 기간이라 그 카드(없으면 첫 카드, 가장 싼 옵션)의 날짜를 쓴다. 안 되면 안내하고 null.
    */
   function flightRequest(item?: ResultItem) {
     if (!search || !results) return null;
     const c = search.conditions;
-    const origin = resolveLocation(c.origin ?? "");
-    const destination = resolveLocation(c.destination ?? "");
+    const origin = resolvedPlace(search.resolutions, "origin") ?? resolveLocation(c.origin ?? "");
+    const destination = resolvedPlace(search.resolutions, "destination") ?? resolveLocation(c.destination ?? "");
     if (!origin || !destination) {
       setError("출발지/도착지를 항공권 목록에서 찾지 못했어요. 조건 검색에서 직접 골라 주세요.");
       return null;
@@ -311,7 +333,7 @@ export function useAiSearch() {
     if (await send(draft)) setDraft("");
   }
 
-  const lastAi = messages.findLastIndex((message) => message.role === "ai");
+  const lastCard = messages.findLastIndex(hasCard);
   // 문장(reply)과 관계없이 서버가 계산한 상태로 판단한다. 최종 판단은 서버가 다시 한다.
   const canSearch = turn?.state === "AWAITING_CONFIRMATION" && !turn.missingFields.length && !turn.ambiguousFields.length && !search && !quotaExceeded && !expired;
   const results = search ? resultItems(search) : null;
@@ -354,8 +376,12 @@ export function useAiSearch() {
                   {/* reply는 텍스트로만 그린다(HTML 삽입 금지). */}
                   <p>{message.turn.reply}</p>
                 </div>
-                {/* 답변마다 그때의 조건을 보여 준다. 마지막 카드는 409 갱신을 반영하려고 최신 turn을 쓴다. */}
-                <TripSummary turn={index === lastAi && turn ? turn : message.turn} />
+                {/* 답변마다 그때의 조건을 보여 준다(여행 대화 제외). 마지막 카드는 409 갱신을 반영하려고 최신 turn을 쓴다. */}
+                {hasCard(message) && <TripSummary turn={index === lastCard && turn ? turn : message.turn} />}
+                {/* 장소 후보는 지금 고를 수 있는 마지막 카드에만 보여 준다. */}
+                {index === lastCard && turn && (
+                  <LocationChips resolutions={turn.locationResolutions} disabled={pending} onPick={(text) => void send(text)} />
+                )}
               </Fragment>
             ),
           )}
@@ -475,6 +501,13 @@ export function useAiSearch() {
 /** AI 답변 하나는 그때의 응답 전체(조건·누락·애매 항목)를 함께 보관한다. */
 type ChatEntry = { role: "user"; text: string } | { role: "ai"; turn: ChatMessageResponse };
 
+/**
+ * 조건을 바꿀 수 있는 답변. 여행 대화(TRAVEL_CHAT)·지원하지 않는 요청(UNSUPPORTED)은 서버가 조건·상태·버전을 그대로 두고
+ * 모호 항목을 빈 배열로 준다(ChatTurnDecisionMaker.preserve*). 이런 답변은 카드 없이 답변만 보여 준다.
+ */
+const changesConditions = (turn: ChatMessageResponse) => turn.intent !== "TRAVEL_CHAT" && turn.intent !== "UNSUPPORTED";
+const hasCard = (entry: ChatEntry) => entry.role === "ai" && changesConditions(entry.turn);
+
 type SummaryCell = "period" | "passengers" | "tripType" | "budget" | "route" | "style";
 
 /** missingFields·ambiguousFields 항목명 → 조건 카드 칸. 백엔드 ChatTurnDecisionMaker의 항목명 기준. */
@@ -498,7 +531,7 @@ const FIELD_CELL: Record<string, SummaryCell> = {
 };
 
 /** 조건 요약 카드. 아직 없거나 애매한 칸은 분홍색으로 강조한다. */
-function TripSummary({ turn }: { turn: Pick<ChatMessageResponse, "conditions" | "missingFields" | "ambiguousFields"> }) {
+function TripSummary({ turn }: { turn: Pick<ChatMessageResponse, "conditions" | "missingFields" | "ambiguousFields" | "locationResolutions"> }) {
   const c = turn.conditions ?? {};
   const flagged = new Set([...turn.missingFields, ...turn.ambiguousFields].map((field) => FIELD_CELL[field]));
   const cell = (key: SummaryCell, label: string, value: ReactNode) => (
@@ -513,10 +546,66 @@ function TripSummary({ turn }: { turn: Pick<ChatMessageResponse, "conditions" | 
       {cell("passengers", "탑승객", passengers(c))}
       {cell("tripType", "여행 유형", TRIP_LABEL[tripTypeOf(c) ?? "UNKNOWN"])}
       {cell("budget", "예산", c.maxBudgetKrw ? `${formatBudget(c.maxBudgetKrw)} 이하` : "제한 없음")}
-      {cell("route", "출발지 / 도착지", `${c.origin ?? "미정"} / ${c.destination ?? "미정"}`)}
+      {cell("route", "출발지 / 도착지", `${placeName(turn, "origin", c.origin)} / ${placeName(turn, "destination", c.destination)}`)}
       {/* API에 없는 항목(미연결). */}
       {cell("style", "여행 스타일", "-")}
     </section>
+  );
+}
+
+/** 서버가 확정한(RESOLVED) 장소는 그 이름으로, 아니면 사용자 표현 그대로 보여 준다. */
+function placeName(turn: Pick<ChatMessageResponse, "locationResolutions">, field: ChatLocationResolution["field"], expression?: string) {
+  const resolved = resolvedPlace(turn.locationResolutions, field);
+  if (!resolved) return expression ?? "미정";
+  return resolved.type === "AIRPORT" ? `${resolved.nameKo}(${resolved.code})` : resolved.nameKo;
+}
+
+/** 서버가 하나로 확정한 장소(GET /locations와 같은 형태). 없으면 null. */
+function resolvedPlace(resolutions: ChatLocationResolution[] | undefined, field: ChatLocationResolution["field"]) {
+  return resolutions?.find((r) => r.field === field && r.status === "RESOLVED")?.candidates[0] ?? null;
+}
+
+const FIELD_LABEL: Record<ChatLocationResolution["field"], string> = { origin: "출발지", destination: "목적지" };
+
+/** 받침이 있으면 "으로", 없거나 ㄹ 받침이면 "로". 한글이 아니면(영문·코드) "로". */
+function toParticle(word: string) {
+  const code = word.charCodeAt(word.length - 1) - 0xac00;
+  if (code < 0 || code > 11171) return "로";
+  const final = code % 28;
+  return final === 0 || final === 8 ? "로" : "으로";
+}
+
+/**
+ * 장소 후보 칩(시안 없음, 메인 조건 검색 칩 모양). 후보가 여러 개(AMBIGUOUS)일 때만 보여 주고,
+ * 누르면 "출발지는 청주국제공항으로 할게"를 다음 메시지로 보낸다(서버에 후보 선택 API가 없음).
+ * 주변 공항 거리는 직선거리라 이동 시간처럼 표현하지 않는다.
+ */
+function LocationChips({ resolutions, disabled, onPick }: { resolutions?: ChatLocationResolution[]; disabled: boolean; onPick: (text: string) => void }) {
+  const ambiguous = resolutions?.filter((r) => r.status === "AMBIGUOUS") ?? [];
+  if (!ambiguous.length) return null;
+  return (
+    <div className="ai-location-picks">
+      {ambiguous.map((r) => {
+        const options = r.nearbyAirportCandidates.length
+          ? r.nearbyAirportCandidates.map(({ location, straightLineDistanceKm }) => ({ location, note: ` · 직선거리 약 ${straightLineDistanceKm}km` }))
+          : r.candidates.map((location) => ({ location, note: "" }));
+        return (
+          <div key={r.field} className="ai-location-chips" role="group" aria-label={`${FIELD_LABEL[r.field]} 후보`}>
+            <span>{FIELD_LABEL[r.field]} 후보</span>
+            {options.map(({ location, note }) => (
+              <button
+                key={location.code}
+                type="button"
+                disabled={disabled}
+                onClick={() => onPick(`${FIELD_LABEL[r.field]}는 ${location.nameKo}${toParticle(location.nameKo)} 할게`)}
+              >
+                {location.nameKo}({location.code}){note}
+              </button>
+            ))}
+          </div>
+        );
+      })}
+    </div>
   );
 }
 
