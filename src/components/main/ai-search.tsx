@@ -74,6 +74,8 @@ const SEARCH_FAILURES: Record<string, string> = {
   CHAT_SEARCH_INTERRUPTED: "서버가 다시 시작돼 검색이 중단됐어요. 다시 검색해 주세요.",
   AI_SERVICE_FAILED: "AI가 조건을 해석하지 못했어요. 입력한 문장은 그대로 두었으니 잠시 후 다시 보내 주세요.",
   AI_SERVICE_TIMEOUT: "AI 응답이 늦어지고 있어요. 입력한 문장은 그대로 두었으니 잠시 후 다시 보내 주세요.",
+  // AI 호출 한도(429, 백엔드 PR #20부터 502 대신 이 코드로 온다).
+  AI_RATE_LIMITED: "AI 요청이 잠시 많아요. 입력한 문장은 그대로 두었으니 잠시 후 다시 보내 주세요.",
 };
 
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
