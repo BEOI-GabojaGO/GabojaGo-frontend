@@ -64,9 +64,16 @@ const storage = {
 const STATUS_POLL_MS = 3000;
 const STATUS_POLL_LIMIT = 60;
 
+/** 서버 문구 대신 보여 줄 안내(오류 코드별). 어느 경우든 자동 재시도는 하지 않는다. */
 const SEARCH_FAILURES: Record<string, string> = {
   SERPAPI_QUOTA_EXCEEDED: "항공권 검색 한도를 모두 썼어요. 잠시 후 다시 시도해 주세요.",
   FLIGHT_SEARCH_FAILED: "항공권 검색에 실패했어요. 다시 검색하려면 버튼을 눌러 주세요.",
+  // 기간 검색 대기열 포화(503). 검색이 접수되지 않았다.
+  CHAT_SEARCH_BUSY: "검색 요청이 많아요. 잠시 후 다시 눌러 주세요.",
+  // 상태 GET의 FAILED 사유: 서버 재시작으로 중단. 조건은 남아 있어 같은 버튼으로 다시 검색할 수 있다.
+  CHAT_SEARCH_INTERRUPTED: "서버가 다시 시작돼 검색이 중단됐어요. 다시 검색해 주세요.",
+  AI_SERVICE_FAILED: "AI가 조건을 해석하지 못했어요. 입력한 문장은 그대로 두었으니 잠시 후 다시 보내 주세요.",
+  AI_SERVICE_TIMEOUT: "AI 응답이 늦어지고 있어요. 입력한 문장은 그대로 두었으니 잠시 후 다시 보내 주세요.",
 };
 
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -219,7 +226,9 @@ export function useAiSearch() {
       if (result.ok && result.status === 202) return await checkSearch(base, show);
       if (result.ok) return show(result.data as ChatSearchResult);
       // 응답이 불명확하면(연결 끊김, 검색 실패·진행 중) 다시 POST하지 않고 최신 검색 상태로 확인한다.
-      if (result.status === 0 || result.status >= 500 || result.code === "CHAT_SEARCH_IN_PROGRESS") await checkSearch(base, show);
+      // 대기열 포화(503 BUSY)는 접수 자체가 안 된 것이라 확인할 검색이 없다.
+      const unclear = result.status === 0 || result.status >= 500 || result.code === "CHAT_SEARCH_IN_PROGRESS";
+      if (unclear && result.code !== "CHAT_SEARCH_BUSY") await checkSearch(base, show);
       else failed(result);
     } finally {
       setSearching(false);
