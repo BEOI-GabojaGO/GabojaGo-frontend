@@ -114,17 +114,42 @@ export function useAiSearch() {
 
   const close = () => closeDialogAnimated(ref.current, 700);
 
-  /** 만료됐을 때 처음부터. 서버 세션은 다음 메시지 때 새로 만든다. */
-  function startOver() {
-    sessionId.current = null;
-    storage.set(null);
+  /** 새 대화 요청 중. 버튼 중복 클릭을 막는다. */
+  const [resetting, setResetting] = useState(false);
+
+  /**
+   * 새 대화 시작: 서버 세션을 초기화(POST .../reset, 기존 세션 종료 + 빈 새 세션 발급)하고 화면의 대화·조건·결과를 비운다.
+   * 세션이 없으면(만료로 이미 지웠거나 아직 안 만듦) 화면만 비우고, 서버 세션은 다음 메시지 때 만든다.
+   */
+  async function resetChat() {
+    if (resetting || pending || searching) return;
+    const id = sessionId.current;
+    if (id) {
+      setResetting(true);
+      const result = await requestJson<ChatSessionCreated>(`/api/v1/chat-sessions/${encodeURIComponent(id)}/reset`, { method: "POST" });
+      setResetting(false);
+      if (!result.ok) {
+        // 자동 재시도하지 않는다. 대화는 그대로 두고 다시 누르게 한다.
+        setError(result.message);
+        return;
+      }
+      sessionId.current = result.data.chatSessionId;
+    }
+    storage.set(sessionId.current);
     setTurn(null);
     setSearch(null);
     setMessages([]);
+    setDraft("");
     setError("");
     setExpired(false);
     setResumed(false);
     setQuotaExceeded(false);
+    notify("새 대화를 시작했어요.");
+  }
+
+  /** 버튼: 지운 대화는 되돌릴 수 없어 한 번 확인한다(시안에 확인 창이 없어 브라우저 기본 창). */
+  function confirmReset() {
+    if (window.confirm("지금까지의 대화와 조건이 지워져요. 새 대화를 시작할까요?")) void resetChat();
   }
 
   /** 세션 404는 대화 만료다. 다른 404(검색 기록 없음 등)와 구분한다. */
@@ -403,7 +428,7 @@ export function useAiSearch() {
             <p className="ai-error" role="alert">
               {error}
               {expired && (
-                <button className="ai-restart" type="button" onClick={startOver}>
+                <button className="ai-restart" type="button" disabled={resetting} onClick={() => void resetChat()}>
                   새 대화 시작
                 </button>
               )}
@@ -445,19 +470,19 @@ export function useAiSearch() {
               <span className="ai-action-label-desktop">이 조건으로 항공권 찾기</span>
             </button>
           )}
+          {/* 조건 바꾸기는 아래 입력창으로 한다. 이 버튼은 대화·조건을 모두 비우고 처음부터 시작한다. */}
           <button
-            className="ai-edit-query"
+            className="ai-new-chat"
             type="button"
-            onClick={() => {
-              // 팝업을 닫지 않고 같은 대화에 바꿀 조건을 입력하게 한다.
-              ref.current?.querySelector<HTMLInputElement>("#ai-followup-input")?.focus({ preventScroll: true });
-            }}
+            disabled={!messages.length || resetting || pending || searching}
+            onClick={confirmReset}
           >
             <svg className="ai-action-icon" aria-hidden="true" width="20" height="20" viewBox="0 0 20 20" fill="none">
-              <path d="M11.25 4.167L15.833 8.75M4.167 15.833L5.139 11.944L13.75 3.333C14.21 2.873 14.956 2.873 15.417 3.333L16.667 4.583C17.127 5.044 17.127 5.79 16.667 6.25L8.056 14.861L4.167 15.833Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+              <path d="M3.75 10A6.25 6.25 0 1 0 5.58 5.58" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+              <path d="M3.75 3.333V6.667H7.083" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
-            <span className="ai-action-label-mobile">조건 수정</span>
-            <span className="ai-action-label-desktop">조건 수정하기</span>
+            <span className="ai-action-label-mobile">새 대화</span>
+            <span className="ai-action-label-desktop">새 대화 시작하기</span>
           </button>
           {results && (
             <button className="ai-more-flights" type="button" onClick={() => void openFlightList()}>
