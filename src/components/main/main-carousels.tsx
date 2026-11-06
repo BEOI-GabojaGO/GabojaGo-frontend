@@ -74,22 +74,25 @@ export function MainCarousels() {
             aria-label={`${t.name} ${tripLength(t.nights)} 왕복 항공권 검색`}
             onClick={() => router.push(recommendedSearchUrl(t))}
           >
-            <span className="travel-photo">
-              <picture>
-                <img src={asset(t.image)} alt={`${t.name} 여행 풍경`} />
-              </picture>
-              <span className="travel-label">
-                <span className="travel-name">{t.name}</span>
-                <span className="travel-country">{t.country}</span>
+            {/* hover 때 이 묶음을 살짝 줄여 사진이 확대돼 보이게 한다(1105 시안). */}
+            <span className="travel-card-content">
+              <span className="travel-photo">
+                <picture>
+                  <img src={asset(t.image)} alt={`${t.name} 여행 풍경`} />
+                </picture>
+                <span className="travel-label">
+                  <span className="travel-name">{t.name}</span>
+                  <span className="travel-country">{t.country}</span>
+                </span>
               </span>
-            </span>
-            <span className="travel-details">
-              <span className="trip-duration"><Img name="imgCalendarIcon1.svg" />{tripLength(t.nights)}</span>
-              <span className="travel-description">{t.description}</span>
-              <span className="tags">
-                {t.tags.map((tag) => (
-                  <span key={tag}># {tag}</span>
-                ))}
+              <span className="travel-details">
+                <span className="trip-duration"><Img name="imgCalendarIcon1.svg" />{tripLength(t.nights)}</span>
+                <span className="travel-description">{t.description}</span>
+                <span className="tags">
+                  {t.tags.map((tag) => (
+                    <span key={tag}># {tag}</span>
+                  ))}
+                </span>
               </span>
             </span>
           </button>
@@ -105,23 +108,22 @@ export function MainCarousels() {
         trackLabel="아시아 국가"
         onSeeAll={() => router.push("/explore")}
       >
-        {/* 디자인에 사진이 없는 나라(태국·대만·홍콩)는 사진 없이 회색 카드로 뒤에 이어 붙인다. */}
         {COUNTRIES.map(({ code, nameKo: name, nameEn: en, image }) => (
           <button
-            className={image ? "country-card" : "country-card no-photo"}
+            className="country-card"
             type="button"
             key={code}
             aria-label={`${name} 둘러보기`}
             onClick={() => router.push(`/explore/${code}`)}
           >
-            {image && (
+            <span className="country-card-content">
               <picture>
                 <img className="desktop-image" src={asset(image)} alt={`${name} 풍경`} />
               </picture>
-            )}
-            <span className="country-label">
-              <strong>{name}</strong>
-              <small>{en}</small>
+              <span className="country-label">
+                <strong>{name}</strong>
+                <small>{en}</small>
+              </span>
             </span>
           </button>
         ))}

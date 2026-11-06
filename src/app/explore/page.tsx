@@ -13,11 +13,7 @@ export default function ExplorePage() {
               href={`/explore/${country.code}`}
               className="block overflow-hidden rounded-2xl border border-slate-200 bg-white transition hover:border-blue-300 hover:shadow-sm"
             >
-              {country.image ? (
-                <img src={`/main/${country.image}`} alt={`${country.nameKo} 풍경`} className="aspect-[4/3] w-full object-cover" />
-              ) : (
-                <span className="grid aspect-[4/3] place-items-center bg-slate-100 text-sm text-slate-400">사진 준비 중</span>
-              )}
+              <img src={`/main/${country.image}`} alt={`${country.nameKo} 풍경`} className="aspect-[4/3] w-full object-cover" />
               <span className="block p-3">
                 <strong className="block text-slate-900">{country.nameKo}</strong>
                 <small className="text-slate-500">{country.nameEn}</small>
