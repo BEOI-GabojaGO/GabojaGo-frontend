@@ -114,7 +114,7 @@ dialog{border:0;border-radius:24px;padding:32px;max-width:540px;width:calc(100% 
 .ai-dialog-actions button{display:flex;align-items:center;justify-content:center;gap:8px;min-height:54px;padding:0 20px;border-radius:20px;font-size:14px;font-weight:600;white-space:nowrap}
 .ai-action-icon,.ai-action-label-mobile{display:none}
 .ai-new-chat{border:1px solid #e9e9e9;background:#fff}.ai-new-chat:hover:not(:disabled){background:#f6f6f6}.ai-new-chat:disabled{color:#bbb;cursor:default}
-.ai-more-flights{background:var(--pink);color:#fff}.ai-more-flights:hover{background:#bd0649}
+.ai-more-flights{background:var(--pink);color:#fff}.ai-more-flights:hover{background:#e31c5a}
 .ai-followup-form{display:flex;align-items:center;gap:12px;min-height:56px;margin-top:0;padding:10px 10px 10px 14px;border-radius:24px;background:#f6f6f6;transition:background-color .15s,box-shadow .15s}
 .ai-followup-form:hover{background:#fff;box-shadow:inset 0 0 0 1px var(--pink),0 4px 12px #00000012}
 .ai-followup-form>img{width:16px;height:16px;flex:none}.ai-followup-form input{min-width:0;width:100%;flex:1;border:0;outline:0;background:transparent;color:#333;font-size:14px;line-height:1.8}.ai-followup-form input::placeholder{color:#aaa}
@@ -549,6 +549,96 @@ footer{position:relative;z-index:3}
 .passenger-picker .passenger-row strong{font-size:18px;line-height:22px}
 .passenger-picker .counter output{font-weight:600}
 .date-picker .calendar-top strong{font-size:18px;line-height:21px}
+
+/* ---------- 1105 시안: AI 다이얼로그 ---------- */
+/* 대화 묶음(.ai-turn): 질문 + 답변. 두 번째 묶음부터 구분선(위 여백 36 = 로그 간격 16 + 20). */
+.ai-chat-log{margin-top:0}
+.ai-turn{display:flex;flex-direction:column;gap:16px;width:100%;min-width:0}
+.ai-turn+.ai-turn{margin-top:20px;padding-top:28px;border-top:1px solid #eee}
+.ai-user-message{line-height:30px;scroll-margin-top:76px}
+@media(min-width:700px){.ai-answer,.ai-answer p{line-height:1.8}}
+/* 답변 대기: 점 3개 말풍선. */
+.ai-thinking{display:flex;align-self:flex-start;align-items:center;justify-content:center;width:65px;height:46px;margin-top:8px;border-radius:24px;background:#f6f6f6;animation:ai-thinking-breathe 1.8s cubic-bezier(.22,1,.36,1) infinite}
+.ai-thinking i{display:inline-flex;align-items:center;gap:5px;font-style:normal}
+.ai-thinking b{display:block;width:6px;height:6px;border-radius:50%;background:var(--pink);animation:ai-thinking-dot 1s cubic-bezier(.22,1,.36,1) infinite}
+.ai-thinking b:nth-child(2){animation-delay:.16s}
+.ai-thinking b:nth-child(3){animation-delay:.32s}
+/* 부족한 조건 안내 + 비활성 검색 버튼. */
+.ai-dialog-actions{flex-wrap:wrap;row-gap:22px}
+.ai-missing-conditions{flex:0 0 100%;margin:0;color:#333;font-size:16px;font-weight:400;line-height:1.8;text-align:left;white-space:pre-line}
+.ai-more-flights:disabled{background:#eee;color:#aaa;cursor:not-allowed;box-shadow:none}
+.ai-more-flights:disabled:hover{background:#eee}
+@media(min-width:700px) and (max-width:1199px){.ai-missing-conditions{font-size:14px}}
+/* 토스트는 대화창 안, 입력칸 위에 띄운다. */
+.ai-dialog .toast{position:absolute;bottom:126px;z-index:30;max-width:calc(100% - 48px);text-align:center;white-space:normal}
+/* 항공권 카드: 올리면 1px 떠오르고 테두리가 진해진다. */
+.ai-flight-card{transition:border-color .2s,box-shadow .2s,transform .2s}
+.ai-flight-card:hover{border-color:#ccc;box-shadow:0 4px 12px rgba(0,0,0,.035);transform:translateY(-1px)}
+.ai-followup-form button:hover{background:#e31c5a}
+.ai-followup-form:hover,.ai-followup-form:active,.ai-followup-form:focus-within{background:#fff;box-shadow:inset 0 0 0 1px var(--pink),0 8px 24px #00000024}
+
+/* 열 때(is-entering) 차례로 떠오른다. */
+.ai-dialog.is-entering :is(.ai-dialog-header>*,.ai-dialog-content>*,.ai-dialog-footer>form){opacity:0;animation:ai-dialog-content-in 420ms cubic-bezier(.22,1,.36,1) var(--ai-entry-delay,0ms) both}
+.ai-dialog.is-entering .ai-dialog-header>.ai-dialog-close{--ai-entry-delay:55ms}
+.ai-dialog.is-entering .ai-dialog-content>.ai-chat-log{--ai-entry-delay:105ms}
+.ai-dialog.is-entering .ai-dialog-content>.ai-dialog-actions{--ai-entry-delay:450ms}
+/* 새 답변(is-new is-revealing): 답변 → 조건 칸 6개 → 장소 후보 순서로 시차를 두고 나타난다. */
+.ai-turn.is-revealing>.ai-answer>:is(strong,p),.ai-turn.is-revealing>.ai-trip-summary>div>:is(span,strong),.ai-turn.is-revealing>.ai-location-picks{opacity:0;animation:ai-dialog-content-in 460ms cubic-bezier(.22,1,.36,1) var(--ai-item-delay,0ms) both}
+.ai-turn.is-revealing>.ai-answer>p{--ai-item-delay:110ms}
+.ai-turn.is-revealing>.ai-trip-summary>div:nth-child(1)>span{--ai-item-delay:180ms}
+.ai-turn.is-revealing>.ai-trip-summary>div:nth-child(1)>strong{--ai-item-delay:215ms}
+.ai-turn.is-revealing>.ai-trip-summary>div:nth-child(2)>span{--ai-item-delay:250ms}
+.ai-turn.is-revealing>.ai-trip-summary>div:nth-child(2)>strong{--ai-item-delay:285ms}
+.ai-turn.is-revealing>.ai-trip-summary>div:nth-child(3)>span{--ai-item-delay:320ms}
+.ai-turn.is-revealing>.ai-trip-summary>div:nth-child(3)>strong{--ai-item-delay:355ms}
+.ai-turn.is-revealing>.ai-trip-summary>div:nth-child(4)>span{--ai-item-delay:390ms}
+.ai-turn.is-revealing>.ai-trip-summary>div:nth-child(4)>strong{--ai-item-delay:425ms}
+.ai-turn.is-revealing>.ai-trip-summary>div:nth-child(5)>span{--ai-item-delay:460ms}
+.ai-turn.is-revealing>.ai-trip-summary>div:nth-child(5)>strong{--ai-item-delay:495ms}
+.ai-turn.is-revealing>.ai-trip-summary>div:nth-child(6)>span{--ai-item-delay:530ms}
+.ai-turn.is-revealing>.ai-trip-summary>div:nth-child(6)>strong{--ai-item-delay:565ms}
+.ai-turn.is-revealing>.ai-location-picks{--ai-item-delay:600ms}
+/* 답변이 오면 점 말풍선 자리에서 분홍 빛이 번진다(데스크톱, 2초). 위치는 JS가 --ai-wake-x/y로 준다. */
+/* 빛(20배 확대)이 다이얼로그의 스크롤 영역을 넓히면 버튼 포커스 때 다이얼로그 자체가 옆으로 밀린다. clip은 스크롤 자체를 막는다. */
+.ai-dialog{--ai-wake-x:52px;--ai-wake-y:180px;overflow:clip}
+.ai-dialog.is-waking::before{content:'';position:absolute;top:var(--ai-wake-y);left:var(--ai-wake-x);width:260px;height:180px;z-index:10;pointer-events:none;border-radius:50%;background:radial-gradient(ellipse at 28% 32%,rgba(255,198,224,.7) 0,rgba(214,202,255,.52) 34%,rgba(175,222,255,.37) 62%,rgba(161,231,232,0) 84%),linear-gradient(120deg,rgba(255,210,230,.3),rgba(211,205,255,.24) 46%,rgba(166,229,240,.28));filter:blur(18px);animation:ai-dialog-wake-scale 2000ms cubic-bezier(.16,1,.3,1) both,ai-dialog-wake-opacity 2000ms ease-out both;contain:paint}
+@media(prefers-reduced-motion:reduce){
+  .ai-thinking,.ai-thinking b{animation:none}
+  .ai-dialog.is-entering :is(.ai-dialog-header>*,.ai-dialog-content>*,.ai-dialog-footer>form),.ai-turn.is-revealing *{animation:none!important;opacity:1!important}
+  .ai-dialog.is-waking::before{animation:none;opacity:0}
+}
+
+/* 모바일(699px 이하): 헤더를 본문 위에 겹쳐 띄우고 스크롤 중 숨긴다. 아래 입력칸은 포커스 때 살짝 넓어진다. 닫을 때도 페이드아웃. */
+@media(max-width:699px){
+  .ai-dialog-header{height:60px;min-height:60px;padding:18px 20px;transition:transform 420ms cubic-bezier(.22,1,.36,1)}
+  .ai-dialog-header.is-scroll-hidden{transform:translateY(-100%)}
+  .ai-dialog-content{padding-top:80px}
+  .ai-dialog-footer{height:96px;padding:0 max(30px,calc((100vw - 520px)/2));transition:height .24s cubic-bezier(.22,1,.36,1),padding .24s cubic-bezier(.22,1,.36,1)}
+  .ai-dialog-footer:has(.ai-followup-form:hover),.ai-dialog-footer:has(.ai-followup-form:active),.ai-dialog-footer:has(.ai-followup-form:focus-within){height:100px;padding-left:max(14px,calc((100vw - 520px)/2));padding-right:max(14px,calc((100vw - 520px)/2))}
+  .ai-user-message{line-height:1.8;scroll-margin-top:96px}
+  .ai-trip-summary{column-gap:18px}
+  .ai-trip-summary strong{line-height:20px}
+  .ai-dialog-actions{gap:10px;row-gap:20px}
+  .ai-missing-conditions{font-size:14px}
+  .ai-dialog .toast{bottom:132px;max-width:calc(100% - 40px)}
+  .ai-dialog.is-waking::before{display:none}
+  .ai-flight-card:hover{transform:none}
+  .ai-flight-card:active{transform:translate3d(0,1px,0) scale(.985);border-color:#d2d2d2;background:#fafafa;transition:transform 110ms cubic-bezier(.32,0,.67,0)}
+  .ai-flight-card.is-one-way{height:110px;min-height:110px}
+  .ai-flight-card.is-one-way .ai-flight-price{font-size:18px}
+}
+@media(max-width:699px) and (prefers-reduced-motion:no-preference){
+  .ai-dialog[open].is-closing{animation:login-fade-out 180ms ease-in both}
+  .ai-dialog.is-closing{pointer-events:none}
+}
+@media(max-width:699px) and (prefers-reduced-motion:reduce){.ai-dialog-header,.ai-dialog-footer{transition:none}}
+@media(max-width:599px){
+  .ai-answer strong{font-size:12px;line-height:17px}
+  .ai-answer p{margin-top:8px}
+  .ai-followup-form{min-height:52px;padding:8px 8px 8px 14px;border-radius:20px;gap:6px;transition:background-color .15s,box-shadow .15s,padding .24s cubic-bezier(.22,1,.36,1),border-radius .24s cubic-bezier(.22,1,.36,1)}
+  .ai-dialog-footer:has(.ai-followup-form:hover) .ai-followup-form,.ai-dialog-footer:has(.ai-followup-form:active) .ai-followup-form,.ai-dialog-footer:has(.ai-followup-form:focus-within) .ai-followup-form{padding:10px 10px 10px 16px;border-radius:22px}
+  .ai-followup-form input{font-size:14px;line-height:20px;height:20px;padding:0}
+}
 }
 
 /* 로그인 후 헤더(둘러보기 시안 "♡ 위시리스트 · 닉네임님 ▾"). 메인 헤더는 밝아서 글자·아이콘을 진하게 쓴다. */
@@ -589,3 +679,8 @@ footer{position:relative;z-index:3}
 .ai-flight-card[role=button]{cursor:pointer}
 .ai-flight-card[role=button]:focus-visible{outline:2px solid var(--pink);outline-offset:2px}
 @keyframes prompt-placeholder-marquee{0%,16%{transform:translateX(0)}84%,100%{transform:translateX(calc(-1 * var(--prompt-placeholder-distance,0px)))}}
+@keyframes ai-dialog-content-in{from{opacity:0;transform:translate3d(0,10px,0)}to{opacity:1;transform:translate3d(0,0,0)}}
+@keyframes ai-thinking-breathe{0%,100%{transform:scale(1)}50%{transform:scale(1.035)}}
+@keyframes ai-thinking-dot{0%,100%{opacity:.28;transform:translateY(0) scale(.72)}25%{opacity:1;transform:translateY(-5px) scale(1.08)}50%{opacity:.7;transform:translateY(0) scale(.92)}75%{opacity:.42;transform:translateY(2px) scale(.78)}}
+@keyframes ai-dialog-wake-scale{from{transform:translate3d(-50%,-50%,0) scale(.14)}to{transform:translate3d(-50%,-50%,0) scale(20)}}
+@keyframes ai-dialog-wake-opacity{0%{opacity:0}18%{opacity:.78}68%{opacity:.3}100%{opacity:0}}

@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { Fragment, useEffect, useRef, useState, type FormEvent, type KeyboardEvent, type ReactNode } from "react";
 import { airlinesOf, FlightHeart } from "@/components/flight/flight-list-ui";
 import { saveSelectedTrip } from "@/components/flight/selected-trip";
-import { closeDialogAnimated, Img, isBackdropClick, useToast } from "@/components/main/main-ui";
+import { closeDialogAnimated, Img, isBackdropClick, prefersReducedMotion, useToast } from "@/components/main/main-ui";
 import { SiteLoader } from "@/components/site-loader";
 import type {
   ChatConditions,
@@ -103,16 +103,55 @@ export function useAiSearch() {
   const [quotaExceeded, setQuotaExceeded] = useState(false);
   /** 새로고침 전 세션을 이어 쓰는 첫 응답에 한 번 안내한다. */
   const [resumed, setResumed] = useState(false);
+  /** 방금 도착한 마지막 대화 묶음을 시차를 두고 드러낸다(1105 시안 is-new is-revealing). 다음 메시지를 보낼 때 끈다. */
+  const [revealLast, setRevealLast] = useState(false);
   const { notify, toast } = useToast();
   const router = useRouter();
+  const headerTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   function open() {
-    if (ref.current?.open) return;
-    ref.current?.showModal();
+    const dialog = ref.current;
+    if (!dialog || dialog.open) return;
+    dialog.showModal();
     document.body.classList.add("ai-open");
+    // 열 때 제목 → 닫기 → 대화 → 버튼 순으로 떠오른다(시안 playAiDialogEntry, 520ms).
+    dialog.classList.add("is-entering");
+    setTimeout(() => dialog.classList.remove("is-entering"), 520);
   }
 
-  const close = () => closeDialogAnimated(ref.current, 700);
+  const close = () => closeDialogAnimated(ref.current, 0);
+
+  /**
+   * 답변이 오면 점 말풍선 자리에서 분홍 빛이 번진다(시안 is-waking, 데스크톱만·2초).
+   * 말풍선이 사라지기 전에 위치를 잡아 둔다.
+   */
+  function wake() {
+    const dialog = ref.current;
+    const bubble = dialog?.querySelector(".ai-thinking")?.getBoundingClientRect();
+    if (!dialog || !bubble || prefersReducedMotion() || matchMedia("(max-width: 699px)").matches) return;
+    const box = dialog.getBoundingClientRect();
+    dialog.style.setProperty("--ai-wake-x", `${bubble.left - box.left + bubble.width / 2}px`);
+    dialog.style.setProperty("--ai-wake-y", `${bubble.top - box.top + bubble.height / 2}px`);
+    dialog.classList.remove("is-waking");
+    void dialog.offsetWidth;
+    dialog.classList.add("is-waking");
+    const done = (event: AnimationEvent) => {
+      if (event.animationName !== "ai-dialog-wake-opacity") return;
+      dialog.classList.remove("is-waking");
+      dialog.removeEventListener("animationend", done);
+    };
+    dialog.addEventListener("animationend", done);
+  }
+
+  /** 모바일은 본문을 스크롤하는 동안 헤더를 위로 숨기고, 멈추면 0.4초 뒤 다시 보여 준다(메인 GNB와 같은 방식). */
+  function onContentScroll() {
+    const header = ref.current?.querySelector(".ai-dialog-header");
+    clearTimeout(headerTimer.current);
+    if (!header) return;
+    if (!matchMedia("(max-width: 699px)").matches || prefersReducedMotion()) return header.classList.remove("is-scroll-hidden");
+    header.classList.add("is-scroll-hidden");
+    headerTimer.current = setTimeout(() => header.classList.remove("is-scroll-hidden"), 400);
+  }
 
   /** 새 대화 요청 중. 버튼 중복 클릭을 막는다. */
   const [resetting, setResetting] = useState(false);
@@ -144,6 +183,7 @@ export function useAiSearch() {
     setExpired(false);
     setResumed(false);
     setQuotaExceeded(false);
+    setRevealLast(false);
     notify("새 대화를 시작했어요.");
   }
 
@@ -176,6 +216,7 @@ export function useAiSearch() {
 
     setQuestion(message);
     setPending(true);
+    setRevealLast(false);
     setError("");
     // 만료 뒤 "새 대화 시작"을 누르지 않고 바로 보내도 새 세션으로 이어지므로 만료 표시를 푼다.
     setExpired(false);
@@ -205,7 +246,9 @@ export function useAiSearch() {
         failed(result);
         return false;
       }
+      wake();
       setMessages((list) => [...list, { role: "user", text: message }, { role: "ai", turn: result.data }]);
+      setRevealLast(true);
       // 여행 대화·지원하지 않는 요청은 조건을 바꾸지 않는다. 빈 모호 항목으로 덮지 않도록 최신 조건 카드·확인 버튼·결과를 그대로 둔다.
       if (changesConditions(result.data)) {
         // conditions는 누적 전체 조건이라 이전 값과 합치지 않고 교체한다. 조건이 바뀌었으니 이전 결과도 지운다.
@@ -362,6 +405,9 @@ export function useAiSearch() {
   // 문장(reply)과 관계없이 서버가 계산한 상태로 판단한다. 최종 판단은 서버가 다시 한다.
   const canSearch = turn?.state === "AWAITING_CONFIRMATION" && !turn.missingFields.length && !turn.ambiguousFields.length && !search && !quotaExceeded && !expired;
   const results = search ? resultItems(search) : null;
+  // 빠졌거나 애매한 조건이 있으면 검색 버튼을 비활성으로 보여 주고 무엇을 정해야 하는지 알려 준다(1105 시안).
+  const missing = turn && !search && !expired && !quotaExceeded ? missingLabels(turn) : [];
+  const turns = groupTurns(messages);
 
   const dialog = (
     <dialog
@@ -372,7 +418,10 @@ export function useAiSearch() {
         event.preventDefault();
         void close();
       }}
-      onClose={() => document.body.classList.remove("ai-open")}
+      onClose={() => {
+        document.body.classList.remove("ai-open");
+        ref.current?.querySelector(".ai-dialog-header")?.classList.remove("is-scroll-hidden");
+      }}
       onClick={(event) => {
         if (isBackdropClick(event) && !matchMedia("(max-width: 599px)").matches) void close();
       }}
@@ -381,7 +430,7 @@ export function useAiSearch() {
         <h2 id="ai-dialog-title">AI 항공권 추천</h2>
         <button className="ai-dialog-close" type="button" aria-label="AI 검색 닫기" onClick={() => void close()} />
       </div>
-      <div className="ai-dialog-content">
+      <div className="ai-dialog-content" onScroll={onContentScroll}>
         <div className="ai-chat-log" aria-live="polite">
           {!messages.length && !pending && (
             <div className="ai-answer">
@@ -389,37 +438,44 @@ export function useAiSearch() {
               <p>여행 조건을 말씀해 주시면 정리해 드릴게요.</p>
             </div>
           )}
-          {messages.map((message, index) =>
-            message.role === "user" ? (
-              <p key={index} className="ai-user-message">
-                {message.text}
-              </p>
-            ) : (
-              <Fragment key={index}>
-                <div className="ai-answer">
-                  <strong>AI 답변</strong>
-                  {/* reply는 텍스트로만 그린다(HTML 삽입 금지). */}
-                  <p>{message.turn.reply}</p>
-                </div>
-                {/* 답변마다 그때의 조건을 보여 준다(여행 대화 제외). 마지막 카드는 409 갱신을 반영하려고 최신 turn을 쓴다. */}
-                {hasCard(message) && <TripSummary turn={index === lastCard && turn ? turn : message.turn} />}
-                {/* 장소 후보는 지금 고를 수 있는 마지막 카드에만 보여 준다. */}
-                {index === lastCard && turn && (
-                  <LocationChips resolutions={turn.locationResolutions} disabled={pending} onPick={(text) => void send(text)} />
-                )}
-              </Fragment>
-            ),
-          )}
+          {/* 질문 하나와 그 답변을 한 묶음(.ai-turn)으로 그린다. 두 번째 묶음부터 위에 구분선이 생긴다. */}
+          {turns.map((group, turnIndex) => (
+            <div key={turnIndex} className={`ai-turn${revealLast && turnIndex === turns.length - 1 ? " is-new is-revealing" : ""}`}>
+              {group.map(({ entry: message, index }) =>
+                message.role === "user" ? (
+                  <p key={index} className="ai-user-message">
+                    {message.text}
+                  </p>
+                ) : (
+                  <Fragment key={index}>
+                    <div className="ai-answer">
+                      <strong>AI 답변</strong>
+                      {/* reply는 텍스트로만 그린다(HTML 삽입 금지). */}
+                      <p>{message.turn.reply}</p>
+                    </div>
+                    {/* 답변마다 그때의 조건을 보여 준다(여행 대화 제외). 마지막 카드는 409 갱신을 반영하려고 최신 turn을 쓴다. */}
+                    {hasCard(message) && <TripSummary turn={index === lastCard && turn ? turn : message.turn} />}
+                    {/* 장소 후보는 지금 고를 수 있는 마지막 카드에만 보여 준다. */}
+                    {index === lastCard && turn && (
+                      <LocationChips resolutions={turn.locationResolutions} disabled={pending} onPick={(text) => void send(text)} />
+                    )}
+                  </Fragment>
+                ),
+              )}
+            </div>
+          ))}
           {pending && (
-            <>
+            <div className="ai-turn is-thinking">
               <p className="ai-user-message">{question}</p>
-              <div className="ai-answer">
-                <strong>AI 답변</strong>
-                <p className="ai-pending" role="status">
-                  조건을 정리하고 있어요...
-                </p>
+              {/* 답변 대기: 점 3개 말풍선(시안 .ai-thinking). ai-pending은 점검 스크립트가 대기 여부를 보는 표시다. */}
+              <div className="ai-thinking ai-pending" role="status" aria-label="AI가 답변을 준비하고 있습니다">
+                <i aria-hidden="true">
+                  <b />
+                  <b />
+                  <b />
+                </i>
               </div>
-            </>
+            </div>
           )}
           {resumed && !pending && (
             <p className="ai-resume-note">새로고침 전 대화에 이어서 답했어요. 지난 메시지는 다시 표시되지 않아요.</p>
@@ -463,8 +519,15 @@ export function useAiSearch() {
           </div>
         )}
         <div className="ai-dialog-actions">
-          {canSearch && (
-            <button className="ai-more-flights" type="button" disabled={searching} onClick={() => void searchFlights()}>
+          {missing.length > 0 && (
+            <p className="ai-missing-conditions" role="status">
+              항공권을 보려면 다음 조건을 입력해 주세요
+              {"\n"}
+              {missing.join(" · ")}
+            </p>
+          )}
+          {(canSearch || missing.length > 0) && (
+            <button className="ai-more-flights" type="button" disabled={searching || !canSearch} onClick={() => void searchFlights()}>
               <span className="search-glyph" aria-hidden="true" />
               <span className="ai-action-label-mobile">항공권 찾기</span>
               <span className="ai-action-label-desktop">이 조건으로 항공권 찾기</span>
@@ -506,7 +569,7 @@ export function useAiSearch() {
           <input
             id="ai-followup-input"
             maxLength={MAX_MESSAGE}
-            placeholder="여행 조건(예산, 날짜, 특징, 스타일 등)을 자유롭게 말씀해 주세요."
+            placeholder="여행 조건을 자유롭게 말씀해 주세요."
             value={draft}
             onChange={(event) => setDraft(event.target.value)}
           />
@@ -555,6 +618,26 @@ const FIELD_CELL: Record<string, SummaryCell> = {
   destination: "route",
 };
 
+/** 질문(user) 하나와 그 뒤 답변을 한 묶음으로 나눈다. 원래 위치(index)는 마지막 카드 판단에 쓴다. */
+function groupTurns(messages: ChatEntry[]) {
+  const turns: { entry: ChatEntry; index: number }[][] = [];
+  messages.forEach((entry, index) => {
+    if (entry.role === "user" || !turns.length) turns.push([]);
+    turns.at(-1)!.push({ entry, index });
+  });
+  return turns;
+}
+
+const CELL_LABEL: Record<SummaryCell, string> = { period: "여행 기간", passengers: "탑승객", tripType: "왕복 / 편도", budget: "예산", route: "출발지 / 도착지", style: "여행 스타일" };
+
+/** 빠졌거나 애매한 조건 → 안내에 쓸 이름(중복 없이). 출발지·도착지는 실제로 빠진 쪽만 쓴다. 모르는 항목명은 건너뛴다. */
+function missingLabels(turn: Pick<ChatMessageResponse, "missingFields" | "ambiguousFields">) {
+  const names = [...turn.missingFields, ...turn.ambiguousFields].map((field) =>
+    field === "origin" ? "출발지" : field === "destination" ? "목적지" : FIELD_CELL[field] && CELL_LABEL[FIELD_CELL[field]],
+  );
+  return [...new Set(names.filter((name): name is string => !!name))];
+}
+
 /** 조건 요약 카드. 아직 없거나 애매한 칸은 분홍색으로 강조한다. */
 function TripSummary({ turn }: { turn: Pick<ChatMessageResponse, "conditions" | "missingFields" | "ambiguousFields" | "locationResolutions"> }) {
   const c = turn.conditions ?? {};
@@ -569,7 +652,7 @@ function TripSummary({ turn }: { turn: Pick<ChatMessageResponse, "conditions" | 
     <section className="ai-trip-summary" aria-label="검색 조건 요약">
       {cell("period", "여행 기간", tripPeriod(c))}
       {cell("passengers", "탑승객", passengers(c))}
-      {cell("tripType", "여행 유형", TRIP_LABEL[tripTypeOf(c) ?? "UNKNOWN"])}
+      {cell("tripType", "왕복 / 편도", TRIP_LABEL[tripTypeOf(c) ?? "UNKNOWN"])}
       {cell("budget", "예산", c.maxBudgetKrw ? `${formatBudget(c.maxBudgetKrw)} 이하` : "제한 없음")}
       {cell("route", "출발지 / 도착지", `${placeName(turn, "origin", c.origin)} / ${placeName(turn, "destination", c.destination)}`)}
       {/* API에 없는 항목(미연결). */}
