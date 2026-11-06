@@ -6,6 +6,7 @@ import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type 
 import { cityName } from "@/components/flight/search-condition-fields";
 import { useAiSearch } from "@/components/main/ai-search";
 import { Img, prefersReducedMotion, useInfoDialog, useIsMobile, useToast } from "@/components/main/main-ui";
+import { PromptForm } from "@/components/main/prompt-form";
 import { formatLocation } from "@/lib/flight-client";
 import { toSearchQuery, type InitialSearch } from "@/lib/flight-search-params";
 import type { LocationOption, OneWaySearchRequest, TravelClass } from "@/lib/flight-types";
@@ -72,7 +73,7 @@ export function SearchPanel({ initialCondition, conditionTab }: { initialConditi
   const [mode, setMode] = useState<Mode>(initialCondition || conditionTab ? "조건" : "AI");
   const [prompt, setPrompt] = useState("");
   const isMobile = useIsMobile();
-  const promptInput = useRef<HTMLInputElement>(null);
+  const promptInput = useRef<HTMLTextAreaElement>(null);
   const tabRefs = useRef<(HTMLButtonElement | null)[]>([]);
   const tabList = useRef<HTMLDivElement>(null);
   const indicator = useRef<HTMLSpanElement>(null);
@@ -177,22 +178,7 @@ export function SearchPanel({ initialCondition, conditionTab }: { initialConditi
       </div>
 
       <div id="search-content" role="tabpanel" aria-labelledby={activeTab.id} hidden={condition || mbti}>
-        <form className="prompt-form" onSubmit={submitPrompt}>
-          <Img name="imgSparkleIcon.svg" />
-          <label className="sr-only" htmlFor="travel-prompt">여행 조건</label>
-          <input
-            ref={promptInput}
-            id="travel-prompt"
-            name="prompt"
-            placeholder={placeholder}
-            required
-            value={prompt}
-            onChange={(event) => setPrompt(event.target.value)}
-          />
-          <button className="send" type="submit" aria-label="여행 검색">
-            <Img name="imgSendIcon.svg" />
-          </button>
-        </form>
+        <PromptForm value={prompt} onChange={setPrompt} placeholder={placeholder} onSubmit={submitPrompt} inputRef={promptInput} />
         <div className="suggestions">
           {SUGGESTIONS.map((text) => (
             <button
@@ -255,7 +241,7 @@ const PASSENGER_ROWS = [
   { key: "infants", label: "유아", description: "만 2세 미만", min: 0 },
 ] as const;
 
-const PICKER_TITLES = { origin: "출발지", destination: "도착지", dates: "일정 선택", passengers: "탑승객" };
+const PICKER_TITLES = { origin: "출발지", destination: "도착지", dates: "일정 선택", passengers: "탑승객 및 좌석" };
 // 피커는 모두 누른 칸 아래에 붙는 드롭다운이다(시안 positionAnchoredPicker). 폭은 Figma 기준.
 const PICKER_WIDTHS = { origin: 362, destination: 362, dates: 374, passengers: 352 };
 const PICKER_CLASSES = { origin: "location-picker", destination: "location-picker", dates: "date-picker", passengers: "passenger-picker" };
@@ -277,6 +263,12 @@ const LOCATION_REGIONS = [
     flag: "flag-china.png",
     chips: [["상하이", "CITY", "SHA"], ["광저우", "AIRPORT", "CAN"], ["북경", "CITY", "BJS"], ["청도", "AIRPORT", "TAO"], ["연길", "AIRPORT", "YNJ"], ["심천", "AIRPORT", "SZX"], ["심양", "AIRPORT", "SHE"]],
   },
+  // 1105 시안에서 추가된 지역. 시드에 없는 뭄바이·벵갈루루·고아·페낭·랑카위·파타야는 뺐다.
+  { label: "싱가포르", flag: "flag-singapore.webp", chips: [["싱가포르", "AIRPORT", "SIN"]] },
+  { label: "홍콩", flag: "flag-hong-kong.webp", chips: [["홍콩", "AIRPORT", "HKG"]] },
+  { label: "인도", flag: "flag-india.webp", chips: [["뉴델리", "AIRPORT", "DEL"]] },
+  { label: "말레이시아", flag: "flag-malaysia.webp", chips: [["쿠알라룸푸르", "AIRPORT", "KUL"], ["코타키나발루", "AIRPORT", "BKI"]] },
+  { label: "태국", flag: "flag-thailand.webp", chips: [["방콕", "CITY", "BKK"], ["푸껫", "AIRPORT", "HKT"], ["치앙마이", "AIRPORT", "CNX"]] },
 ].map(({ chips, ...region }) => ({
   ...region,
   chips: (chips as [string, LocationOption["type"], string][]).map(([label, type, code]) => ({ label, option: findLocation(type, code)! })),
@@ -326,7 +318,7 @@ function ConditionSearch({ notify, initial }: { notify: (text: string) => void; 
       : {
           trip: "round",
           origin: findLocation("AIRPORT", "ICN"),
-          destination: findLocation("AIRPORT", "OKA"),
+          destination: null,
           depart: null,
           return: null,
           adults: 1,
@@ -524,7 +516,7 @@ function ConditionSearch({ notify, initial }: { notify: (text: string) => void; 
           {field("origin", "출발지", origin ? formatLocation(origin) : "출발지를 선택해 주세요")}
           {field("destination", "목적지", destination ? formatLocation(destination) : "목적지를 선택해 주세요")}
           {field("dates", "일정", datesText)}
-          {field("passengers", "탑승객", passengersText)}
+          {field("passengers", "탑승객 및 좌석", passengersText)}
         </div>
         <div className="condition-actions">
           <p id="condition-error" role="alert" aria-live="polite">
@@ -601,7 +593,7 @@ function LocationPicker({ label, onSelect }: { label: string; onSelect: (option:
       <div className="origin-search-wrap">
         <label className="sr-only" htmlFor="airport-query">{label} 검색</label>
         <div className="origin-search">
-          <span className="search-glyph" aria-hidden="true" />
+          <Img className="search-icon-image" name="search.svg" />
           <input id="airport-query" autoComplete="off" placeholder={`${label}를 검색해 주세요.`} value={query} onChange={(event) => setQuery(event.target.value)} />
         </div>
       </div>
@@ -609,7 +601,9 @@ function LocationPicker({ label, onSelect }: { label: string; onSelect: (option:
         {regions.map((region) => (
           <section key={region.label} className="origin-region" aria-label={region.label}>
             <h3>
-              <Img className="origin-flag" name={region.flag} />
+              <span className="origin-flag">
+                <Img name={region.flag} />
+              </span>
               {region.label}
             </h3>
             <div className="origin-chips">{region.chips.map(({ label, option }) => chip(label, option))}</div>
