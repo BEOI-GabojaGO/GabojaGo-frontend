@@ -393,7 +393,8 @@ function ConditionSearch({ notify, initial }: { notify: (text: string) => void; 
   });
   useEffect(() => {
     if (!picker) return;
-    panel.current?.querySelector<HTMLElement>("input,button:not(.picker-close)")?.focus();
+    // 패널 위치를 잡기 전에 포커스가 가면 브라우저가 그쪽으로 페이지를 스크롤한다(1,000px 넘게 튐). 스크롤은 막는다.
+    panel.current?.querySelector<HTMLElement>("input,button:not(.picker-close)")?.focus({ preventScroll: true });
 
     function onPointerDown(event: MouseEvent) {
       const target = event.target as Element;
