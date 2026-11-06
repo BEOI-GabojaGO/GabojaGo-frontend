@@ -1,5 +1,5 @@
 /* 메인 디자인(가보자GO-메인-디자인/styles.css) 이식본. 전역 CSS는 라우트 이동 후에도 남으므로 .main-page 아래로 스코프한다. */
-.main-page{--pink:#d70552;--ink:#333;--muted:#888;--surface:#f6f6f6;--content:1440px;--page-padding:30px;--section-gap:80px;--card-gap:24px;min-height:100vh;background:#fff;color:var(--ink);font-family:var(--font-noto-kr),sans-serif;font-size:14px;line-height:1.2}
+.main-page{--pink:#ff385c;--ink:#333;--muted:#888;--surface:#f6f6f6;--content:1440px;--page-padding:30px;--section-gap:80px;--card-gap:24px;min-height:100vh;background:#fff;color:var(--ink);font-family:var(--font-noto-kr),sans-serif;font-size:14px;line-height:1.2}
 body.picker-open,body.ai-open{overflow:hidden}
 @keyframes calendar-pop-in{from{opacity:0;transform:translateY(-8px) scale(.985)}to{opacity:1;transform:translateY(0) scale(1)}}
 @keyframes calendar-pop-out{from{opacity:1;transform:translateY(0) scale(1)}to{opacity:0;transform:translateY(-8px) scale(.985)}}
@@ -40,12 +40,12 @@ dialog{border:0;border-radius:24px;padding:32px;max-width:540px;width:calc(100% 
 .mbti-grid{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:8px;width:100%}
 .mbti-option{height:40px;padding:0 8px;border:1px solid #ddd;border-radius:10px;background:#fff;color:#333;font-family:inherit;font-size:14px;line-height:20px;font-weight:400;transition:border-color 180ms ease,background-color 180ms ease,color 180ms ease,box-shadow 180ms ease}
 .mbti-option:hover{border-color:#999;background:#fff}
-.mbti-option:focus-visible{outline:2px solid #d70552;outline-offset:2px}
-.mbti-option.is-selected{border-color:var(--pink);color:var(--pink);font-weight:500;background:#fff;box-shadow:0 3px 8px #d7055226}
+.mbti-option:focus-visible{outline:2px solid #ff385c;outline-offset:2px}
+.mbti-option.is-selected{border-color:var(--pink);color:var(--pink);font-weight:500;background:#fff;box-shadow:0 3px 8px #ff385c26}
 .mbti-submit{align-self:flex-end;display:inline-flex;align-items:center;justify-content:center;gap:8px;width:198px;height:54px;padding:0 24px;border:0;border-radius:20px;background:var(--pink);color:#fff;font-family:inherit;font-size:14px;line-height:20px;font-weight:600;white-space:nowrap;transition:background-color 180ms ease,transform 180ms ease,box-shadow 180ms ease}
-.mbti-submit:hover{background:#b60445;box-shadow:0 6px 14px #d7055233}
+.mbti-submit:hover{background:#e31c5a;box-shadow:0 6px 14px #ff385c33}
 .mbti-submit:active{transform:translateY(1px)}
-.mbti-submit:focus-visible{outline:2px solid #d70552;outline-offset:3px}
+.mbti-submit:focus-visible{outline:2px solid #ff385c;outline-offset:3px}
 .mbti-submit .search-glyph{width:13px;height:13px;border-width:2px;margin:0;color:currentColor}
 .mbti-submit .search-glyph:after{width:6px;height:2px;right:-5px;bottom:-3px}
 @media(max-width:599px){
@@ -80,7 +80,7 @@ dialog{border:0;border-radius:24px;padding:32px;max-width:540px;width:calc(100% 
 .ai-user-message{align-self:flex-end;max-width:min(80%,520px);margin-top:0;padding:12px 14px;border-radius:24px;background:#f6f6f6;color:#333;font-size:16px;line-height:19px;overflow-wrap:anywhere}
 .ai-chat-log{display:flex;flex-direction:column;gap:16px;margin-top:20px}
 .ai-answer{align-self:flex-start;max-width:80%;font-size:16px;line-height:19px}
-.ai-answer strong{display:inline-block;padding:6px 10px;border-radius:10px;background:#d705520f;color:var(--pink);font-size:14px;font-weight:700;line-height:19px}
+.ai-answer strong{display:inline-block;padding:6px 10px;border-radius:10px;background:#ff385c0f;color:var(--pink);font-size:14px;font-weight:700;line-height:19px}
 .ai-answer p{margin-top:12px}
 .ai-trip-summary{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:60px;row-gap:30px;padding:20px 40px;border-radius:40px;background:#f6f6f6}
 .ai-trip-summary{flex:none}
@@ -239,8 +239,8 @@ img.ai-airline-logo{object-fit:contain}
 .condition-actions{display:flex;align-items:center;justify-content:space-between;gap:12px}
 #condition-error{color:#bd114a;font-size:12px;line-height:1.5}
 .condition-submit,.picker-done{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:42px;border-radius:12px;background:var(--pink);color:#fff;font-weight:700;padding:0 24px;white-space:nowrap}
-.condition-submit{width:213px;max-width:100%;height:56px;min-height:56px;flex-shrink:0;border-radius:20px;background:#d70552}
-.condition-submit:hover,.picker-done:hover{background:#b60445}
+.condition-submit{width:213px;max-width:100%;height:56px;min-height:56px;flex-shrink:0;border-radius:20px;background:#ff385c}
+.condition-submit:hover,.picker-done:hover{background:#e31c5a}
 .search-glyph{position:relative;width:13px;height:13px;border:2px solid currentColor;border-radius:50%;display:inline-block;flex:none;margin-right:2px}
 .search-glyph:after{content:'';position:absolute;width:6px;height:2px;background:currentColor;right:-5px;bottom:-3px;transform:rotate(45deg);border-radius:2px}
 .picker-backdrop{position:fixed;inset:0;background:#10182880;z-index:30}
@@ -251,14 +251,14 @@ img.ai-airline-logo{object-fit:contain}
 .picker-body{overflow:auto;padding:22px 24px 26px;overscroll-behavior:contain}
 .picker-search-label,.cabin-label{display:block;font-size:13px;font-weight:700;margin-bottom:9px}
 .picker-search{display:flex;align-items:center;gap:10px;border:1px solid #d9dce2;border-radius:12px;padding:0 13px}
-.picker-search:focus-within{border-color:var(--pink);box-shadow:0 0 0 3px #d705521a}
+.picker-search:focus-within{border-color:var(--pink);box-shadow:0 0 0 3px #ff385c1a}
 .picker-search span{font-size:22px;color:var(--pink)}
 .picker-search input{height:46px;min-width:0;width:100%;outline:none;border:0;background:none}
 .picker-hint{color:#777;font-size:13px;line-height:1.5;margin:18px 0 12px}
 .airport-list{display:flex;flex-direction:column;max-height:340px;overflow:auto}
 .airport-option{display:flex;align-items:center;gap:12px;width:100%;min-height:65px;padding:8px;text-align:left;border-radius:10px}
-.airport-option:hover,.airport-option:focus-visible{background:#fff0f5}
-.airport-symbol{width:36px;height:36px;border-radius:10px;background:#fce7ef;color:var(--pink);display:grid;place-items:center;flex:none}
+.airport-option:hover,.airport-option:focus-visible{background:#fff0f2}
+.airport-symbol{width:36px;height:36px;border-radius:10px;background:#fff0f2;color:var(--pink);display:grid;place-items:center;flex:none}
 .airport-option>span:nth-child(2){display:flex;flex-direction:column;gap:5px;min-width:0;flex:1}
 .airport-option strong{font-size:14px}
 .airport-option small{color:#888;font-size:12px}
@@ -268,14 +268,14 @@ img.ai-airline-logo{object-fit:contain}
 .calendar-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
 .calendar-top strong{font-size:16px}
 .calendar-top button{font-size:26px;width:34px;height:34px;border-radius:9px}
-.calendar-top button:hover:not(:disabled){background:#fff0f5}
+.calendar-top button:hover:not(:disabled){background:#fff0f2}
 .calendar-top button:disabled{opacity:.25}
 .calendar-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;text-align:center}
 .calendar-grid>b{padding:8px 0;color:#888;font-size:12px;font-weight:500}
 .calendar-day{aspect-ratio:1;border-radius:10px;font-size:13px}
-.calendar-day:hover:not(:disabled){background:#fce7ef}
+.calendar-day:hover:not(:disabled){background:#fff0f2}
 .calendar-day.selected{background:var(--pink);color:#fff;font-weight:700}
-.calendar-day.between{background:#fff0f5;color:var(--pink)}
+.calendar-day.between{background:#fff0f2;color:var(--pink)}
 .calendar-day:disabled{color:#c4c4c4;cursor:default}
 .picker-done{width:100%;margin-top:18px}
 .passenger-list{display:flex;flex-direction:column}
@@ -313,12 +313,12 @@ img.ai-airline-logo{object-fit:contain}
 .cabin-options{display:flex;flex:none;flex-direction:column;gap:20px;width:100%;height:173px;padding:24px 0 0;margin:0;border:0;border-top:1px solid #eee}
 .cabin-options label{display:flex;align-items:center;gap:10px;height:22px;color:#333;cursor:pointer}
 .cabin-options input{position:relative;appearance:none;width:20px;height:20px;flex:none;margin:0;border:1px solid #ccc;border-radius:50%;background:#fff;box-shadow:0 0 0 .2px #ccc}
-.cabin-options input:checked{border-color:#d70552;box-shadow:0 0 0 .2px #d70552}
-.cabin-options input:checked::after{content:'';position:absolute;top:50%;left:50%;width:12px;height:12px;border-radius:50%;background:#d70552;transform:translate(-50%,-50%)}
-.cabin-options input:focus-visible{outline:2px solid #d70552;outline-offset:2px}
+.cabin-options input:checked{border-color:#ff385c;box-shadow:0 0 0 .2px #ff385c}
+.cabin-options input:checked::after{content:'';position:absolute;top:50%;left:50%;width:12px;height:12px;border-radius:50%;background:#ff385c;transform:translate(-50%,-50%)}
+.cabin-options input:focus-visible{outline:2px solid #ff385c;outline-offset:2px}
 .cabin-options span{font-family:"Noto Sans KR",sans-serif;font-size:16px;font-weight:400;line-height:22px;transform:translateY(-1px)}
 .passenger-action{display:flex;align-items:center;justify-content:flex-end;width:100%;height:33px}
-.passenger-picker .picker-done{width:80px;height:33px;min-height:33px;margin:0;padding:8px 14px;border-radius:12px;background:#d70552;color:#fff;font-family:"Noto Sans KR",sans-serif;font-size:14px;font-weight:500;line-height:17px}
+.passenger-picker .picker-done{width:80px;height:33px;min-height:33px;margin:0;padding:8px 14px;border-radius:12px;background:#ff385c;color:#fff;font-family:"Noto Sans KR",sans-serif;font-size:14px;font-weight:500;line-height:17px}
 /* Figma Origin 638:19536 shared by departure and arrival selection. */
 .picker-panel.location-picker{position:absolute;top:auto;bottom:auto;transform:none;width:354px;max-width:calc(100vw - 24px);height:492px;max-height:none;overflow:hidden;padding:26px 6px 6px;border-radius:24px;gap:16px;box-shadow:0 2px 6px #0000001a,0 10px 60px #0003;animation:calendar-pop-in 220ms cubic-bezier(.22,1,.36,1) both}
 .location-picker .picker-header{height:19px;padding:0 20px;border:0;flex:none}
@@ -405,21 +405,21 @@ img.ai-airline-logo{object-fit:contain}
 .date-picker .calendar-day.selected:hover::after,.date-picker .calendar-day.selected:focus-visible::after{background:#333}
 .date-picker .calendar-day.range-start.adjacent-range::before{left:50%;width:50%;background:#333}
 .date-picker .calendar-day.range-end.adjacent-range::before{width:50%;background:#333}
-.date-picker .calendar-done{align-self:flex-end;width:80px;height:33px;min-height:33px;margin:0;padding:8px 14px;border-radius:12px;background:#d70552;color:#fff;font-family:"Noto Sans KR",sans-serif;font-size:14px;font-weight:500;line-height:17px}
+.date-picker .calendar-done{align-self:flex-end;width:80px;height:33px;min-height:33px;margin:0;padding:8px 14px;border-radius:12px;background:#ff385c;color:#fff;font-family:"Noto Sans KR",sans-serif;font-size:14px;font-weight:500;line-height:17px}
 .date-picker .calendar-done:disabled{background:#ccc;color:#fff;opacity:1}
 .picker-panel.location-picker.is-closing,.picker-panel.date-picker.is-closing,.picker-panel.passenger-picker.is-closing{pointer-events:none;animation:calendar-pop-out 180ms ease-in both}
 @media(prefers-reduced-motion:reduce){.picker-panel.location-picker,.picker-panel.date-picker,.picker-panel.passenger-picker{animation:none}.picker-panel.date-picker,.date-picker .calendar-viewport,.date-picker .calendar-track{transition:none}.date-picker .calendar-track{scroll-behavior:auto}}
 
 
 /* Brand scrollbars; mobile keeps scrolling with hidden bars. */
-*{scrollbar-color:var(--pink) #fce7ef;scrollbar-width:thin}
+*{scrollbar-color:var(--pink) #fff0f2;scrollbar-width:thin}
 @supports selector(::-webkit-scrollbar){
   *{scrollbar-width:auto;scrollbar-color:auto}
   ::-webkit-scrollbar{width:10px;height:10px}
-  ::-webkit-scrollbar-track{background:#fce7ef;border-radius:999px}
-  ::-webkit-scrollbar-thumb{background:var(--pink);border:2px solid #fce7ef;border-radius:999px}
+  ::-webkit-scrollbar-track{background:#fff0f2;border-radius:999px}
+  ::-webkit-scrollbar-thumb{background:var(--pink);border:2px solid #fff0f2;border-radius:999px}
   ::-webkit-scrollbar-thumb:hover{background:#b90446}
-  ::-webkit-scrollbar-corner{background:#fce7ef}
+  ::-webkit-scrollbar-corner{background:#fff0f2}
 }
 @media(max-width:599px){
   *{scrollbar-width:none}

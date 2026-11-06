@@ -25,11 +25,11 @@ input {
 /* 페이지 로딩 화면(가보자GO (1) 시안). JS 없이 850ms 보여 준 뒤 사라진다. */
 .site-loader{position:fixed;inset:0;z-index:10000;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:15px;padding-bottom:56px;background:#fff;color:#333;font-family:"Noto Sans KR",sans-serif;pointer-events:none;animation:site-loader-out 360ms ease 850ms forwards}
 .site-loader-brand{font-size:33.6px;line-height:40.6px;font-weight:700;letter-spacing:-.5px}
-.site-loader-brand span{color:#d70552}
+.site-loader-brand span{color:#ff385c}
 .site-loader-route{position:relative;width:150px;height:30px;display:flex;align-items:center}
 .site-loader-line{position:absolute;inset:0;width:150px;height:30px;overflow:visible}
-.site-loader-line path{fill:none;stroke:#d7055266;stroke-width:1;stroke-dasharray:3 3;vector-effect:non-scaling-stroke}
-.site-loader-start,.site-loader-end{position:absolute;top:11.5px;width:7px;height:7px;border:2px solid #d70552;border-radius:50%;background:#fff}
+.site-loader-line path{fill:none;stroke:#ff385c66;stroke-width:1;stroke-dasharray:3 3;vector-effect:non-scaling-stroke}
+.site-loader-start,.site-loader-end{position:absolute;top:11.5px;width:7px;height:7px;border:2px solid #ff385c;border-radius:50%;background:#fff}
 .site-loader-start{left:12.5px}
 .site-loader-end{right:12.5px}
 .site-loader-plane{position:absolute;left:0;top:0;width:22px;height:22px;z-index:1;offset-path:path("M 16 15 C 45 -3 105 -3 134 15");offset-anchor:center;offset-rotate:auto 42deg;animation:site-loader-flight 900ms linear both}

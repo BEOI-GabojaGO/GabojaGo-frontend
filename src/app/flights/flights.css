@@ -15,8 +15,8 @@
   font-size: 14px;
   line-height: 1.2;
   -webkit-font-smoothing: antialiased;
-  --brand:#d70651;
-  --brand-dark:#b60445;
+  --brand:#ff385c;
+  --brand-dark:#e31c5a;
   --ink:#333;
   --muted:#888;
   --line:#e9e9e9;
@@ -37,13 +37,13 @@
   .site-header img { filter: brightness(.2); }
   .back-button img { transform: rotate(180deg); }
   .brand { font-size: 18px; font-weight: 700; color: #101828; white-space: nowrap; line-height: 22px; }
-  .brand span { color: #d70552; }
+  .brand span { color: #ff385c; }
   .account-nav { display: flex; align-items: center; gap: 8px; }
   .wishlist-button { display: flex; align-items: center; gap: 6px; padding: 8px 10px; color: #555; font-size: 14px; font-weight: 500; }
   /* 로그인 후: 둘러보기 시안의 "닉네임님 ▾" */
   .user-button { display: flex; align-items: center; gap: 8px; padding: 8px 0 8px 14px; color: #333; font-size: 14px; line-height: 20px; font-weight: 500; white-space: nowrap; }
   /* 로그아웃: 메인·항공권 목록 시안의 분홍 "로그인". 아이콘은 모바일에서만 */
-  .login-button { height: 36px; display: flex; align-items: center; gap: 4px; border-radius: 12px; background: #d70552; color: #fff; font-weight: 500; padding: 8px 14px; line-height: 17px; white-space: nowrap; }
+  .login-button { height: 36px; display: flex; align-items: center; gap: 4px; border-radius: 12px; background: #ff385c; color: #fff; font-weight: 500; padding: 8px 14px; line-height: 17px; white-space: nowrap; }
   .site-header .login-icon { display: none; filter: none; }
 
   /* 조건 입력 단계(시안 없음, 기존 폼) */
@@ -90,7 +90,7 @@
     .page-layout { grid-template-columns:342px minmax(0,1fr); gap:24px; }
     .desktop-filter { top:28px; width:342px; height:942px; padding-top:1px; }
     .desktop-filter .filter-top { height:16px; margin-bottom:30px; display:block; font-size:14px; line-height:16px; }
-    .desktop-filter .reset-link { display:block; padding:0; border:0; color:#d70552; font-size:14px; line-height:16px; font-weight:500; }
+    .desktop-filter .reset-link { display:block; padding:0; border:0; color:#ff385c; font-size:14px; line-height:16px; font-weight:500; }
     .desktop-filter .filter-groups { display:block; }
     .desktop-filter .filter-group { width:300px; padding:0 0 30px; border-bottom:1px solid #ddd; }
     .desktop-filter .filter-group+.filter-group { padding-top:29px; }
@@ -99,7 +99,7 @@
     .desktop-filter .check-list { display:grid; gap:24px; padding:0 10px; }
     .desktop-filter .check-row { height:20px; gap:10px; color:#333; font-size:16px; line-height:20px; font-weight:400; }
     .desktop-filter .check-row input { width:20px; height:20px; flex:none; border:1px solid #ccc; border-radius:6px; }
-    .desktop-filter .check-row input:checked { border-color:#d70552; background-color:#d70552; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 20 20' fill='none'%3E%3Cpath d='M5.5 10.25L8.4 13.15L14.5 6.85' stroke='white' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); background-position:center; background-repeat:no-repeat; }
+    .desktop-filter .check-row input:checked { border-color:#ff385c; background-color:#ff385c; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 20 20' fill='none'%3E%3Cpath d='M5.5 10.25L8.4 13.15L14.5 6.85' stroke='white' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); background-position:center; background-repeat:no-repeat; }
     .desktop-filter .check-row input:checked:after { content:none; }
   }
   .results-column { min-width:0; }
@@ -128,7 +128,7 @@
   .date-options-track { width:max-content; display:flex; align-items:center; gap:4px; }
   .date-option { height:49px; padding:16px 12px; border:.6px solid transparent; border-radius:6px; background:transparent; color:#333; display:flex; flex:none; align-items:center; justify-content:center; font-size:14px; line-height:normal; font-weight:400; white-space:nowrap; cursor:pointer; }
   .date-option:hover { background:#f6f6f6; }
-  .date-option.is-active { border-color:#d70552; background:#fff; color:#d70552; font-weight:500; box-shadow:0 2px 3px rgba(0,0,0,.1); }
+  .date-option.is-active { border-color:#ff385c; background:#fff; color:#ff385c; font-weight:500; box-shadow:0 2px 3px rgba(0,0,0,.1); }
   .date-separator { flex:none; color:#ddd; font-size:14px; line-height:normal; font-weight:400; }
   .flight-list { display:grid; gap:10px; }
   .empty-result { padding:70px 0; text-align:center; color:#999; font-size:14px; }
@@ -163,7 +163,7 @@
   .selected-section::before { content:""; position:absolute; inset:-.3px; border:.6px solid #ccc; border-radius:inherit; pointer-events:none; }
   .selected-heading { min-height:22px; padding:0 10px; display:flex; align-items:center; justify-content:space-between; }
   .selected-heading h2 { margin:0; color:#333; font-size:18px; font-weight:700; line-height:22px; letter-spacing:0; }
-  .selected-heading button { border:0; background:transparent; color:#d70552; font-size:14px; font-weight:500; line-height:normal; letter-spacing:0; cursor:pointer; }
+  .selected-heading button { border:0; background:transparent; color:#ff385c; font-size:14px; font-weight:500; line-height:normal; letter-spacing:0; cursor:pointer; }
   .selected-section .flight-card { box-shadow:none; }
   @media(min-width:1200px) {
     .selected-section .flight-card { min-height:106px; padding:30px 36px; border:1px solid #eee; border-radius:34px; }
@@ -311,7 +311,7 @@
   @supports selector(::-webkit-scrollbar) { *{scrollbar-width:auto; scrollbar-color:auto}
   ::-webkit-scrollbar{width:5px; height:5px}
   ::-webkit-scrollbar-track{background:transparent; border-radius:999px}
-  ::-webkit-scrollbar-thumb{background:#d70552; border:1px solid transparent; border-radius:999px}
+  ::-webkit-scrollbar-thumb{background:#ff385c; border:1px solid transparent; border-radius:999px}
   ::-webkit-scrollbar-thumb:hover{background:#b90446}
   ::-webkit-scrollbar-corner{background:transparent}; }
   @media(max-width:599px) {
@@ -341,7 +341,7 @@
     .route-title .route-arrow { display:block; margin:0 12px; }
     .route-title .leg { margin-left:12px; color:#888; font-size:14px; font-weight:500; line-height:normal; }
     .flight-card { display:flex; align-items:center; justify-content:space-between; min-height:106px; padding:30px 36px; gap:0; border:1px solid #eee; border-radius:34px; background:#fff; box-shadow:none; transform:none; }
-    .flight-card[role=button]:hover, .flight-card.is-chosen { border:.6px solid #d70552; box-shadow:0 4px 10px rgba(0,0,0,.1); transform:none; }
+    .flight-card[role=button]:hover, .flight-card.is-chosen { border:.6px solid #ff385c; box-shadow:0 4px 10px rgba(0,0,0,.1); transform:none; }
     .airline { display:flex; align-items:center; width:140px; gap:10px; }
     .airline-logo { display:flex; align-items:center; justify-content:center; width:40px; height:40px; flex:0 0 40px; overflow:hidden; border-radius:12px; }
     .airline-logo img { display:block; width:100%; height:100%; object-fit:cover; }
@@ -475,12 +475,12 @@
   .final-flag img { display:block; width:100%; height:100%; object-fit:cover; }
   .final-flag-korea img { width:100%; height:100%; object-fit:cover; }
   .final-trip-arrow { display:block; width:32px; height:14px; flex:none; }
-  .final-trip-badge { display:inline-flex; align-items:center; height:22px; padding:4px 6px; border-radius:8px; background:rgba(215,5,82,.06); color:#d70552; font-size:12px; line-height:14px; font-weight:500; }
+  .final-trip-badge { display:inline-flex; align-items:center; height:22px; padding:4px 6px; border-radius:8px; background:rgba(255,56,92,.06); color:#ff385c; font-size:12px; line-height:14px; font-weight:500; }
   .final-trip-meta { display:flex; align-items:center; gap:20px; color:#333; font-size:18px; line-height:22px; font-weight:500; letter-spacing:0; white-space:nowrap; }
   .final-meta-group { display:inline-flex; align-items:center; gap:6px; }
   .final-meta-secondary { font-weight:400; }
   .final-meta-dot { width:2px; height:2px; flex:none; border-radius:50%; background:#333; }
-  .booking-cta { flex:none; width:202px; height:56px; padding:18px 0; border:0; border-radius:20px; background:#d70552; color:#fff; display:inline-flex; align-items:center; justify-content:center; gap:0; font-size:14px; line-height:20px; font-weight:600; cursor:pointer; transition:background-color .18s ease,transform .18s ease; }
+  .booking-cta { flex:none; width:202px; height:56px; padding:18px 0; border:0; border-radius:20px; background:#ff385c; color:#fff; display:inline-flex; align-items:center; justify-content:center; gap:0; font-size:14px; line-height:20px; font-weight:600; cursor:pointer; transition:background-color .18s ease,transform .18s ease; }
   .booking-cta:hover { background:var(--brand-dark); }
   @media(max-width:899px) {
     .final-selection { gap:12px; }
@@ -526,7 +526,7 @@
   }
 
   /* ---------- 앱 전용(시안에 없는 요소) ---------- */
-  .alert { margin: 12px 0; padding: 12px 16px; border-radius: 14px; background: #fff1f4; color: #b60445; font-size: 13px; }
+  .alert { margin: 12px 0; padding: 12px 16px; border-radius: 14px; background: #fff0f2; color: #e31c5a; font-size: 13px; }
   .alert button { margin-left: 8px; color: var(--brand); font-weight: 700; text-decoration: underline; }
   .filter-empty { color: #aaa; font-size: 12px; }
   .booking-section { margin-top: 32px; }
@@ -555,7 +555,7 @@
     .brand { font-size: 16px; line-height: 19px; }
     .user-button { padding: 8px 0 8px 4px; gap: 6px; }
     @media (max-width: 360px) { .wishlist-button span { display: none; } }
-    .login-button { background: transparent; color: #d70552; font-size: 14px; padding: 8px 14px 8px 10px; }
+    .login-button { background: transparent; color: #ff385c; font-size: 14px; padding: 8px 14px 8px 10px; }
     .site-header .login-icon { display: block; width: 20px; height: 20px; }
     .logo-fallback { font-size: 11px; }
   }
