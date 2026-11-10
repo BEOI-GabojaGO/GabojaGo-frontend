@@ -16,7 +16,7 @@ export default async function OneWayPage({ searchParams }: PageProps<"/flights/o
 
   return (
     <div className={`flight-page ${notoSansKr.variable}`}>
-      <ExploreHeader />
+      <ExploreHeader hideOnScroll />
       <OneWayFlow initial={initial} />
     </div>
   );

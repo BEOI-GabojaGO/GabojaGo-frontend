@@ -13,6 +13,7 @@ import {
   DateShiftStrip,
   passengersOf,
   RouteHeading,
+  stripDay,
   useFlightFilter,
 } from "@/components/flight/flight-list-ui";
 import { useAutoSearchOnce } from "@/components/flight/flow-ui";
@@ -180,6 +181,8 @@ export function RoundTripStepFlow({ initial }: { initial: InitialSearch<FlightSe
         legs={[outbound ? "inbound" : "outbound"]}
         onEdit={() => router.push(conditionSearchHref(request, locations))}
         locked={complete}
+        options={source ?? []}
+        stage={complete ? "complete" : outbound ? "return" : "outbound"}
       >
         <ListAlert message={error} onRetry={expired ? retry : undefined} />
 
@@ -220,7 +223,11 @@ export function RoundTripStepFlow({ initial }: { initial: InitialSearch<FlightSe
         {outbound && !complete && (
           <section className="selected-section" aria-live="polite">
             <div className="selected-heading">
-              <h2>{cityName(locations.destination)} 가는편 항공권</h2>
+              {/* 1105 시안: "오키나와 가는편 10. 4 일" */}
+              <div className="selected-heading-title">
+                <h2>{cityName(locations.destination)} 가는편</h2>
+                <time dateTime={request.outboundDate}>{stripDay(request.outboundDate)}</time>
+              </div>
               <button type="button" onClick={backToOutbounds}>
                 변경하기
               </button>

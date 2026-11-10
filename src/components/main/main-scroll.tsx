@@ -1,15 +1,17 @@
 "use client";
 
-import { useEffect, useRef, type ReactNode } from "react";
+import { useEffect, useRef, type ReactNode, type RefObject } from "react";
 import { prefersReducedMotion } from "@/components/main/main-ui";
 
 const MOBILE_QUERY = "(max-width: 599px)";
 
-/** 모바일에서 스크롤하는 동안 GNB를 위로 숨기고, 멈추면 0.4초 뒤 다시 보여 준다(1105 시안). */
-export function MainHeader({ children }: { children: ReactNode }) {
-  const ref = useRef<HTMLElement>(null);
-
+/**
+ * 모바일에서 페이지를 스크롤하는 동안 헤더를 위로 숨기고(.is-scroll-hidden), 멈추면 0.4초 뒤 다시 보여 준다(1105 시안).
+ * 메인 GNB와 항공권 목록 헤더가 함께 쓴다. enabled가 false면 아무것도 하지 않는다.
+ */
+export function useHideOnScroll(ref: RefObject<HTMLElement | null>, enabled = true) {
   useEffect(() => {
+    if (!enabled) return;
     let timer: ReturnType<typeof setTimeout> | undefined;
     const show = () => ref.current?.classList.remove("is-scroll-hidden");
     const onScroll = () => {
@@ -23,7 +25,13 @@ export function MainHeader({ children }: { children: ReactNode }) {
       clearTimeout(timer);
       window.removeEventListener("scroll", onScroll);
     };
-  }, []);
+  }, [ref, enabled]);
+}
+
+/** 메인 GNB. */
+export function MainHeader({ children }: { children: ReactNode }) {
+  const ref = useRef<HTMLElement>(null);
+  useHideOnScroll(ref);
 
   return (
     <header ref={ref} className="header">

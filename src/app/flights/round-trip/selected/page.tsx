@@ -10,7 +10,7 @@ const notoSansKr = Noto_Sans_KR({ subsets: ["latin"], preload: false, variable: 
 export default function SelectedTripPage() {
   return (
     <div className={`flight-page ${notoSansKr.variable}`}>
-      <ExploreHeader />
+      <ExploreHeader hideOnScroll />
       <SelectedTripView />
     </div>
   );

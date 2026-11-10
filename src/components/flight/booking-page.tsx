@@ -171,7 +171,7 @@ function optionKey(option: BookingOption) {
 
 type Sort = "low" | "high" | "name";
 const SORTS: { value: Sort; label: string }[] = [
-  { value: "low", label: "저렴한 가격순" },
+  { value: "low", label: "낮은 가격순" },
   { value: "high", label: "높은 가격순" },
   { value: "name", label: "판매처 이름순" },
 ];

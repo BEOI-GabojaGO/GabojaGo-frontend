@@ -97,6 +97,7 @@ export function SelectedTripView() {
         legs={[inbound ? "inbound" : "outbound"]}
         onEdit={() => router.push(conditionSearchHref(request, locations))}
         locked
+        stage="complete"
       >
         <FinalSelection
           request={request}

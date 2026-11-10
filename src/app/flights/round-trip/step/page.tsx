@@ -16,7 +16,7 @@ export default async function RoundTripStepPage({ searchParams }: PageProps<"/fl
 
   return (
     <div className={`flight-page ${notoSansKr.variable}`}>
-      <ExploreHeader />
+      <ExploreHeader hideOnScroll />
       <RoundTripStepFlow initial={initial} />
     </div>
   );

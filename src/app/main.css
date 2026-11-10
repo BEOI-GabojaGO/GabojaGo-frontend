@@ -639,6 +639,27 @@ footer{position:relative;z-index:3}
   .ai-dialog-footer:has(.ai-followup-form:hover) .ai-followup-form,.ai-dialog-footer:has(.ai-followup-form:active) .ai-followup-form,.ai-dialog-footer:has(.ai-followup-form:focus-within) .ai-followup-form{padding:10px 10px 10px 16px;border-radius:22px}
   .ai-followup-form input{font-size:14px;line-height:20px;height:20px;padding:0}
 }
+
+/* ---------- 1105 시안: AI 카드 하트(테두리·채움 두 장 + 터짐) ---------- */
+.ai-flight-heart{position:relative;overflow:visible;transform-origin:center}
+.ai-flight-heart:hover{background:#f7f7f7;border-radius:50%}
+.ai-heart-icon{position:relative;z-index:1;display:block;width:22px;height:22px;transform-origin:center}
+.ai-heart-icon img{position:absolute;inset:0;display:block;width:100%!important;height:100%!important;max-width:none!important;max-height:none!important;transition:none}
+.ai-heart-stroke{opacity:1;transform:scale(1)}
+.ai-heart-fill{opacity:0;transform:scale(.78)}
+.ai-flight-heart[aria-pressed="true"] .ai-heart-stroke{opacity:0}
+.ai-flight-heart[aria-pressed="true"] .ai-heart-fill{opacity:1;transform:scale(1)}
+.ai-heart-burst{position:absolute;z-index:0;top:50%;left:50%;width:26px;height:26px;border:1.5px solid var(--pink);border-radius:50%;pointer-events:none;opacity:0;transform:translate(-50%,-50%) scale(.55)}
+.ai-heart-burst::before{content:"";position:absolute;top:50%;left:50%;width:4px;height:4px;border-radius:50%;background:var(--pink);opacity:0;transform:translate(-50%,-50%) scale(.6);box-shadow:0 -13px 0 var(--pink),11px -6px 0 var(--pink),11px 7px 0 var(--pink),-11px 7px 0 var(--pink),-11px -6px 0 var(--pink)}
+.ai-flight-heart.is-activating,.ai-flight-heart.is-deactivating{animation:ticket-heart-pop 520ms cubic-bezier(.22,1,.36,1) both}
+.ai-flight-heart.is-activating .ai-heart-stroke{animation:ticket-heart-stroke-out 450ms cubic-bezier(.22,1,.36,1) both}
+.ai-flight-heart.is-activating .ai-heart-fill{animation:ticket-heart-fill-in 450ms cubic-bezier(.22,1,.36,1) both}
+.ai-flight-heart.is-deactivating .ai-heart-stroke{animation:ticket-heart-stroke-in 300ms cubic-bezier(.22,1,.36,1) both}
+.ai-flight-heart.is-deactivating .ai-heart-fill{animation:ticket-heart-fill-out 300ms cubic-bezier(.22,1,.36,1) both}
+.ai-flight-heart.is-activating .ai-heart-burst{animation:ticket-heart-burst 520ms ease-out both}
+.ai-flight-heart.is-activating .ai-heart-burst::before{animation:ticket-heart-sparks 520ms cubic-bezier(.22,1,.36,1) both}
+@media(max-width:699px){.ai-heart-icon{width:20px;height:20px}}
+@media(prefers-reduced-motion:reduce){.ai-flight-heart.is-activating,.ai-flight-heart.is-deactivating,.ai-flight-heart :is(.ai-heart-stroke,.ai-heart-fill,.ai-heart-burst,.ai-heart-burst::before){animation:none!important}.ai-heart-burst{display:none}}
 }
 
 /* 로그인 후 헤더(둘러보기 시안 "♡ 위시리스트 · 닉네임님 ▾"). 메인 헤더는 밝아서 글자·아이콘을 진하게 쓴다. */
@@ -684,3 +705,10 @@ footer{position:relative;z-index:3}
 @keyframes ai-thinking-dot{0%,100%{opacity:.28;transform:translateY(0) scale(.72)}25%{opacity:1;transform:translateY(-5px) scale(1.08)}50%{opacity:.7;transform:translateY(0) scale(.92)}75%{opacity:.42;transform:translateY(2px) scale(.78)}}
 @keyframes ai-dialog-wake-scale{from{transform:translate3d(-50%,-50%,0) scale(.14)}to{transform:translate3d(-50%,-50%,0) scale(20)}}
 @keyframes ai-dialog-wake-opacity{0%{opacity:0}18%{opacity:.78}68%{opacity:.3}100%{opacity:0}}
+@keyframes ticket-heart-pop{ 0%{transform:scale(.78) rotate(-10deg)} 30%{transform:scale(1.18) rotate(8deg)} 58%{transform:scale(1.04) rotate(-3deg)} 78%{transform:scale(1.02) rotate(1deg)} 100%{transform:scale(1) rotate(0deg)} }
+@keyframes ticket-heart-stroke-out{ 0%{opacity:1;transform:scale(.9)} 100%{opacity:0;transform:scale(1.08)} }
+@keyframes ticket-heart-fill-in{ 0%{opacity:0;transform:scale(.72)} 55%{opacity:1;transform:scale(1.14)} 100%{opacity:1;transform:scale(1)} }
+@keyframes ticket-heart-stroke-in{ 0%{opacity:0;transform:scale(.72)} 100%{opacity:1;transform:scale(1)} }
+@keyframes ticket-heart-fill-out{ 0%{opacity:1;transform:scale(1)} 100%{opacity:0;transform:scale(.72)} }
+@keyframes ticket-heart-burst{ 0%{opacity:0;transform:translate(-50%,-50%) scale(.52);box-shadow:0 0 0 0 rgba(255,56,92,0)} 22%{opacity:.5;transform:translate(-50%,-50%) scale(.8);box-shadow:0 0 0 0 rgba(255,56,92,.08)} 100%{opacity:0;transform:translate(-50%,-50%) scale(1.75);box-shadow:0 0 0 7px rgba(255,56,92,0)} }
+@keyframes ticket-heart-sparks{ 0%{opacity:0;transform:translate(-50%,-50%) scale(.5) rotate(0deg)} 22%{opacity:1} 100%{opacity:0;transform:translate(-50%,-50%) scale(1.2) rotate(18deg)} }

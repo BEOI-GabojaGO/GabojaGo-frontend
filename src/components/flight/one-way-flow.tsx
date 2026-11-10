@@ -114,6 +114,8 @@ export function OneWayFlow({ initial }: { initial: InitialSearch<OneWaySearchReq
         legs={["outbound"]}
         onEdit={() => router.push(conditionSearchHref(request, locations))}
         locked={!!selected}
+        options={search.flights}
+        stage={selected ? "complete" : "outbound"}
       >
         <ListAlert message={error} />
 
