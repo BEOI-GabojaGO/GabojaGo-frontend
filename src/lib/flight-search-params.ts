@@ -25,11 +25,6 @@ export function toSearchQuery(request: OneWaySearchRequest | FlightSearchRequest
   return params.toString();
 }
 
-/** 항공권 목록의 "수정하기": 메인 조건 검색 탭을 지금 조건으로 채워 연다(옛 조건 입력 폼 대신). */
-export function conditionSearchHref(request: OneWaySearchRequest | FlightSearchRequest, locations: SelectedLocations) {
-  return `/?search=condition&${toSearchQuery(request, locations)}`;
-}
-
 /** 메인 주소의 search=condition 조건. 오는 날이 있으면 왕복, 없으면 편도. 형식이 맞지 않으면 null(기본 화면). */
 export function readConditionSearchParams(
   params: SearchParams,

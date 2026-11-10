@@ -5,7 +5,7 @@
  *          예약 안내창(실제 판매처로 이동), 커스텀 스크롤 표시(JS), 페이지 진입 로더(공통 SiteLoader).
  */
 .booking-page {
-  --brand:#d70552;
+  --brand:#ff385c;
   --ink:#333;
   --muted:#888;
   --line:#eee;
@@ -23,7 +23,8 @@
   .page-container { width: min(calc(100% - 48px), 1440px); margin-inline: auto; }
 
   /* Header (ExploreHeader) */
-  .site-header { position: fixed; top: 0; left: 0; width: 100%; height: 54px; z-index: 32; background: rgb(255 255 255 / 70%); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); box-shadow: 0 2px 2px #0000000f; }
+  /* 빌드(Tailwind CSS 최적화)는 backdrop-filter와 -webkit- 접두 선언 중 뒤에 적힌 하나만 남긴다. -webkit-을 앞에 둬야 Chrome에서도 흐림이 남는다. */
+  .site-header { position: fixed; top: 0; left: 0; width: 100%; height: 54px; z-index: 32; background: rgb(255 255 255 / 70%); -webkit-backdrop-filter: blur(15px); backdrop-filter: blur(15px); box-shadow: 0 2px 2px #0000000f; }
   .header-inner { height: 100%; display: flex; align-items: center; justify-content: space-between; gap: 16px; }
   .brand-group { display: flex; align-items: center; gap: 10px; }
   .back-button { width: 20px; height: 20px; display: grid; place-items: center; }
@@ -31,13 +32,13 @@
   .site-header img { filter: brightness(.2); }
   .back-button img { transform: rotate(180deg); }
   .brand { font-size: 18px; font-weight: 700; color: #101828; white-space: nowrap; line-height: 22px; }
-  .brand span { color: #d70552; }
+  .brand span { color: #ff385c; }
   .account-nav { display: flex; align-items: center; gap: 8px; }
   .wishlist-button { display: flex; align-items: center; gap: 6px; padding: 8px 10px; color: #555; font-size: 14px; font-weight: 500; }
   /* 로그인 후: 둘러보기 시안의 "닉네임님 ▾" */
   .user-button { display: flex; align-items: center; gap: 8px; padding: 8px 0 8px 14px; color: #333; font-size: 14px; line-height: 20px; font-weight: 500; white-space: nowrap; }
   /* 로그아웃: 메인·항공권 목록 시안의 분홍 "로그인". 아이콘은 모바일에서만 */
-  .login-button { height: 36px; display: flex; align-items: center; gap: 4px; border-radius: 12px; background: #d70552; color: #fff; font-weight: 500; padding: 8px 14px; line-height: 17px; white-space: nowrap; }
+  .login-button { height: 36px; display: flex; align-items: center; gap: 4px; border-radius: 12px; background: #ff385c; color: #fff; font-weight: 500; padding: 8px 14px; line-height: 17px; white-space: nowrap; }
   .site-header .login-icon { display: none; filter: none; }
 
   /* ---------- 시안 ---------- */
@@ -48,7 +49,7 @@
   a { color:inherit; text-decoration:none; }
   .sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
   button:focus-visible, a:focus-visible, select:focus-visible { outline:2px solid var(--brand); outline-offset:3px; }
-  .book-button:hover { background:#b60445; }
+  .book-button:hover { background:#e31c5a; }
   .booking-layout { width:1196px; max-width:calc(100% - 48px); height:100dvh; margin:0 auto; padding:0; display:grid; grid-template-columns:minmax(0,708px) 440px; gap:48px; align-items:stretch; overflow:visible; }
   .offers-section { width:calc(100% + 24px); min-width:0; min-height:0; margin-left:-12px; padding:80px 12px 160px; display:flex; flex-direction:column; gap:30px; overflow-y:auto; overscroll-behavior:contain; scrollbar-width:none; }
   .section-toolbar { height:45px; display:flex; align-items:center; justify-content:space-between; gap:24px; }
@@ -69,7 +70,7 @@
   .provider-title { display:flex; align-items:center; gap:8px; }
   .provider-logo { width:30px; height:30px; flex:none; border-radius:8px; object-fit:cover; }
   .provider-title h2 { font-size:16px; line-height:19px; font-weight:700; white-space:nowrap; }
-  .round-badge { padding:4px 6px; border-radius:8px; background:rgba(215,5,82,.06); color:var(--brand); font-size:12px; line-height:14px; font-weight:500; white-space:nowrap; }
+  .round-badge { padding:4px 6px; border-radius:8px; background:rgba(255,56,92,.06); color:var(--brand); font-size:12px; line-height:14px; font-weight:500; white-space:nowrap; }
   .provider-benefits { display:flex; align-items:center; gap:12px; white-space:nowrap; }
   .benefit-item { display:flex; align-items:center; gap:6px; font-size:12px; line-height:20px; }
   .benefit-item img { display:block; flex:none; }
@@ -197,7 +198,7 @@
 
   /* ---------- 앱 전용(시안에 없는 요소) ---------- */
   .booking-notice { padding: 12px 16px; border-radius: 14px; background: #f6f6f6; color: #555; font-size: 13px; line-height: 1.6; }
-  .booking-notice.is-error { background: #fff1f4; color: #b60445; }
+  .booking-notice.is-error { background: #fff0f2; color: #e31c5a; }
   .booking-notice button, .booking-notice a { margin-left: 8px; color: var(--brand); font-weight: 700; text-decoration: underline; }
   .booking-empty { height: auto; }
   .booking-empty h1 { font-size: 24px; font-weight: 700; }
@@ -221,7 +222,7 @@
     .page-container { width: calc(100% - 30px); }
     .brand { font-size: 16px; line-height: 19px; }
     .user-button { padding: 8px 0 8px 4px; gap: 6px; }
-    .login-button { background: transparent; color: #d70552; font-size: 14px; padding: 8px 14px 8px 10px; }
+    .login-button { background: transparent; color: #ff385c; font-size: 14px; padding: 8px 14px 8px 10px; }
     .site-header .login-icon { display: block; width: 20px; height: 20px; }
   }
 }

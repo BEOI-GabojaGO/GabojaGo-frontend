@@ -3,9 +3,12 @@ import { Noto_Sans_KR } from "next/font/google";
 import { FooterNav } from "@/components/main/footer-nav";
 import { LoginDialog } from "@/components/main/login-dialog";
 import { MainCarousels } from "@/components/main/main-carousels";
+import { BenefitList, MainHeader } from "@/components/main/main-scroll";
 import { SearchPanel } from "@/components/main/search-panel";
 import { readConditionSearchParams } from "@/lib/flight-search-params";
 import "./main.css";
+// 조건 검색 선택기(목록 조건 수정 서랍과 공용).
+import "./condition-picker.css";
 // 로그인 다이얼로그 규칙이 main.css의 input:focus-visible 외곽선을 덮어야 하므로 뒤에 둔다.
 import "./auth.css";
 
@@ -13,10 +16,10 @@ import "./auth.css";
 const notoSansKr = Noto_Sans_KR({ subsets: ["latin"], preload: false, variable: "--font-noto-kr" });
 
 const BENEFITS = [
-  { icon: "imgIconAi.svg", text: "AI 맞춤형 항공권 검색" },
-  { icon: "imgIconCommunication.svg", text: "자연어 복합 조건 입력" },
-  { icon: "imgIconTime.svg", text: "검색 소요 시간 압도적 단축" },
-  { icon: "imgIconHear.svg", text: "사용자 고민 경청 및 해소" },
+  { icon: "imgIconAi.svg", text: "AI 맞춤 항공권을 검색해요" },
+  { icon: "imgIconCommunication.svg", text: "대화하듯 자연어로 입력해요" },
+  { icon: "imgIconTime.svg", text: "검색 시간을 단축해요" },
+  { icon: "imgIconHear.svg", text: "사용자 고민을 경청해요" },
 ];
 
 const HERO_IMAGES = [
@@ -31,14 +34,14 @@ export default async function Home({ searchParams }: PageProps<"/">) {
 
   return (
     <div className={`main-page auth-ui ${notoSansKr.variable}`}>
-      <header className="header">
+      <MainHeader>
         <div className="header-inner">
           <a className="brand" href="#home">
             가보자 <span>GO</span>
           </a>
           <LoginDialog />
         </div>
-      </header>
+      </MainHeader>
 
       <main id="home">
         <section className="hero" aria-labelledby="hero-title">
@@ -81,7 +84,7 @@ export default async function Home({ searchParams }: PageProps<"/">) {
               <span className="desktop-space"> </span>
               선택해야만 하는 이유
             </h2>
-            <div className="benefit-list">
+            <BenefitList>
               {BENEFITS.map(({ icon, text }) => (
                 <div className="benefit" key={text}>
                   <span className="benefit-icon">
@@ -90,7 +93,7 @@ export default async function Home({ searchParams }: PageProps<"/">) {
                   <p>{text}</p>
                 </div>
               ))}
-            </div>
+            </BenefitList>
           </section>
           <MainCarousels />
         </div>

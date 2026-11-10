@@ -1,0 +1,179 @@
+/*
+ * 조건 검색 선택기(출발지·도착지·일정·탑승객) 스타일. 메인 조건 검색과 항공권 목록 조건 수정 서랍이 같이 쓴다.
+ * main.css(메인 시안 이식본)에서 원래 순서·미디어쿼리 그대로 옮겼고, 범위만 .main-page → .main-page·.flight-page로 넓혔다.
+ * 컴포넌트: src/components/flight/condition-form.tsx
+ */
+:is(.main-page,.flight-page){
+.picker-done{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:42px;border-radius:12px;background:var(--pink);color:#fff;font-weight:700;padding:0 24px;white-space:nowrap}
+.picker-done:hover{background:#e31c5a}
+.picker-backdrop{position:fixed;inset:0;background:#10182880;z-index:30}
+.picker-panel{position:fixed;z-index:31;top:50%;left:50%;transform:translate(-50%,-50%);width:min(440px,calc(100vw - 28px));max-height:min(680px,calc(100dvh - 28px));overflow:hidden;border-radius:24px;background:#fff;box-shadow:0 24px 80px #10182838;display:flex;flex-direction:column}
+.picker-header{height:70px;flex:none;display:flex;align-items:center;justify-content:space-between;padding:0 24px;border-bottom:1px solid #eef0f3}
+.picker-header h2{font-size:20px;line-height:1.3}
+.picker-close{font-size:26px;color:#667085;width:32px;height:32px;line-height:1}
+.picker-body{overflow:auto;padding:22px 24px 26px;overscroll-behavior:contain}
+.picker-search-label{display:block;font-size:13px;font-weight:700;margin-bottom:9px}
+.picker-search{display:flex;align-items:center;gap:10px;border:1px solid #d9dce2;border-radius:12px;padding:0 13px}
+.picker-search:focus-within{border-color:var(--pink);box-shadow:0 0 0 3px #ff385c1a}
+.picker-search span{font-size:22px;color:var(--pink)}
+.picker-search input{height:46px;min-width:0;width:100%;outline:none;border:0;background:none}
+.picker-hint{color:#777;font-size:13px;line-height:1.5;margin:18px 0 12px}
+.airport-list{display:flex;flex-direction:column;max-height:340px;overflow:auto}
+.airport-option{display:flex;align-items:center;gap:12px;width:100%;min-height:65px;padding:8px;text-align:left;border-radius:10px}
+.airport-option:hover,.airport-option:focus-visible{background:#fff0f2}
+.airport-symbol{width:36px;height:36px;border-radius:10px;background:#fff0f2;color:var(--pink);display:grid;place-items:center;flex:none}
+.airport-option>span:nth-child(2){display:flex;flex-direction:column;gap:5px;min-width:0;flex:1}
+.airport-option strong{font-size:14px}
+.airport-option small{color:#888;font-size:12px}
+.airport-option b{color:var(--pink);font-size:13px}
+.picker-empty{padding:20px;text-align:center;color:#888}
+.calendar-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.calendar-top strong{font-size:16px}
+.calendar-top button{font-size:26px;width:34px;height:34px;border-radius:9px}
+.calendar-top button:hover:not(:disabled){background:#fff0f2}
+.calendar-top button:disabled{opacity:.25}
+.calendar-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;text-align:center}
+.calendar-grid>b{padding:8px 0;color:#888;font-size:12px;font-weight:500}
+.calendar-day{aspect-ratio:1;border-radius:10px;font-size:13px}
+.calendar-day:hover:not(:disabled){background:#fff0f2}
+.calendar-day.selected{background:var(--pink);color:#fff;font-weight:700}
+.calendar-day.between{background:#fff0f2;color:var(--pink)}
+.calendar-day:disabled{color:#c4c4c4;cursor:default}
+.picker-done{width:100%;margin-top:18px}
+.passenger-list{display:flex;flex-direction:column}
+.passenger-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 0;border-bottom:1px solid #eef0f3}
+.passenger-row>span{display:flex;flex-direction:column;gap:5px}
+.passenger-row strong{font-size:14px}
+.passenger-row small{font-size:12px;color:#888}
+.counter{display:flex;align-items:center;gap:10px}
+.counter button{width:30px;height:30px;border:1px solid #d9dce2;border-radius:50%;font-size:18px}
+.counter button:hover:not(:disabled){border-color:var(--pink);color:var(--pink)}
+.counter button:disabled{opacity:.35}
+.counter output{min-width:18px;text-align:center;font-weight:700}
+/* Passenger picker keeps its 300px content area while adding 2px padding per side. */
+.picker-panel.passenger-picker{position:absolute;z-index:33;width:min(352px,calc(100vw - 24px));height:531px;max-height:none;overflow:hidden;padding:26px;border-radius:24px;background:#fff;box-shadow:0 2px 6px #0000001a,0 10px 60px #0003;transform:none;gap:36px;animation:calendar-pop-in 220ms cubic-bezier(.22,1,.36,1) both}
+.passenger-picker .picker-header{height:19px;min-height:19px;padding:0;border:0}
+.passenger-picker .picker-header h2{font-family:"Noto Sans KR",sans-serif;font-size:16px;font-weight:700;line-height:19px;color:#333}
+.passenger-picker .picker-close{position:absolute;width:1px;height:1px;padding:0;overflow:hidden;clip-path:inset(50%)}
+.passenger-picker .picker-close:focus-visible{clip-path:none;width:28px;height:28px;right:12px;top:12px;background:#fff;border-radius:8px}
+.passenger-picker .picker-body{display:flex;flex:none;flex-direction:column;gap:20px;width:100%;height:424px;padding:0;overflow:visible}
+.passenger-controls{display:flex;flex:none;flex-direction:column;gap:24px;width:100%;height:371px}
+.passenger-picker .passenger-list{display:flex;flex:none;flex-direction:column;gap:24px;width:100%;height:174px}
+.passenger-picker .passenger-row{display:flex;align-items:center;justify-content:space-between;gap:0;width:100%;height:42px;padding:0;border:0}
+.passenger-picker .passenger-row>span{display:flex;flex-direction:column;gap:6px}
+.passenger-picker .passenger-row strong{color:#333;font-family:"Noto Sans KR",sans-serif;font-size:16px;font-weight:500;line-height:19px}
+.passenger-picker .passenger-row small{color:#888;font-family:"Noto Sans KR",sans-serif;font-size:12px;font-weight:400;line-height:17px}
+.passenger-picker .counter{display:flex;align-items:center;gap:12px;width:94px;height:30px}
+.passenger-picker .counter button{position:relative;flex:none;width:30px;height:30px;border:.6px solid #ccc;border-radius:10px;background:#fff;box-shadow:0 1px 4px #00000013;font-size:0;color:#333}
+.passenger-picker .counter button::before,.passenger-picker .counter button[data-step="1"]::after{content:'';position:absolute;top:50%;left:50%;width:10px;height:1px;border-radius:1px;background:currentColor;transform:translate(-50%,-50%)}
+.passenger-picker .counter button[data-step="1"]::after{transform:translate(-50%,-50%) rotate(90deg)}
+.passenger-picker .counter button:hover:not(:disabled){border-color:#333;color:#333;background:#f8f8f8}
+.passenger-picker .counter button:disabled{border-color:#eee;color:#ccc;box-shadow:0 1px 4px #00000008;opacity:1}
+.passenger-picker .counter output{min-width:10px;color:#333;font-family:"Noto Sans KR",sans-serif;font-size:16px;font-weight:400;line-height:19px;text-align:center}
+.cabin-options{display:flex;flex:none;flex-direction:column;gap:20px;width:100%;height:173px;padding:24px 0 0;margin:0;border:0;border-top:1px solid #eee}
+.cabin-options label{display:flex;align-items:center;gap:10px;height:22px;color:#333;cursor:pointer}
+.cabin-options input{position:relative;appearance:none;width:20px;height:20px;flex:none;margin:0;border:1px solid #ccc;border-radius:50%;background:#fff;box-shadow:0 0 0 .2px #ccc}
+.cabin-options input:checked{border-color:#ff385c;box-shadow:0 0 0 .2px #ff385c}
+.cabin-options input:checked::after{content:'';position:absolute;top:50%;left:50%;width:12px;height:12px;border-radius:50%;background:#ff385c;transform:translate(-50%,-50%)}
+.cabin-options input:focus-visible{outline:2px solid #ff385c;outline-offset:2px}
+.cabin-options span{font-family:"Noto Sans KR",sans-serif;font-size:16px;font-weight:400;line-height:22px;transform:translateY(-1px)}
+.passenger-action{display:flex;align-items:center;justify-content:flex-end;width:100%;height:33px}
+.passenger-picker .picker-done{width:80px;height:33px;min-height:33px;margin:0;padding:8px 14px;border-radius:12px;background:#ff385c;color:#fff;font-family:"Noto Sans KR",sans-serif;font-size:14px;font-weight:500;line-height:17px}
+/* Figma Origin 638:19536 shared by departure and arrival selection. */
+.picker-panel.location-picker{position:absolute;top:auto;bottom:auto;transform:none;width:354px;max-width:calc(100vw - 24px);height:492px;max-height:none;overflow:hidden;padding:26px 6px 6px;border-radius:24px;gap:16px;box-shadow:0 2px 6px #0000001a,0 10px 60px #0003;animation:calendar-pop-in 220ms cubic-bezier(.22,1,.36,1) both}
+.location-picker .picker-header{height:19px;padding:0 20px;border:0;flex:none}
+.location-picker .picker-header h2{font-size:16px;font-weight:700;line-height:19px}
+.location-picker .picker-close{position:absolute;width:1px;height:1px;padding:0;overflow:hidden;clip-path:inset(50%)}
+.location-picker .picker-close:focus-visible{clip-path:none;width:28px;height:28px;right:12px;top:12px;background:#fff;border-radius:8px}
+.location-picker .picker-body{min-height:0;flex:1;padding:6px 0 0;overflow:hidden;display:flex;flex-direction:column;gap:16px}
+.origin-search-wrap{padding:0 14px}
+.origin-search{display:flex;align-items:center;gap:10px;height:50px;padding:0 16px;border:1px solid #ddd;border-radius:12px;background:#fff}
+.origin-search:has(input:focus-visible){outline:2px solid #333;outline-offset:2px}
+.origin-search .search-glyph{width:12px;height:12px;border-width:1px;margin:0 2px 2px 0}
+.origin-search .search-glyph:after{width:5px;height:1px;right:-4px;bottom:-2px}
+.origin-search input{border:0;outline:0;min-width:0;width:100%;padding:0;background:none;color:#333;font-size:14px;font-weight:400;line-height:17px}
+.origin-search input::placeholder{color:#aaa}
+.origin-regions{min-height:0;flex:1;overflow-y:auto;overscroll-behavior:contain}
+.origin-region{display:flex;flex-direction:column;gap:6px;padding-bottom:20px}
+.origin-region h3{display:flex;align-items:center;gap:6px;height:46px;padding:0 20px;color:#333;font-size:16px;font-weight:500;line-height:21px}
+.origin-flag{display:block;width:22px;height:22px;flex:none;object-fit:contain;border-radius:50%}
+.origin-chips{display:flex;flex-wrap:wrap;column-gap:8px;row-gap:12px;padding:0 20px}
+.origin-chip{padding:6px 8px;background:#f6f6f6;color:#000;border-radius:8px;font-size:14px;font-weight:400;line-height:21px;white-space:nowrap}
+.origin-chip:hover{background:#eee;font-weight:500}
+@media(max-width:599px){.picker-panel{top:auto;bottom:0;left:0;transform:none;width:100%;max-height:min(86dvh,720px);border-radius:24px 24px 0 0}
+.picker-header{height:62px;padding:0 20px}
+.picker-body{padding:18px 20px 30px}}
+/* Figma Calendar: 362 × 471 anchored date-range picker. */
+.picker-panel.date-picker{position:absolute;z-index:33;width:min(374px,calc(100vw - 24px));height:calc(var(--calendar-grid-height,326px) + 193px);max-height:none;overflow:hidden;transform:none;border-radius:24px;background:#fff;box-shadow:0 2px 6px #0000001a,0 10px 60px #0003;transition:height 260ms cubic-bezier(.22,1,.36,1);animation:calendar-pop-in 220ms cubic-bezier(.22,1,.36,1) both}
+.picker-panel.date-picker.is-opening,.date-picker.is-opening .calendar-viewport,.date-picker.is-opening .calendar-track{transition:none}
+.date-picker .picker-header{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip-path:inset(50%);border:0}
+.date-picker .picker-body{display:flex;min-height:0;height:100%;overflow:hidden;flex-direction:column;justify-content:flex-start;gap:16px;padding:26px;background:#fff}
+.date-picker .calendar{display:flex;flex-direction:column;gap:0;width:100%}
+.date-picker .calendar-top{display:grid;grid-template-columns:20px 1fr 20px;align-items:center;width:100%;height:20px;margin:0 0 16px}
+.date-picker .calendar-top strong{text-align:center;font-size:16px;font-weight:700;line-height:19px}
+.date-picker .calendar-top button{position:relative;display:flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%}
+.date-picker .calendar-top button::before{content:'';position:absolute;inset:50% auto auto 50%;width:32px;height:32px;border-radius:50%;background:transparent;transform:translate(-50%,-50%)}
+.date-picker .calendar-top button:hover:not(:disabled)::before{background:#f6f6f6}
+.date-picker .calendar-top button:disabled{opacity:.28}
+.date-picker .calendar-top img{position:relative;z-index:1;width:20px;height:20px}
+.calendar-phase{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap;border:0}
+.date-picker .calendar-weekdays{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));width:100%;height:46px;margin-bottom:10px;text-align:center}
+.date-picker .calendar-weekdays>b{display:flex;align-items:center;justify-content:center;color:#333;font-size:14px;font-weight:400;line-height:17px}
+.date-picker .calendar-weekdays>.sunday,.date-picker .calendar-weekdays>.saturday{color:var(--pink)}
+.date-picker .calendar-viewport{width:100%;height:var(--calendar-grid-height,326px);overflow:hidden;transition:height 260ms cubic-bezier(.22,1,.36,1)}
+.date-picker .calendar-track{display:flex;align-items:flex-start;width:100%;height:var(--calendar-grid-height,326px);overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;scroll-behavior:smooth;overscroll-behavior-x:contain;touch-action:pan-x;scrollbar-width:none;transition:height 260ms cubic-bezier(.22,1,.36,1)}
+.date-picker .calendar-track::-webkit-scrollbar{display:none;width:0;height:0}
+.date-picker .calendar-slide{flex:0 0 100%;width:100%;height:var(--slide-grid-height,326px);scroll-snap-align:center;scroll-snap-stop:always}
+.date-picker .calendar-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));grid-auto-rows:var(--calendar-row-height,46px);column-gap:0;row-gap:10px;width:100%;height:var(--slide-grid-height,326px);text-align:center}
+.date-picker .calendar-empty{display:block;width:100%;height:var(--calendar-row-height,46px)}
+.date-picker .calendar-day{position:relative;isolation:isolate;display:flex;align-items:center;justify-content:center;width:100%;height:var(--calendar-row-height,46px);aspect-ratio:auto;border-radius:0;color:#333;font-size:14px;font-weight:400;line-height:17px}
+.date-picker .calendar-day>span{position:relative;z-index:2}
+.date-picker .calendar-day::before,.date-picker .calendar-day::after{content:'';position:absolute;top:50%;height:var(--calendar-row-height,46px);transform:translateY(-50%);pointer-events:none}
+.date-picker .calendar-day::before{z-index:0;left:0;width:100%;background:transparent}
+.date-picker .calendar-day::after{z-index:1;left:50%;width:var(--calendar-row-height,46px);border-radius:50%;background:transparent;transform:translate(-50%,-50%)}
+.date-picker .calendar-day:hover:not(:disabled){background:transparent}
+.date-picker .calendar-day:hover:not(:disabled)::after,.date-picker .calendar-day:focus-visible::after{background:#f1f1f1}
+.date-picker .calendar-day:focus-visible{z-index:3;outline:0}
+.date-picker .calendar-day:focus-visible::after{box-shadow:inset 0 0 0 2px var(--pink)}
+.date-picker .calendar-day:disabled{color:#ccc}
+.date-picker .calendar-day.between{background:transparent;color:#333}
+.date-picker .calendar-day.range-week::before{background:rgb(51 51 51 / 6%)}
+.date-picker .calendar-day.range-row-start::before{border-radius:12px 0 0 12px}
+.date-picker .calendar-day.range-row-end::before{border-radius:0 12px 12px 0}
+.date-picker .calendar-day.range-start.range-week::before{left:50%;width:50%;border-radius:50% 0 0 50%}
+.date-picker .calendar-day.range-end.range-week::before{left:0;width:50%;border-radius:0 50% 50% 0}
+.date-picker .calendar-day.selected{background:transparent;color:#fff;font-weight:500}
+.date-picker .calendar-day.selected::after{background:#333}
+.date-picker .calendar-day.selected:hover::after,.date-picker .calendar-day.selected:focus-visible::after{background:#333}
+.date-picker .calendar-day.range-start.adjacent-range::before{left:50%;width:50%;background:#333}
+.date-picker .calendar-day.range-end.adjacent-range::before{width:50%;background:#333}
+.date-picker .calendar-done{align-self:flex-end;width:80px;height:33px;min-height:33px;margin:0;padding:8px 14px;border-radius:12px;background:#ff385c;color:#fff;font-family:"Noto Sans KR",sans-serif;font-size:14px;font-weight:500;line-height:17px}
+.date-picker .calendar-done:disabled{background:#ccc;color:#fff;opacity:1}
+.picker-panel.location-picker.is-closing,.picker-panel.date-picker.is-closing,.picker-panel.passenger-picker.is-closing{pointer-events:none;animation:calendar-pop-out 180ms ease-in both}
+@media(prefers-reduced-motion:reduce){.picker-panel.location-picker,.picker-panel.date-picker,.picker-panel.passenger-picker{animation:none}
+.picker-panel.date-picker,.date-picker .calendar-viewport,.date-picker .calendar-track{transition:none}
+.date-picker .calendar-track{scroll-behavior:auto}}
+:is(.picker-done,.calendar-done):hover{background:#e31c5a}
+:is(.picker-done,.calendar-done):active{background:#c8104f}
+/* 출발지·도착지 선택기: 돋보기 아이콘, 지역 제목 66px, 국기는 22px 둥근 사각형. */
+.origin-search .search-icon-image{display:block;width:20px;height:20px;flex:0 0 20px;object-fit:contain}
+.origin-search:has(.search-icon-image){gap:4px}
+.origin-regions{padding-bottom:20px;box-sizing:border-box}
+.origin-region h3{display:flex;align-items:center;gap:10px;height:66px;padding:10px 20px;color:#333;font-size:18px;font-weight:500;line-height:24px}
+.origin-flag{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;flex:none;overflow:hidden;border-radius:8px;background:#fff;box-shadow:0 2px 4px rgba(0,0,0,.16)}
+.origin-flag img{display:block;width:100%;height:100%;object-fit:cover;transform:none}
+.location-picker .picker-header h2,.passenger-picker .picker-header h2{font-size:18px;line-height:22px}
+.passenger-picker .passenger-row strong{font-size:18px;line-height:22px}
+.passenger-picker .counter output{font-weight:600}
+.date-picker .calendar-top strong{font-size:18px;line-height:21px}
+}
+@keyframes calendar-pop-in{from{opacity:0;transform:translateY(-8px) scale(.985)}to{opacity:1;transform:translateY(0) scale(1)}}
+@keyframes calendar-pop-out{from{opacity:1;transform:translateY(0) scale(1)}to{opacity:0;transform:translateY(-8px) scale(.985)}}
+/* 유아 좌석 선택(시안 없음): 왕복·편도 토글과 같은 톤의 작은 세그먼트. 이 줄이 생기면 탑승객 피커 고정 높이를 푼다. */
+:is(.main-page,.flight-page) .infant-types{display:flex;gap:4px;width:max-content;padding:2px;border-radius:12px;background:#eee}
+:is(.main-page,.flight-page) .infant-types label{cursor:pointer}
+:is(.main-page,.flight-page) .infant-types input{position:absolute;opacity:0;width:1px;height:1px}
+:is(.main-page,.flight-page) .infant-types span{display:block;padding:6px 10px;border-radius:10px;color:#aaa;font-size:13px;font-weight:500}
+:is(.main-page,.flight-page) .infant-types input:checked+span{color:#333;background:#fff;box-shadow:0 1px 3px #00000040}
+:is(.main-page,.flight-page) .infant-types input:focus-visible+span{outline:2px solid var(--pink);outline-offset:2px}
+:is(.main-page,.flight-page) .passenger-picker:has(.infant-types),:is(.main-page,.flight-page) .passenger-picker:has(.infant-types) :is(.picker-body,.passenger-controls){height:auto}

@@ -3,6 +3,7 @@
 /* eslint-disable @next/next/no-img-element -- 디자인 원본 아이콘과 SerpApi 항공사 로고를 그대로 쓴다. */
 import { usePathname, useRouter } from "next/navigation";
 import { Fragment, useEffect, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
+import { SearchEditDrawer } from "@/components/flight/search-edit-drawer";
 import { cityName, TRAVEL_CLASS_OPTIONS } from "@/components/flight/search-condition-fields";
 import { loginHref } from "@/lib/auth-client";
 import { formatMinutes, postJson, requestJson } from "@/lib/flight-client";
@@ -22,8 +23,8 @@ type Sort = "default" | "price" | "price-desc" | "depart" | "duration";
 
 const SORT_OPTIONS: { value: Sort; label: string }[] = [
   { value: "default", label: "추천순" },
-  { value: "price", label: "가격 낮은순" },
-  { value: "price-desc", label: "비싼 가격순" },
+  { value: "price", label: "낮은 가격순" },
+  { value: "price-desc", label: "높은 가격순" },
   { value: "depart", label: "출발 시간순" },
   { value: "duration", label: "소요 시간순" },
 ];
@@ -33,7 +34,18 @@ const TIME_SLOTS = [0, 4, 8, 12, 16, 20].map((start) => ({
   label: `${String(start).padStart(2, "0")}시 - ${String(start + 4).padStart(2, "0")}시`,
 }));
 
-export const FLAGS: Record<string, string> = { 대한민국: "flag-korea.png", 일본: "flag-japan.png", 중국: "flag-china.png" };
+export const FLAGS: Record<string, string> = {
+  대한민국: "flag-korea.png",
+  일본: "flag-japan.png",
+  중국: "flag-china.png",
+  싱가포르: "flag-singapore.webp",
+  홍콩: "flag-hong-kong.webp",
+  인도: "flag-india.webp",
+  말레이시아: "flag-malaysia.webp",
+  태국: "flag-thailand.webp",
+};
+/** 국기 파일 이름 → CSS 클래스(flag-korea 등). */
+export const flagClass = (file: string) => file.replace(/\.\w+$/, "");
 
 const departHour = (option: FlightOption) => {
   const time = option.segments[0]?.departure?.localTime;
@@ -95,18 +107,37 @@ export function useFlightFilter() {
 
 type FlightFilter = ReturnType<typeof useFlightFilter>;
 
+/** 체크 애니메이션(1105 시안 filter-animating·filter-unchecking). 끝나면 클래스를 지운다. React는 이 input의 class를 다루지 않는다. */
+function playCheck(inputs: Iterable<HTMLInputElement>, checked: boolean, batch = false) {
+  for (const input of inputs) {
+    input.classList.remove("filter-animating", "filter-unchecking", "filter-batch");
+    void input.offsetWidth;
+    input.classList.add(checked ? "filter-animating" : "filter-unchecking", ...(batch ? ["filter-batch"] : []));
+    setTimeout(() => input.classList.remove("filter-animating", "filter-unchecking", "filter-batch"), 700);
+  }
+}
+
+/** 이 편의 로고(편 전체 → 첫 구간). */
+const logoOf = (option: FlightOption) => option.airlineLogo ?? option.segments[0]?.airlineLogo ?? null;
+
 function FilterGroups({
   value,
   onChange,
   airlines,
   legs,
   idPrefix,
+  options = [],
+  panel = false,
 }: {
   value: FilterState;
   onChange: (next: FilterState) => void;
   airlines: string[];
   legs: Leg[];
   idPrefix: string;
+  /** 지금 고르는 편의 목록(거르기 전). 패널의 항공사 로고·편 수에 쓴다. */
+  options?: FlightOption[];
+  /** 태블릿·모바일 필터 시트. 항공사 줄에 로고와 편 수를 붙인다(시안 filter-airline-row). */
+  panel?: boolean;
 }) {
   const toggleAirline = (name: string) =>
     onChange({
@@ -118,29 +149,91 @@ function FilterGroups({
     const next = current.includes(start) ? current.filter((item) => item !== start) : [...current, start];
     onChange({ ...value, times: { ...value.times, [leg]: next } });
   };
+  const animate = (event: { currentTarget: HTMLInputElement }) => playCheck([event.currentTarget], event.currentTarget.checked);
+
+  // 모두 선택 ↔ 모두 해제. 전부 체크한 상태와 아무것도 안 고른 상태는 결과가 같다(둘 다 전체).
+  const allAirlines = airlines.length > 0 && airlines.every((name) => value.airlines.includes(name));
+  const allTimes = (leg: Leg) => TIME_SLOTS.every(({ start }) => value.times[leg].includes(start));
+  const selectAll = (group: "airline" | Leg, section: HTMLElement | null) => {
+    const on = group === "airline" ? !allAirlines : !allTimes(group);
+    if (group === "airline") onChange({ ...value, airlines: on ? [...airlines] : [] });
+    else onChange({ ...value, times: { ...value.times, [group]: on ? TIME_SLOTS.map(({ start }) => start) : [] } });
+    if (section) playCheck(section.querySelectorAll("input"), on, true);
+  };
+  const title = (heading: ReactNode, group: "airline" | Leg, all: boolean) => (
+    <div className="filter-group-title">
+      <h3>{heading}</h3>
+      <button
+        className="filter-select-all"
+        type="button"
+        disabled={group === "airline" && airlines.length === 0}
+        onClick={(event) => selectAll(group, event.currentTarget.closest("section"))}
+      >
+        {all ? "모두 해제" : "모두 선택"}
+      </button>
+    </div>
+  );
+  // 지금 시간 필터를 적용했을 때 항공사별 편 수와 로고.
+  const legOf = legs[0] ?? "outbound";
+  const inTime = (option: FlightOption) => {
+    const times = value.times[legOf];
+    const hour = departHour(option);
+    return !times.length || hour === null || times.some((start) => hour >= start && hour < start + 4);
+  };
+  const countOf = (name: string) => options.filter((option) => airlinesOf(option).includes(name) && inTime(option)).length;
+  const logoFor = (name: string) => {
+    const option = options.find((item) => airlinesOf(item).length === 1 && airlinesOf(item)[0] === name);
+    return option ? logoOf(option) : null;
+  };
 
   return (
     <div className="filter-groups">
       <section className="filter-group">
-        <h3>항공사</h3>
+        {title("항공사", "airline", allAirlines)}
         <div className="check-list">
           {airlines.length === 0 && <p className="filter-empty">항공사 정보가 없습니다.</p>}
-          {airlines.map((name) => (
-            <label className="check-row" key={name} htmlFor={`${idPrefix}-airline-${name}`}>
-              <input
-                id={`${idPrefix}-airline-${name}`}
-                type="checkbox"
-                checked={value.airlines.includes(name)}
-                onChange={() => toggleAirline(name)}
-              />
-              <span>{name}</span>
-            </label>
-          ))}
+          {airlines.map((name) => {
+            const count = panel ? countOf(name) : 0;
+            const logo = panel ? logoFor(name) : null;
+            return (
+              <label className={`check-row${panel ? " filter-airline-row" : ""}`} key={name} htmlFor={`${idPrefix}-airline-${name}`}>
+                <input
+                  id={`${idPrefix}-airline-${name}`}
+                  type="checkbox"
+                  checked={value.airlines.includes(name)}
+                  onChange={(event) => {
+                    animate(event);
+                    toggleAirline(name);
+                  }}
+                />
+                {panel ? (
+                  <span className="filter-airline-content">
+                    {logo && (
+                      <span className="filter-airline-logo" aria-hidden="true">
+                        <img src={logo} alt="" />
+                      </span>
+                    )}
+                    <span className="filter-airline-name">{name}</span>
+                    {count > 0 && <em>{count}개</em>}
+                  </span>
+                ) : (
+                  <span>{name}</span>
+                )}
+              </label>
+            );
+          })}
         </div>
       </section>
       {legs.map((leg) => (
         <section className="filter-group" key={leg}>
-          <h3>{leg === "outbound" ? "가는편" : "오는편"} 출발 시간</h3>
+          {title(
+            <>
+              <span className="filter-heading-first">{leg === "outbound" ? "가는편" : "오는편"}</span>{" "}
+              <span className="filter-heading-second">출발 시간</span>
+            </>,
+            leg,
+            allTimes(leg),
+          )}
           <div className="check-list">
             {TIME_SLOTS.map(({ start, label }) => (
               <label className="check-row" key={start} htmlFor={`${idPrefix}-${leg}-${start}`}>
@@ -148,7 +241,10 @@ function FilterGroups({
                   id={`${idPrefix}-${leg}-${start}`}
                   type="checkbox"
                   checked={value.times[leg].includes(start)}
-                  onChange={() => toggleTime(leg, start)}
+                  onChange={(event) => {
+                    animate(event);
+                    toggleTime(leg, start);
+                  }}
                 />
                 <span>{label}</span>
               </label>
@@ -223,7 +319,19 @@ export function SortMenu<T extends string>({
 }
 
 /** 태블릿·모바일 필터. 고르는 동안은 초안만 바꾸고 "적용하기"를 눌러야 반영한다(시안과 같음). */
-function FilterDrawer({ filter, airlines, legs, onClose }: { filter: FlightFilter; airlines: string[]; legs: Leg[]; onClose: () => void }) {
+function FilterDrawer({
+  filter,
+  airlines,
+  legs,
+  options,
+  onClose,
+}: {
+  filter: FlightFilter;
+  airlines: string[];
+  legs: Leg[];
+  options: FlightOption[];
+  onClose: () => void;
+}) {
   const [draft, setDraft] = useState(filter.filter);
 
   useEffect(() => {
@@ -236,13 +344,18 @@ function FilterDrawer({ filter, airlines, legs, onClose }: { filter: FlightFilte
     <>
       <div className="modal-backdrop is-open" onClick={onClose} />
       <div className="filter-panel is-open" role="dialog" aria-modal="true" aria-labelledby="filter-title">
+        {/* 시안도 모양만 있는 손잡이(끌기 동작 없음). */}
+        <span className="filter-drag-handle" aria-hidden="true" />
         <div className="filter-head">
           <h2 id="filter-title">필터</h2>
+          <button className="mobile-filter-reset" type="button" onClick={() => setDraft(EMPTY_FILTER)}>
+            초기화
+          </button>
           <button className="close-filter" type="button" aria-label="필터 닫기" onClick={onClose}>
             ×
           </button>
         </div>
-        <FilterGroups value={draft} onChange={setDraft} airlines={airlines} legs={legs} idPrefix="panel" />
+        <FilterGroups value={draft} onChange={setDraft} airlines={airlines} legs={legs} idPrefix="panel" options={options} panel />
         <div className="filter-actions">
           <button className="reset-button" type="button" onClick={() => setDraft(EMPTY_FILTER)}>
             초기화
@@ -303,8 +416,9 @@ export function FlightListLayout({
   filter,
   airlines,
   legs,
-  onEdit,
   locked = false,
+  options = [],
+  stage = "outbound",
   children,
 }: {
   request: QueryRequest;
@@ -312,13 +426,54 @@ export function FlightListLayout({
   filter: FlightFilter;
   airlines: string[];
   legs: Leg[];
-  onEdit: () => void;
   /** 왕복 최종 선택 요약을 보여 주는 동안 필터·정렬을 잠근다(시안 .is-disabled). */
   locked?: boolean;
+  /** 지금 고르는 편의 목록(거르기 전). 필터 시트의 항공사 로고·편 수에 쓴다. */
+  options?: FlightOption[];
+  /** 지금 단계. 바뀌면 시안처럼 새 단계 내용을 떠오르게 한다(stage-revealing). */
+  stage?: "outbound" | "return" | "complete";
   children: ReactNode;
 }) {
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const { dates, nights, people, travelClass } = querySummary(request);
+  // "수정하기"·모바일 요약 → 조건 수정 서랍(1105 시안). 닫으면 누른 버튼으로 포커스를 돌려준다.
+  const [editOpen, setEditOpen] = useState(false);
+  const editTrigger = useRef<HTMLButtonElement | null>(null);
+  const onEdit = (event: { currentTarget: HTMLButtonElement }) => {
+    editTrigger.current = event.currentTarget;
+    setEditOpen(true);
+  };
+  const { dates, people, travelClass } = querySummary(request);
+  const layout = useRef<HTMLElement>(null);
+
+  // 단계가 바뀌면 1.8초 동안 stage-revealing + stage-return|complete(시안 playStageReveal). 처음 그릴 때는 하지 않는다.
+  const previousStage = useRef(stage);
+  useEffect(() => {
+    const element = layout.current;
+    if (!element || stage === previousStage.current) return;
+    previousStage.current = stage;
+    element.classList.remove("stage-revealing", "stage-return", "stage-complete");
+    if (stage === "outbound") return;
+    void element.offsetWidth;
+    element.classList.add("stage-revealing", stage === "complete" ? "stage-complete" : "stage-return");
+    const timer = setTimeout(() => element.classList.remove("stage-revealing", "stage-return", "stage-complete"), 1800);
+    return () => clearTimeout(timer);
+  }, [stage]);
+
+  // 필터·정렬을 바꾸면 결과 카드를 차례로 다시 띄운다(시안 playFilterReveal, 1.5초).
+  const firstFilter = useRef(true);
+  useEffect(() => {
+    if (firstFilter.current) {
+      firstFilter.current = false;
+      return;
+    }
+    const list = layout.current?.querySelector(".flight-list");
+    if (!list) return;
+    list.classList.remove("filter-revealing");
+    void (list as HTMLElement).offsetWidth;
+    list.classList.add("filter-revealing");
+    const timer = setTimeout(() => list.classList.remove("filter-revealing"), 1500);
+    return () => clearTimeout(timer);
+  }, [filter.filter, filter.sort]);
   const route = `${placeLabel(locations.origin)} → ${placeLabel(locations.destination)}`;
   const divider = (
     <span className="query-divider" aria-hidden="true">
@@ -340,13 +495,10 @@ export function FlightListLayout({
             <span>{placeLabel(locations.destination)}</span>
           </span>
           <span className="query-badge">{trip}</span>
+          {/* 900~1199px에서 두 줄로 나눌 자리(시안). */}
+          <span className="query-line-break" aria-hidden="true" />
           {divider}
           <span className="query-item query-date">{dates}</span>
-          {nights !== null && (
-            <span className="query-item query-date-description">
-              ({nights}박 {nights + 1}일)
-            </span>
-          )}
           {divider}
           <span className="query-item query-passenger">{people}</span>
           <span className="query-badge">{travelClass}</span>
@@ -356,12 +508,18 @@ export function FlightListLayout({
         </div>
       </section>
 
-      <main className="page-layout">
+      <main ref={layout} className="page-layout">
+        {/* 모바일 요약: 경로·왕복 / 날짜 / 인원·좌석 3줄(1105 시안). */}
         <button className="mobile-summary" type="button" aria-label="검색 조건 수정" onClick={onEdit}>
-          <span className="summary-route">{route}</span>
-          <span className="summary-badge">{trip}</span>
+          <span className="summary-topline">
+            <span className="summary-route">{route}</span>
+            <span className="summary-badge">{trip}</span>
+          </span>
           <span className="summary-meta">
-            {dates}&nbsp;&nbsp; {people}&nbsp;&nbsp; <em>{travelClass}</em>
+            <span className="summary-date">{dates}</span>
+            <span className="summary-passengers">
+              {people}&nbsp;&nbsp; <em>{travelClass}</em>
+            </span>
           </span>
         </button>
 
@@ -386,7 +544,16 @@ export function FlightListLayout({
         </section>
       </main>
 
-      {drawerOpen && <FilterDrawer filter={filter} airlines={airlines} legs={legs} onClose={() => setDrawerOpen(false)} />}
+      {drawerOpen && <FilterDrawer filter={filter} airlines={airlines} legs={legs} options={options} onClose={() => setDrawerOpen(false)} />}
+      <SearchEditDrawer
+        open={editOpen}
+        request={request}
+        locations={locations}
+        onClose={() => {
+          setEditOpen(false);
+          editTrigger.current?.focus({ preventScroll: true });
+        }}
+      />
     </>
   );
 }
@@ -396,7 +563,7 @@ function Place({ option }: { option: LocationOption }) {
   return (
     <>
       {flag && (
-        <span className={`flag ${flag.replace(".png", "")}`}>
+        <span className={`flag ${flagClass(flag)}`}>
           <img src={`/main/${flag}`} alt={option.countryNameKo} />
         </span>
       )}
@@ -429,7 +596,7 @@ const addDays = (value: string, days: number) => {
   return isoDate(date);
 };
 /** 시안 표기: "10. 1 목" */
-const stripDay = (value: string) => {
+export const stripDay = (value: string) => {
   const date = parseDate(value);
   return `${date.getMonth() + 1}. ${date.getDate()} ${WEEKDAYS[date.getDay()]}`;
 };
@@ -521,7 +688,7 @@ function FinalCountry({ option }: { option: LocationOption }) {
   return (
     <span className="final-country">
       {flag && (
-        <span className={`final-flag final-${flag.replace(".png", "")}`}>
+        <span className={`final-flag final-${flagClass(flag)}`}>
           <img src={`/main/${flag}`} alt={option.countryNameKo} />
         </span>
       )}
@@ -562,6 +729,8 @@ export function FinalSelection({
 }) {
   const { dates, nights, people, travelClass } = querySummary(request);
   const total = roundTripPrice !== undefined && !!inbound;
+  // 총액: 왕복은 오는편 price(또는 AI 조합 price)가 이미 왕복 총액이다(두 편을 더하지 않는다). 편도는 편도 요금.
+  const totalPrice = inbound ? (total ? roundTripPrice : inbound.price) : outbound.price;
   return (
     <section className="final-selection" aria-live="polite">
       <div className="final-leg">
@@ -626,9 +795,15 @@ export function FinalSelection({
             </span>
           </div>
         </div>
-        <button className="booking-cta" type="button" onClick={onBook}>
-          <span>예약하자 GO</span>
-        </button>
+        <div className="final-trip-actions">
+          <div className="final-total" aria-live="polite">
+            <span>총</span>
+            <strong>{totalPrice == null ? "가격 정보 없음" : `${totalPrice.toLocaleString("ko-KR")} 원`}</strong>
+          </div>
+          <button className="booking-cta" type="button" onClick={onBook}>
+            <span>예약하자 GO</span>
+          </button>
+        </div>
       </div>
     </section>
   );
@@ -780,8 +955,23 @@ export function FlightHeart({
   }
 
   const on = saved !== null;
+  const button = useRef<HTMLButtonElement>(null);
+  // 담기·빼기가 성공하면 하트가 튀고(담을 때는 테두리 빛과 점이 퍼진다) 애니메이션이 끝나면 클래스를 지운다.
+  const firstOn = useRef(on);
+  useEffect(() => {
+    const element = button.current;
+    if (!element || on === firstOn.current) return;
+    firstOn.current = on;
+    element.classList.remove("is-activating", "is-deactivating");
+    void element.offsetWidth;
+    element.classList.add(on ? "is-activating" : "is-deactivating");
+    const timer = setTimeout(() => element.classList.remove("is-activating", "is-deactivating"), 600);
+    return () => clearTimeout(timer);
+  }, [on]);
+
   return (
     <button
+      ref={button}
       className={className}
       type="button"
       aria-label={on ? "위시리스트에서 빼기" : "위시리스트에 담기"}
@@ -792,7 +982,11 @@ export function FlightHeart({
         void toggle();
       }}
     >
-      <img src={on ? "/flight/heart-fill.svg" : "/flight/heart-stroke.svg"} alt="" />
+      <span className="heart-icon ai-heart-icon" aria-hidden="true">
+        <img className="heart-icon-stroke ai-heart-stroke" src="/flight/heart-stroke.svg" alt="" />
+        <img className="heart-icon-fill ai-heart-fill" src="/flight/heart-fill.svg" alt="" />
+      </span>
+      <span className="heart-burst ai-heart-burst" aria-hidden="true" />
     </button>
   );
 }

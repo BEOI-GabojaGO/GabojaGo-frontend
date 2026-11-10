@@ -2,6 +2,8 @@ import { Noto_Sans_KR } from "next/font/google";
 import { ExploreHeader } from "@/components/explore/explore-header";
 import { SelectedTripView } from "@/components/flight/selected-trip";
 import "../../flights.css";
+// 조건 수정 서랍의 선택기(메인 조건 검색과 공용).
+import "../../../condition-picker.css";
 
 // 메인 페이지와 같은 설정. 한글 글리프는 unicode-range로 나뉘어 있어 preload 대신 필요한 조각만 받는다.
 const notoSansKr = Noto_Sans_KR({ subsets: ["latin"], preload: false, variable: "--font-noto-kr" });
@@ -10,7 +12,7 @@ const notoSansKr = Noto_Sans_KR({ subsets: ["latin"], preload: false, variable: 
 export default function SelectedTripPage() {
   return (
     <div className={`flight-page ${notoSansKr.variable}`}>
-      <ExploreHeader />
+      <ExploreHeader hideOnScroll />
       <SelectedTripView />
     </div>
   );
