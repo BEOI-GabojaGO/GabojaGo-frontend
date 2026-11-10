@@ -29,7 +29,8 @@
   .page-container { width: min(calc(100% - 48px), var(--content)); margin-inline: auto; }
 
   /* Header (ExploreHeader) */
-  .site-header { position: fixed; top: 0; left: 0; width: 100%; height: 54px; z-index: 32; background: rgb(255 255 255 / 70%); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); box-shadow: 0 2px 2px #0000000f; }
+  /* 빌드(Tailwind CSS 최적화)는 backdrop-filter와 -webkit- 접두 선언 중 뒤에 적힌 하나만 남긴다. -webkit-을 앞에 둬야 Chrome에서도 흐림이 남는다. */
+  .site-header { position: fixed; top: 0; left: 0; width: 100%; height: 54px; z-index: 32; background: rgb(255 255 255 / 70%); -webkit-backdrop-filter: blur(15px); backdrop-filter: blur(15px); box-shadow: 0 2px 2px #0000000f; }
   .header-inner { height: 100%; display: flex; align-items: center; justify-content: space-between; gap: 16px; }
   .brand-group { display: flex; align-items: center; gap: 10px; }
   .back-button { width: 20px; height: 20px; display: grid; place-items: center; }
@@ -55,7 +56,7 @@
   button { color:inherit; }
   .sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
   [hidden] { display:none!important; }
-  .desktop-query-bar { position:relative; z-index:10; height:68px; background:#fff; box-shadow:0 2px 2px rgba(0,0,0,.06); backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px); }
+  .desktop-query-bar { position:relative; z-index:10; height:68px; background:#fff; box-shadow:0 2px 2px rgba(0,0,0,.06); -webkit-backdrop-filter:blur(20px); backdrop-filter:blur(20px); }
   .query-inner { width:min(calc(100% - 48px),var(--content)); height:100%; margin:auto; display:flex; align-items:center; gap:10px; color:#333; font-size:14px; line-height:20px; font-weight:400; white-space:nowrap; }
   .query-item { height:20px; display:inline-flex; align-items:center; flex:none; }
   .query-route { gap:6px; font-weight:500; }
