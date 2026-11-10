@@ -97,7 +97,16 @@ export function conditionFrom({ request, locations }: InitialCondition): Conditi
  */
 export function useConditionForm(
   initial: InitialCondition | null | undefined,
-  { notify, portal }: { notify: (text: string) => void; portal: string },
+  {
+    notify,
+    portal,
+    dateAnchor = "origin",
+  }: {
+    notify: (text: string) => void;
+    portal: string;
+    /** 일정 선택기를 맞출 칸. 메인은 출발지 칸 왼쪽(시안), 목록 서랍은 일정 칸 자신. */
+    dateAnchor?: "origin" | "dates";
+  },
 ) {
   const router = useRouter();
   const [state, setState] = useState<Condition>(() =>
@@ -149,7 +158,7 @@ export function useConditionForm(
     if (!picker) return;
     function place() {
       const trigger = triggers.current[picker!]?.getBoundingClientRect();
-      const anchor = triggers.current[picker === "dates" ? "origin" : picker!]?.getBoundingClientRect();
+      const anchor = triggers.current[picker === "dates" ? dateAnchor : picker!]?.getBoundingClientRect();
       const parent = panel.current?.offsetParent?.getBoundingClientRect();
       if (!trigger || !anchor || !parent) return;
       const width = Math.min(PICKER_WIDTHS[picker!], window.innerWidth - 24);
@@ -159,7 +168,7 @@ export function useConditionForm(
     place();
     window.addEventListener("resize", place);
     return () => window.removeEventListener("resize", place);
-  }, [picker]);
+  }, [picker, dateAnchor]);
 
   function update(patch: Partial<Condition>) {
     setState((current) => ({ ...current, ...patch }));
@@ -178,7 +187,7 @@ export function useConditionForm(
 
     function onPointerDown(event: MouseEvent) {
       const target = event.target as Element;
-      if (!panel.current?.contains(target) && !target.closest(".condition-field")) closeRef.current();
+      if (!panel.current?.contains(target) && !target.closest("[data-picker-trigger]")) closeRef.current();
     }
     function onKeyDown(event: globalThis.KeyboardEvent) {
       if (event.key === "Escape") {
@@ -261,18 +270,21 @@ export function useConditionForm(
     router.push(`${oneway ? "/flights/one-way" : "/flights/round-trip/step"}?${query}`);
   }
 
+  /** 칸 버튼에 붙이는 속성(선택기 열기·닫기, 위치 기준). 메인 칸(field)과 목록 서랍 칸이 같이 쓴다. */
+  const triggerProps = (type: PickerType) => ({
+    ref: (element: HTMLButtonElement | null) => {
+      triggers.current[type] = element;
+    },
+    type: "button" as const,
+    "data-picker-trigger": type,
+    "aria-haspopup": "dialog" as const,
+    "aria-controls": "picker-panel",
+    "aria-expanded": picker === type,
+    onClick: () => (picker === type ? closePicker() : openPicker(type)),
+  });
+
   const field = (type: PickerType, label: string, value: string) => (
-    <button
-      ref={(element) => {
-        triggers.current[type] = element;
-      }}
-      className="condition-field"
-      type="button"
-      aria-haspopup="dialog"
-      aria-controls="picker-panel"
-      aria-expanded={picker === type}
-      onClick={() => (picker === type ? closePicker() : openPicker(type))}
-    >
+    <button className="condition-field" {...triggerProps(type)}>
       <span>{label}</span>
       <strong>{value}</strong>
     </button>
@@ -319,7 +331,7 @@ export function useConditionForm(
       document.querySelector(portal)!,
     );
 
-  return { state, update, error, setError, picker, field, pickerPanel, submit, datesText, passengersText, reset: setState };
+  return { state, update, error, setError, picker, closePicker, field, triggerProps, pickerPanel, submit, datesText, passengersText, reset: setState };
 }
 
 function LocationPicker({ label, onSelect }: { label: string; onSelect: (option: LocationOption) => void }) {

@@ -6,7 +6,7 @@ import { useMemo, useSyncExternalStore } from "react";
 import { saveBooking } from "@/components/flight/booking-page";
 import { airlinesOf, FinalSelection, FlightHeart, FlightListLayout, passengersOf, useFlightFilter } from "@/components/flight/flight-list-ui";
 import { useToast } from "@/components/main/main-ui";
-import { conditionSearchHref, toSearchQuery } from "@/lib/flight-search-params";
+import { toSearchQuery } from "@/lib/flight-search-params";
 import type { FlightOption, OneWaySearchRequest, SelectedLocations } from "@/lib/flight-types";
 
 /** AI 검색 카드에서 고른 왕복 한 쌍(편도는 항공편 하나). 채팅 검색 결과라 오는편 목록을 다시 받을 수 없어 쌍째로 넘긴다. */
@@ -95,7 +95,6 @@ export function SelectedTripView() {
         filter={filter}
         airlines={[...new Set([...airlinesOf(outbound), ...(inbound ? airlinesOf(inbound) : [])])]}
         legs={[inbound ? "inbound" : "outbound"]}
-        onEdit={() => router.push(conditionSearchHref(request, locations))}
         locked
         stage="complete"
       >

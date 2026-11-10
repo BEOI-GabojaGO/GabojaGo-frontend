@@ -1216,6 +1216,166 @@ html.content-revealing .flight-list .flight-card:nth-child(10){animation-delay:8
   @media (max-width: 599px) { .page-layout:has(.final-selection) { padding-bottom: 240px; } }
   /* 앱 전용: "가는편"과 "출발 시간" 사이는 화면 읽기용 공백이 간격을 대신한다(시안 margin-left 4px ≈ 공백 폭). */
   .filter-heading-second { margin-left: 0; }
+
+  /* ---------- 1105 시안: 항공권 목록 조건 수정 서랍(#searchEditDrawer) ----------
+   * 새 시안의 search-edit-* 규칙을 원래 순서대로 옮겼다. 서랍 안 선택기는 메인과 같은 condition-picker.css를 쓴다
+   * (시안의 drawer-picker-* 규칙은 옮기지 않음). 컴포넌트: src/components/flight/search-edit-drawer.tsx
+   */
+.search-edit-backdrop{position: fixed;inset: 54px 0 0;z-index: 29;background: rgba(18, 18, 18, .28);-webkit-backdrop-filter: blur(4px);backdrop-filter: blur(4px);opacity: 0;pointer-events: none;transition: opacity .32s ease}
+.search-edit-backdrop.is-open{opacity: 1;pointer-events: auto}
+.search-edit-drawer{position: fixed;top: 54px;left: 0;right: 0;z-index: 31;height: 450px;border-radius: 0 0 40px 40px;background: #fff;visibility: hidden;transform: translateY(-100%);pointer-events: none;transition: transform .5s cubic-bezier(.22,1,.36,1), visibility 0s linear .5s;will-change: transform}
+.search-edit-drawer.is-open{visibility: visible;transform: translateY(0);pointer-events: auto;transition: transform .5s cubic-bezier(.22,1,.36,1), visibility 0s}
+.search-edit-inner{width: min(calc(100% - 48px), 1400px);height: 100%;margin: 0 auto;padding: 60px 0}
+.search-edit-head{display: flex;align-items: center;justify-content: space-between;height: 36px;margin-bottom: 30px}
+.search-edit-head h2{margin: 0;color: #333;font-family: "Noto Sans KR", sans-serif;font-size: 30px;line-height: 36px;font-weight: 700;letter-spacing: 0}
+.search-edit-close{display: grid;width: 32px;height: 32px;margin: 0;padding: 0;place-items: center;border: 0;border-radius: 50%;background: transparent;color: #333;cursor: pointer;transition: background-color .18s ease}
+.search-edit-close svg{display: block;width: 24px;height: 24px;fill: none;stroke: currentColor;stroke-width: 1.5;stroke-linecap: round;stroke-linejoin: round}
+.search-edit-close:hover{background: #f2f2f2}
+.search-edit-close:focus-visible, .search-edit-field:focus-visible, .search-edit-reset:focus-visible, .search-edit-submit:focus-visible{outline: 2px solid rgba(255, 56, 92, .38);outline-offset: 2px}
+.search-edit-form{display: flex;height: 284px;flex-direction: column}
+.search-edit-topline{display: flex;align-items: center;justify-content: space-between;height: 40px}
+.search-edit-trip-types{--trip-option-width: 46px;--trip-slide-distance: 50px;position: relative;display: flex;align-items: center;gap: 4px;width: 100px;height: 40px;padding: 2px;box-sizing: border-box;border-radius: 12px;background: #eee;isolation: isolate}
+.search-edit-trip-types::before{content: "";position: absolute;z-index: 0;top: 2px;left: 2px;width: var(--trip-option-width);height: 36px;border-radius: 10px;background: #fff;box-shadow: 0 1px 3px rgba(0, 0, 0, .25);transform: translateX(0);transition: transform 240ms cubic-bezier(.22,1,.36,1);will-change: transform}
+.search-edit-trip-types:has(input[value="oneway"]:checked)::before{transform: translateX(var(--trip-slide-distance))}
+.search-edit-trip-types label{position: relative;z-index: 1;display: block;width: 46px;height: 36px;cursor: pointer}
+.search-edit-trip-types input{position: absolute;width: 1px;height: 1px;opacity: 0}
+.search-edit-trip-types span{display: flex;align-items: center;justify-content: center;width: 100%;height: 100%;padding: 8px;box-sizing: border-box;border-radius: 10px;color: #aaa;font-family: "Noto Sans KR", sans-serif;font-size: 16px;line-height: 20px;font-weight: 500;letter-spacing: 0;white-space: nowrap;transition: color .18s ease}
+.search-edit-trip-types input:checked + span{color: #333}
+.search-edit-trip-types input:focus-visible + span{outline: 2px solid rgba(255, 56, 92, .38);outline-offset: 2px}
+.search-edit-reset{height: 40px;padding: 0 2px;border: 0;background: transparent;color: var(--brand);font-family: "Noto Sans KR", sans-serif;font-size: 14px;line-height: 20px;font-weight: 500;cursor: pointer;transition: color .18s ease}
+.search-edit-reset:hover{color: var(--brand-dark)}
+.search-edit-fields{position: relative;display: grid;grid-template-columns: repeat(4, minmax(0, 1fr));width: 100%;height: 111px;margin-top: 20px;overflow: visible;border: 1px solid #eee;border-radius: 20px;background: #fafafa}
+.search-edit-field{position: relative;height: 109px;min-width: 0;padding: 27px 32px 25px;border: 1px solid transparent;border-radius: 0;background: transparent;color: #333;text-align: left;cursor: pointer;transition: background-color .18s ease, box-shadow .18s ease}
+.search-edit-field ~ .search-edit-field{border-left: 1px solid #eee}
+.search-edit-field[data-edit-field="from"]{border-radius: 19px 0 0 19px}
+.search-edit-field[data-edit-field="passengers"]{border-radius: 0 19px 19px 0}
+.search-edit-swap{position: absolute;z-index: 6;top: 50%;left: 25%;display: grid;width: 40px;height: 40px;padding: 0;place-items: center;border: 1px solid #eee;border-radius: 50%;background: #fff;color: #333;box-shadow: 0 2px 6px rgba(0, 0, 0, .08);transform: translate(-50%, -50%);cursor: pointer;transition: border-color .18s ease, background-color .18s ease, color .18s ease, box-shadow .18s ease}
+.search-edit-swap:hover{border-color: #cccccc;background: #fff;box-shadow: 0 4px 12px rgba(0, 0, 0, .14)}
+.search-edit-swap:focus-visible{outline: 2px solid rgba(255, 56, 92, .38);outline-offset: 2px}
+.search-edit-swap svg{display: block;width: 24px;height: 24px;fill: none;stroke: currentColor;stroke-width: 1.5;stroke-linecap: round;stroke-linejoin: round}
+.search-edit-field:hover{z-index: 2;background: #fff;border-color: #ccc;box-shadow: none}
+.search-edit-field.is-focused{z-index: 3;background: #fff;border-color: var(--brand);box-shadow: 0 6px 18px #00000012, 0 1px 4px #0000000a}
+.search-edit-field.is-focused:hover{border-color: var(--brand);box-shadow: 0 6px 18px #00000012, 0 1px 4px #0000000a}
+.search-edit-field.is-focused .edit-field-label{color: var(--brand)}
+.edit-field-label{display: block;margin-bottom: 10px;color: #888;transition: color .18s ease;font-family: "Noto Sans KR", sans-serif;font-size: 14px;line-height: 16px;font-weight: 400}
+.search-edit-field strong{display: block;overflow: hidden;color: #333;font-family: "Noto Sans KR", sans-serif;font-size: 18px;line-height: 24px;font-weight: 500;letter-spacing: 0;text-overflow: ellipsis;white-space: nowrap}
+.edit-field-value{display: flex;min-width: 0;align-items: center;gap: 10px}
+.edit-country-icon{display: inline-flex;width: 30px;height: 30px;flex: none;align-items: center;justify-content: center;overflow: hidden;border-radius: 10px;background: #fff;box-shadow: 0 1px 2px rgba(0, 0, 0, .16)}
+.edit-country-icon img{display: block}
+.edit-country-icon-korea img{width: 111.11%;height: 74.07%}
+.edit-country-icon-japan img{width: 100%;height: 100%;object-fit: cover}
+.search-edit-actions{display: flex;justify-content: flex-end;margin-top: 30px}
+.search-edit-submit{display: inline-flex;flex: none;align-items: center;justify-content: center;min-width: 196px;height: 56px;padding: 18px 60px;border: 0;border-radius: 20px;background: #ff385c;color: #fff;font-family: "Noto Sans KR", sans-serif;font-size: 14px;line-height: 20px;font-weight: 700;white-space: nowrap;cursor: pointer;transition: background-color .18s ease}
+.search-edit-submit:hover{background: var(--brand-dark)}
+@media (max-width: 1199px) and (min-width: 900px){.search-edit-drawer{height: 370px}}
+@media (max-width: 1199px) and (min-width: 900px){.search-edit-drawer.is-closing{visibility: visible;transform: translateY(calc(-100% - 54px));pointer-events: none;transition: transform .5s cubic-bezier(.22,1,.36,1), visibility 0s linear .5s}}
+@media (max-width: 1199px) and (min-width: 900px){.search-edit-inner{width: calc(100% - 80px);padding: 42px 0}}
+@media (max-width: 1199px) and (min-width: 900px){.search-edit-head{margin-bottom: 24px}}
+@media (max-width: 1199px) and (min-width: 900px){.search-edit-head h2{font-size: 26px;line-height: 34px}}
+@media (max-width: 1199px) and (min-width: 900px){.search-edit-form{height: auto}}
+@media (max-width: 1199px) and (min-width: 900px){.search-edit-fields{height: 96px;margin-top: 18px;border-radius: 20px}}
+@media (max-width: 1199px) and (min-width: 900px){.search-edit-field{height: 94px;padding: 22px 22px}}
+@media (max-width: 1199px) and (min-width: 900px){.search-edit-field strong{font-size: 15px;line-height: 21px}}
+@media (max-width: 1199px) and (min-width: 900px){.search-edit-actions{margin-top: 24px}}
+@media (max-width: 899px){.search-edit-backdrop{inset: 56px 0 0}}
+@media (max-width: 899px){.search-edit-drawer{top: 56px;height: auto;max-height: calc(100dvh - 56px);overflow-y: auto;border-radius: 0 0 40px 40px}}
+@media (max-width: 899px){.search-edit-drawer.is-closing{visibility: visible;transform: translateY(calc(-100% - 56px));pointer-events: none;transition: transform .5s cubic-bezier(.22,1,.36,1), visibility 0s linear .5s}}
+@media (max-width: 899px){.search-edit-inner{width: auto;height: auto;margin: 0 20px;padding: 24px 0 28px}}
+@media (max-width: 899px){.search-edit-head{height: auto;margin-bottom: 20px}}
+@media (max-width: 899px){.search-edit-head h2{font-size: 21px;line-height: 30px}}
+@media (max-width: 899px){.search-edit-form{height: auto}}
+@media (max-width: 899px){.search-edit-trip-types{--trip-option-width: 40px;--trip-slide-distance: 42px;width: 86px;height: 34px;gap: 2px}}
+@media (max-width: 899px){.search-edit-trip-types::before{height: 30px}}
+@media (max-width: 899px){.search-edit-trip-types label{width: 40px;height: 30px}}
+@media (max-width: 899px){.search-edit-trip-types span{padding: 5px 6px;font-size: 14px;line-height: 20px}}
+@media (max-width: 899px){.search-edit-topline{height: 34px}}
+@media (max-width: 899px){.search-edit-reset{height: 34px;font-size: 13px}}
+@media (max-width: 899px){.search-edit-fields{grid-template-columns: 1fr 1fr;height: auto;margin-top: 16px;overflow: visible;border: 0;border-radius: 0;background: transparent;gap: 9px}}
+@media (max-width: 899px){.search-edit-swap{top: 33px;left: 50%;width: 34px;height: 34px}}
+@media (max-width: 899px){.search-edit-swap svg{width: 20px;height: 20px}}
+@media (max-width: 899px){.search-edit-field{height: 66px;padding: 11px 15px;border: 1px solid #e3e3e3;border-radius: 14px;background: #fafafa}}
+@media (max-width: 899px){.search-edit-field[data-edit-field="from"], .search-edit-field[data-edit-field="passengers"]{border-radius: 14px}}
+@media (max-width: 899px){.search-edit-field ~ .search-edit-field{border-left: 1px solid #e3e3e3}}
+@media (max-width: 899px){.search-edit-field[data-edit-field="date"], .search-edit-field[data-edit-field="passengers"]{grid-column: 1 / -1}}
+@media (max-width: 899px){.edit-field-label{margin-bottom: 5px;font-size: 10px;line-height: 14px}}
+@media (max-width: 899px){.search-edit-field strong{font-size: 14px;line-height: 20px}}
+@media (max-width: 899px){.edit-field-value{gap: 7px}}
+@media (max-width: 899px){.edit-country-icon{width: 24px;height: 24px;border-radius: 8px}}
+@media (max-width: 899px){.search-edit-actions{margin-top: 18px}}
+@media (max-width: 899px){.search-edit-submit{width: 100%;height: 50px;padding: 0 24px;border-radius: 16px;font-size: 15px}}
+@media (max-width: 599px){.search-edit-inner{margin: 0 16px;padding-top: 20px}}
+@media (max-width: 599px){.search-edit-head h2{font-size: 19px;line-height: 28px}}
+@media (max-width:699px){.search-edit-field .edit-field-value{gap:8px}}
+@media (max-width:699px){.search-edit-field .edit-country-icon{width:22px;height:22px;flex:0 0 22px;border-radius:8px}}
+.edit-country-icon-generic img{width:100%;height:100%;object-fit:contain}
+.search-edit-drawer{box-sizing: border-box;max-height: calc(100dvh - 54px);overflow-y: auto;overflow-x: hidden;overscroll-behavior: contain;-webkit-overflow-scrolling: touch;scrollbar-width: thin;scrollbar-color: #ff385c transparent}
+.search-edit-inner{box-sizing: border-box;height: auto;min-height: 100%;padding-bottom: max(24px, env(safe-area-inset-bottom))}
+.search-edit-drawer::-webkit-scrollbar{width: 5px;height: 5px}
+.search-edit-drawer::-webkit-scrollbar-button, .search-edit-drawer::-webkit-scrollbar-button:single-button{display: none !important;width: 0 !important;height: 0 !important}
+.search-edit-drawer::-webkit-scrollbar-track{background: transparent;border-radius: 999px}
+.search-edit-drawer::-webkit-scrollbar-thumb{background: #ff385c;border: 0;border-radius: 999px}
+.search-edit-drawer::-webkit-scrollbar-corner{background: transparent}
+@media (max-width: 899px){.search-edit-drawer{max-height: calc(100dvh - 56px)}}
+.search-edit-drawer{scrollbar-width: none !important}
+.search-edit-drawer::-webkit-scrollbar, .search-edit-drawer::-webkit-scrollbar-button, .search-edit-drawer::-webkit-scrollbar-track, .search-edit-drawer::-webkit-scrollbar-thumb{display: none !important;width: 0 !important;height: 0 !important;background: transparent !important;border: 0 !important}
+@media (max-width: 899px){.search-edit-drawer{top: 56px;height: auto;max-height: calc(100dvh - 56px);overflow-x: hidden;overflow-y: auto;border-radius: 0 0 40px 40px;box-sizing: border-box}}
+@media (max-width: 899px){.search-edit-inner{width: auto;height: auto;min-height: 0;margin: 0 20px;padding: 24px 0 28px;box-sizing: border-box}}
+@media (max-width: 899px){.search-edit-head{height: 32px;margin-bottom: 20px}}
+@media (max-width: 899px){.search-edit-head h2{font-size: 20px;line-height: 28px;font-weight: 700}}
+@media (max-width: 899px){.search-edit-close{width: 32px;height: 32px}}
+@media (max-width: 899px){.search-edit-close svg{width: 22px;height: 22px;stroke-width: 1.5}}
+@media (max-width: 899px){.search-edit-form{height: auto}}
+@media (max-width: 899px){.search-edit-topline{height: 34px}}
+@media (max-width: 899px){.search-edit-trip-types{width: 86px;height: 34px;gap: 2px;border-radius: 10px}}
+@media (max-width: 899px){.search-edit-trip-types::before{width: 40px;height: 30px;border-radius: 8px}}
+@media (max-width: 899px){.search-edit-trip-types label{width: 40px;height: 30px}}
+@media (max-width: 899px){.search-edit-trip-types span{padding: 5px 6px;border-radius: 8px;font-size: 14px;line-height: 20px}}
+@media (max-width: 899px){.search-edit-reset{height: 34px;padding: 0;font-size: 14px;line-height: 20px}}
+@media (max-width: 899px){.search-edit-fields{grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);height: auto;margin-top: 16px;gap: 8px;border: 0;border-radius: 0;background: transparent}}
+@media (max-width: 899px){.search-edit-field{height: 66px;padding: 11px 14px;border: 1px solid #e3e3e3;border-radius: 14px;background: #fafafa;box-sizing: border-box}}
+@media (max-width: 899px){.search-edit-field ~ .search-edit-field{border-left: 1px solid #e3e3e3}}
+@media (max-width: 899px){.search-edit-field[data-edit-field="from"], .search-edit-field[data-edit-field="to"], .search-edit-field[data-edit-field="date"], .search-edit-field[data-edit-field="passengers"]{border-radius: 14px}}
+@media (max-width: 899px){.search-edit-field[data-edit-field="date"], .search-edit-field[data-edit-field="passengers"]{grid-column: 1 / -1}}
+@media (max-width: 899px){.edit-field-label{margin-bottom: 5px;font-size: 12px;line-height: 16px}}
+@media (max-width: 899px){.search-edit-field strong{font-size: 16px;line-height: 22px;font-weight: 500}}
+@media (max-width: 899px){.edit-field-value{gap: 8px}}
+@media (max-width: 899px){.edit-country-icon{width: 24px;height: 24px;border-radius: 8px}}
+@media (max-width: 899px){.search-edit-swap{top: 33px;left: 50%;width: 34px;height: 34px}}
+@media (max-width: 899px){.search-edit-swap svg{width: 20px;height: 20px}}
+@media (max-width: 899px){.search-edit-actions{margin-top: 18px}}
+@media (max-width: 899px){.search-edit-submit{width: 100%;min-width: 0;height: 56px;padding: 0 24px;border-radius: 16px;font-size: 16px;line-height: 22px}}
+@media (max-width: 599px){.search-edit-inner{margin-inline: 20px;padding-top: 20px}}
+@media (max-width: 899px){.search-edit-fields{grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);grid-template-rows: repeat(3, 82px);gap: 0;margin-top: 16px;border: 1px solid #e5e5e5;border-radius: 20px;overflow: hidden;background: #fafafa}}
+@media (max-width: 899px){.search-edit-field, .search-edit-field[data-edit-field="from"], .search-edit-field[data-edit-field="to"], .search-edit-field[data-edit-field="date"], .search-edit-field[data-edit-field="passengers"]{width: 100%;height: auto;min-height: 0;margin: 0;padding: 19px 20px 16px;border: 0;border-radius: 0;background: transparent;box-sizing: border-box}}
+@media (max-width: 899px){.search-edit-field[data-edit-field="from"], .search-edit-field[data-edit-field="to"]{border-bottom: 1px solid #e5e5e5}}
+@media (max-width: 899px){.search-edit-field[data-edit-field="to"]{border-left: 1px solid #e5e5e5}}
+@media (max-width: 899px){.search-edit-field[data-edit-field="date"], .search-edit-field[data-edit-field="passengers"]{grid-column: 1 / -1}}
+@media (max-width: 899px){.search-edit-field[data-edit-field="date"]{border-bottom: 1px solid #e5e5e5}}
+@media (max-width: 899px){.edit-field-label{display: block;margin-bottom: 7px;font-size: 12px;line-height: 16px;color: #888}}
+@media (max-width: 899px){.search-edit-field strong{display: block;max-width: 100%;overflow: hidden;text-overflow: ellipsis;white-space: nowrap;font-size: 16px;line-height: 24px;font-weight: 500}}
+@media (max-width: 899px){.edit-field-value{min-width: 0;gap: 6px}}
+@media (max-width: 899px){.edit-country-icon{flex: 0 0 24px;width: 24px;height: 24px;border-radius: 8px}}
+@media (max-width: 899px){.search-edit-field.is-focused, .search-edit-field.is-focused:hover, .search-edit-field:hover{background: transparent}}
+@media (max-width: 899px){.search-edit-swap{top: 24px;left: 50%;z-index: 3;width: 34px;height: 34px;transform: translateX(-50%)}}
+@media (max-width: 699px){.search-edit-field[data-edit-field="from"] .edit-field-code, .search-edit-field[data-edit-field="to"] .edit-field-code{font-size: 14px;font-weight: 400}}
+@media (max-width: 899px){.search-edit-actions{justify-content: flex-end}}
+@media (max-width: 899px){.search-edit-actions .search-edit-submit{width: 196px;min-width: 196px;height: 56px;padding: 18px 60px;border-radius: 20px;font-size: 14px;line-height: 20px;font-weight: 700}}
+.search-edit-close{color: #666666}
+.search-edit-close svg{width: 12px;height: 12px;stroke-width: 1.2}
+@media (max-width: 899px){.search-edit-close svg{width: 12px;height: 12px;stroke-width: 1.2}}
+@media(max-width:699px){.search-edit-field .edit-field-value{gap:8px !important}}
+@media(max-width:699px){.search-edit-field .edit-country-icon{width:22px !important;height:22px !important;flex:0 0 22px !important;border-radius:8px !important}}
+.search-edit-field[data-edit-field="to"] .edit-field-label, .search-edit-field[data-edit-field="to"] .edit-field-value{margin-left: 10px}
+
+  /* 앱 전용: 공용 선택기(condition-picker.css)가 쓰는 색 변수, 서랍(z-index 31)보다 위에 뜨게. */
+  & { --pink: #ff385c; }
+  .picker-panel { z-index: 40; }
+  /* 앱 전용: 우리 국기는 정사각 이미지라 칸을 꽉 채운다(시안 한국 국기 111% 크기는 가로형 원본용). */
+  .edit-country-icon img { width: 100%; height: 100%; object-fit: cover; }
+  /* 앱 전용: 검사 안내(출발지·목적지·일정). 비어 있으면 자리를 차지하지 않는다. */
+  .search-edit-actions { align-items: center; gap: 16px; }
+  .search-edit-error { flex: 1; margin: 0; color: var(--brand-dark); font-size: 13px; line-height: 1.5; text-align: right; }
+  .search-edit-error:empty { display: none; }
 }
 
 @keyframes card-in { from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)} }
@@ -1236,3 +1396,5 @@ html.content-revealing .flight-list .flight-card:nth-child(10){animation-delay:8
 /* 메인과 같은 등장 키프레임(목록 화면에 바로 들어오면 main.css가 없어 여기서도 정의한다). */
 @keyframes site-content-in{from{opacity:0;transform:translate3d(0,10px,0)}to{opacity:1;transform:none}}
 @keyframes site-content-fade{from{opacity:0}}
+/* 조건 수정 서랍이 열린 동안 뒤 페이지 스크롤을 막는다(body라 .flight-page 블록 밖에 둔다). */
+body.search-edit-open { overflow: hidden; }

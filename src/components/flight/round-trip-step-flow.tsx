@@ -21,7 +21,7 @@ import { cityName } from "@/components/flight/search-condition-fields";
 import { useToast } from "@/components/main/main-ui";
 import { SiteLoader } from "@/components/site-loader";
 import { FLIGHT_SEARCH_NOT_FOUND, postJson, requestJson } from "@/lib/flight-client";
-import { conditionSearchHref, type InitialSearch } from "@/lib/flight-search-params";
+import type { InitialSearch } from "@/lib/flight-search-params";
 import type {
   FlightOption,
   FlightSearchRequest,
@@ -151,7 +151,6 @@ export function RoundTripStepFlow({ initial }: { initial: InitialSearch<FlightSe
           filter={filter}
           airlines={[]}
           legs={["outbound"]}
-          onEdit={() => router.push(conditionSearchHref(request, locations))}
           locked
         >
           <ListAlert message={error} onRetry={retry} />
@@ -179,7 +178,6 @@ export function RoundTripStepFlow({ initial }: { initial: InitialSearch<FlightSe
         airlines={airlines}
         // 시안처럼 지금 고르는 편의 출발 시간 필터만 보여 준다.
         legs={[outbound ? "inbound" : "outbound"]}
-        onEdit={() => router.push(conditionSearchHref(request, locations))}
         locked={complete}
         options={source ?? []}
         stage={complete ? "complete" : outbound ? "return" : "outbound"}

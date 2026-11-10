@@ -4,6 +4,8 @@ import { ExploreHeader } from "@/components/explore/explore-header";
 import { OneWayFlow } from "@/components/flight/one-way-flow";
 import { readOneWaySearchParams } from "@/lib/flight-search-params";
 import "../flights.css";
+// 조건 수정 서랍의 선택기(메인 조건 검색과 공용).
+import "../../condition-picker.css";
 
 // 메인 페이지와 같은 설정. 한글 글리프는 unicode-range로 나뉘어 있어 preload 대신 필요한 조각만 받는다.
 const notoSansKr = Noto_Sans_KR({ subsets: ["latin"], preload: false, variable: "--font-noto-kr" });
@@ -17,7 +19,8 @@ export default async function OneWayPage({ searchParams }: PageProps<"/flights/o
   return (
     <div className={`flight-page ${notoSansKr.variable}`}>
       <ExploreHeader hideOnScroll />
-      <OneWayFlow initial={initial} />
+      {/* 서랍에서 같은 화면으로 새 조건을 넘기면 흐름을 새로 만들어 다시 검색한다(자동 검색은 한 번만 돈다). */}
+      <OneWayFlow key={JSON.stringify(initial)} initial={initial} />
     </div>
   );
 }

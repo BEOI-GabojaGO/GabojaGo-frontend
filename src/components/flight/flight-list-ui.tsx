@@ -3,6 +3,7 @@
 /* eslint-disable @next/next/no-img-element -- 디자인 원본 아이콘과 SerpApi 항공사 로고를 그대로 쓴다. */
 import { usePathname, useRouter } from "next/navigation";
 import { Fragment, useEffect, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
+import { SearchEditDrawer } from "@/components/flight/search-edit-drawer";
 import { cityName, TRAVEL_CLASS_OPTIONS } from "@/components/flight/search-condition-fields";
 import { loginHref } from "@/lib/auth-client";
 import { formatMinutes, postJson, requestJson } from "@/lib/flight-client";
@@ -33,7 +34,18 @@ const TIME_SLOTS = [0, 4, 8, 12, 16, 20].map((start) => ({
   label: `${String(start).padStart(2, "0")}시 - ${String(start + 4).padStart(2, "0")}시`,
 }));
 
-export const FLAGS: Record<string, string> = { 대한민국: "flag-korea.png", 일본: "flag-japan.png", 중국: "flag-china.png" };
+export const FLAGS: Record<string, string> = {
+  대한민국: "flag-korea.png",
+  일본: "flag-japan.png",
+  중국: "flag-china.png",
+  싱가포르: "flag-singapore.webp",
+  홍콩: "flag-hong-kong.webp",
+  인도: "flag-india.webp",
+  말레이시아: "flag-malaysia.webp",
+  태국: "flag-thailand.webp",
+};
+/** 국기 파일 이름 → CSS 클래스(flag-korea 등). */
+export const flagClass = (file: string) => file.replace(/\.\w+$/, "");
 
 const departHour = (option: FlightOption) => {
   const time = option.segments[0]?.departure?.localTime;
@@ -404,7 +416,6 @@ export function FlightListLayout({
   filter,
   airlines,
   legs,
-  onEdit,
   locked = false,
   options = [],
   stage = "outbound",
@@ -415,7 +426,6 @@ export function FlightListLayout({
   filter: FlightFilter;
   airlines: string[];
   legs: Leg[];
-  onEdit: () => void;
   /** 왕복 최종 선택 요약을 보여 주는 동안 필터·정렬을 잠근다(시안 .is-disabled). */
   locked?: boolean;
   /** 지금 고르는 편의 목록(거르기 전). 필터 시트의 항공사 로고·편 수에 쓴다. */
@@ -425,6 +435,13 @@ export function FlightListLayout({
   children: ReactNode;
 }) {
   const [drawerOpen, setDrawerOpen] = useState(false);
+  // "수정하기"·모바일 요약 → 조건 수정 서랍(1105 시안). 닫으면 누른 버튼으로 포커스를 돌려준다.
+  const [editOpen, setEditOpen] = useState(false);
+  const editTrigger = useRef<HTMLButtonElement | null>(null);
+  const onEdit = (event: { currentTarget: HTMLButtonElement }) => {
+    editTrigger.current = event.currentTarget;
+    setEditOpen(true);
+  };
   const { dates, people, travelClass } = querySummary(request);
   const layout = useRef<HTMLElement>(null);
 
@@ -528,6 +545,15 @@ export function FlightListLayout({
       </main>
 
       {drawerOpen && <FilterDrawer filter={filter} airlines={airlines} legs={legs} options={options} onClose={() => setDrawerOpen(false)} />}
+      <SearchEditDrawer
+        open={editOpen}
+        request={request}
+        locations={locations}
+        onClose={() => {
+          setEditOpen(false);
+          editTrigger.current?.focus({ preventScroll: true });
+        }}
+      />
     </>
   );
 }
@@ -537,7 +563,7 @@ function Place({ option }: { option: LocationOption }) {
   return (
     <>
       {flag && (
-        <span className={`flag ${flag.replace(".png", "")}`}>
+        <span className={`flag ${flagClass(flag)}`}>
           <img src={`/main/${flag}`} alt={option.countryNameKo} />
         </span>
       )}
@@ -662,7 +688,7 @@ function FinalCountry({ option }: { option: LocationOption }) {
   return (
     <span className="final-country">
       {flag && (
-        <span className={`final-flag final-${flag.replace(".png", "")}`}>
+        <span className={`final-flag final-${flagClass(flag)}`}>
           <img src={`/main/${flag}`} alt={option.countryNameKo} />
         </span>
       )}

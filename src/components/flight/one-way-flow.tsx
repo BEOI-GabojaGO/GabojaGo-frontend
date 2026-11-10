@@ -18,7 +18,7 @@ import { useAutoSearchOnce } from "@/components/flight/flow-ui";
 import { useToast } from "@/components/main/main-ui";
 import { SiteLoader } from "@/components/site-loader";
 import { postJson } from "@/lib/flight-client";
-import { conditionSearchHref, type InitialSearch } from "@/lib/flight-search-params";
+import type { InitialSearch } from "@/lib/flight-search-params";
 import type {
   FlightOption,
   OneWaySearchRequest,
@@ -90,7 +90,6 @@ export function OneWayFlow({ initial }: { initial: InitialSearch<OneWaySearchReq
           filter={filter}
           airlines={[]}
           legs={["outbound"]}
-          onEdit={() => router.push(conditionSearchHref(request, locations))}
           locked
         >
           <ListAlert message={error} onRetry={retry} />
@@ -112,7 +111,6 @@ export function OneWayFlow({ initial }: { initial: InitialSearch<OneWaySearchReq
         filter={filter}
         airlines={[...new Set(search.flights.flatMap(airlinesOf))]}
         legs={["outbound"]}
-        onEdit={() => router.push(conditionSearchHref(request, locations))}
         locked={!!selected}
         options={search.flights}
         stage={selected ? "complete" : "outbound"}
