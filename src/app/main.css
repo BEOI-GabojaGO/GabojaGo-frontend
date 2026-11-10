@@ -1,8 +1,7 @@
-/* 메인 디자인(가보자GO-메인-디자인/styles.css) 이식본. 전역 CSS는 라우트 이동 후에도 남으므로 .main-page 아래로 스코프한다. */
-.main-page{--pink:#ff385c;--ink:#333;--muted:#888;--surface:#f6f6f6;--content:1440px;--page-padding:30px;--section-gap:80px;--card-gap:24px;min-height:100vh;background:#fff;color:var(--ink);font-family:var(--font-noto-kr),sans-serif;font-size:14px;line-height:1.2}
+
+/* 메인 디자인(가보자GO-메인-디자인/styles.css) 이식본. 전역 CSS는 라우트 이동 후에도 남으므로 .main-page 아래로 스코프한다. */.main-page{--pink:#ff385c;--ink:#333;--muted:#888;--surface:#f6f6f6;--content:1440px;--page-padding:30px;--section-gap:80px;--card-gap:24px;min-height:100vh;background:#fff;color:var(--ink);font-family:var(--font-noto-kr),sans-serif;font-size:14px;line-height:1.2}
 body.picker-open,body.ai-open{overflow:hidden}
-@keyframes calendar-pop-in{from{opacity:0;transform:translateY(-8px) scale(.985)}to{opacity:1;transform:translateY(0) scale(1)}}
-@keyframes calendar-pop-out{from{opacity:1;transform:translateY(0) scale(1)}to{opacity:0;transform:translateY(-8px) scale(.985)}}
+
 @keyframes hero-slide{0%{opacity:0}4.6%{opacity:1}24.6%{opacity:1}29.2%{opacity:0}100%{opacity:0}}
 @keyframes tab-content-in{from{opacity:0;transform:translateY(10px)}}
 .main-page{
@@ -21,18 +20,17 @@ dialog{border:0;border-radius:24px;padding:32px;max-width:540px;width:calc(100% 
 @media(max-width:599px){&{--section-gap:60px;--card-gap:16px}.mobile-only{display:block}.mobile-break{display:inline}.desktop-space,.see-all{display:none}.header{height:56px}.header-inner{margin-left:20px;margin-right:10px}.login{background:transparent;color:var(--pink);font-size:14px;line-height:17px;padding:8px 10px;display:flex;align-items:center;gap:6px}.login img{width:16px;height:16px}.hero{padding:120px 20px 100px;gap:30px}.hero:after{background:linear-gradient(180deg,transparent,#0000004d 50%,#0000004d)}.hero-copy{padding:0 20px}.hero h1{font-size:30px;line-height:1.3;white-space:nowrap}.hero-text>p{font-size:14px;line-height:1.8}.search-panel{width:100%;border-radius:30px;padding:6px 12px 12px;gap:10px}.search-tabs{flex-wrap:nowrap;justify-content:flex-start;gap:6px;max-width:none;overflow-x:auto;overflow-y:hidden;scrollbar-width:none;overscroll-behavior-x:contain}.search-tabs::-webkit-scrollbar{display:none}.tab-pair{flex:none;gap:10px}.search-tab{flex:none;font-size:12px;line-height:14px;padding:12px 8px}.prompt-form{padding:8px 8px 8px 14px;border-radius:20px;gap:6px}.prompt-form textarea{font-size:14px}.send{margin-left:0}.suggestions{display:none}.content{margin:40px 20px}.benefits{gap:24px}h2{font-size:20px;line-height:30px}.benefit-list{display:flex;flex-direction:column;align-items:flex-start;gap:20px}.benefit{padding:0 10px;gap:18px}.benefit p{font-size:16px}.section-heading{height:30px}.arrows{gap:8px}.arrow{width:30px;height:30px}.arrow img{width:16px;height:16px}.carousel-section{gap:24px}.track{margin-right:-20px}.travel-card{width:200px;border-radius:20px}.travel-photo{height:140px;border-radius:20px}.travel-label{left:16px;top:76px;gap:6px}.travel-name{font-size:20px;line-height:24px}.travel-country{font-size:12px;line-height:14px}.heart{right:12px;top:12px}.travel-details{padding:16px 6px}.price-group{gap:6px}.price{font-size:18px;line-height:22px}.travel-description{line-height:1.6;white-space:normal}.country-card{width:140px;height:140px;border-radius:20px}.country-label{left:16px;top:85px;gap:4px}.country-label strong{font-size:16px;line-height:19px}.country-label small{font-size:10px;line-height:12px}.country-card:first-child .desktop-image{width:100%;left:0}.footer-inner{margin:0 20px;flex-direction:column;align-items:flex-start;gap:16px}.footer-inner>.brand,.footer-inner>p,.footer-inner nav{width:auto}.footer-inner>p{text-align:left}.footer-inner nav{gap:20px}}
 @media(max-width:374px){.hero-copy{padding:0 6px}.hero h1{font-size:27px}.hero-text>p{font-size:13px}.benefit{padding:0 4px;gap:12px}.benefit p{font-size:14px}}
 @media(prefers-reduced-motion:reduce){.toast,.search-tab,.tab-indicator{transition:none}.hero-background-slide{animation:none}}
-/* Only the tag wrapper receives padding; text variants retain their geometry. */
-.tags>span>span{padding:0;background:none;border-radius:0}
+
+/* Only the tag wrapper receives padding; text variants retain their geometry. */.tags>span>span{padding:0;background:none;border-radius:0}
 @media(min-width:600px) and (max-width:1199px){.track{margin-right:-30px}}
 @media(width:402px){.hero{height:588px}}
-/* Figma's section bounds are rounded to whole pixels. */
-@media(min-width:1500px){.hero{min-height:589px}}
+
+/* Figma's section bounds are rounded to whole pixels. */@media(min-width:1500px){.hero{min-height:589px}}
 @media(min-width:600px) and (max-width:1199px){.hero{min-height:589px}}
 @media(min-width:600px) and (max-width:740px){.hero{min-height:621px}}
 @media(max-width:599px){.header .brand{font-size:16px;line-height:19px}.login{gap:4px;padding:8px 14px 8px 10px}.login img,.arrow img{width:20px;height:20px}.hero{min-height:588px}.hero-text>p{word-break:break-all}.travel-description{height:19px;line-height:19px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}.price{line-height:22px}.country-card{height:140px}}
 
-/* MBTI search panel: Figma frame 197:4953 */
-.search-panel.mbti-mode{width:600px;max-width:100%;min-height:0;gap:20px;padding:6px 20px 22px;border-radius:40px}
+/* MBTI search panel: Figma frame 197:4953 */.search-panel.mbti-mode{width:600px;max-width:100%;min-height:0;gap:20px;padding:6px 20px 22px;border-radius:40px}
 #mbti-content{width:100%;display:flex;flex-direction:column;gap:20px}
 .mbti-title{margin:0;color:#333;font-size:20px;line-height:28px;font-weight:700;letter-spacing:-.02em}
 .mbti-grid{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:8px;width:100%}
@@ -55,8 +53,8 @@ dialog{border:0;border-radius:24px;padding:32px;max-width:540px;width:calc(100% 
   .mbti-submit{align-self:stretch;width:100%;height:48px;border-radius:16px}
 }
 @media(prefers-reduced-motion:reduce){.mbti-option,.mbti-submit{transition:none}}
-/* Figma AI Prompt Modal: 740 × 800, with viewport-aware scrolling. */
-.ai-dialog{position:fixed;inset:0;margin:auto;width:740px;height:800px;max-width:calc(100vw - 32px);max-height:calc(100dvh - 32px);padding:30px 30px 46px;border:0;border-radius:40px;background:#fff;color:#333;box-shadow:0 20px 80px #0003;overflow:hidden}
+
+/* Figma AI Prompt Modal: 740 × 800, with viewport-aware scrolling. */.ai-dialog{position:fixed;inset:0;margin:auto;width:740px;height:800px;max-width:calc(100vw - 32px);max-height:calc(100dvh - 32px);padding:30px 30px 46px;border:0;border-radius:40px;background:#fff;color:#333;box-shadow:0 20px 80px #0003;overflow:hidden}
 .ai-dialog[open]{display:flex;flex-direction:column}
 .ai-dialog::backdrop{background:#0009;backdrop-filter:blur(8px)}
 .ai-dialog::-webkit-scrollbar{display:none;width:0;height:0}
@@ -86,8 +84,8 @@ dialog{border:0;border-radius:24px;padding:32px;max-width:540px;width:calc(100% 
 .ai-trip-summary .is-flagged span,.ai-trip-summary .is-flagged strong{color:var(--pink)}
 .ai-trip-summary span{color:#888;font-size:12px;line-height:14px}
 .ai-trip-summary strong{font-size:16px;line-height:19px;font-weight:500;overflow-wrap:anywhere}
-/* 장소 후보 칩: 시안 없음. 메인 조건 검색의 .origin-chip 모양을 따른다. */
-.ai-location-picks{display:flex;flex-direction:column;gap:10px;flex:none}
+
+/* 장소 후보 칩: 시안 없음. 메인 조건 검색의 .origin-chip 모양을 따른다. */.ai-location-picks{display:flex;flex-direction:column;gap:10px;flex:none}
 .ai-location-chips{display:flex;flex-wrap:wrap;align-items:center;column-gap:8px;row-gap:8px}
 .ai-location-chips span{color:#888;font-size:12px;line-height:14px;margin-right:4px}
 .ai-location-chips button{padding:6px 8px;background:#f6f6f6;color:#000;border-radius:8px;font-size:14px;font-weight:400;line-height:21px;text-align:left;overflow-wrap:anywhere}
@@ -202,19 +200,19 @@ dialog{border:0;border-radius:24px;padding:32px;max-width:540px;width:calc(100% 
   .ai-flight-price{right:48px;font-size:14px}.ai-flight-price small{font-size:10px}
   .ai-airline{width:42px;min-width:42px}.ai-airline-logo{right:70px}
 }
-/* API 연동 상태 문구(시안 없음) */
-.ai-pending{color:#888}
+
+/* API 연동 상태 문구(시안 없음) */.ai-pending{color:#888}
 .ai-error{color:var(--pink);font-size:13px;line-height:1.5}
 .ai-result-notice{color:#666;font-size:14px;line-height:1.6}
 .ai-resume-note{color:#888;font-size:12px;line-height:1.5}
 .ai-restart{margin-left:8px;color:var(--pink);font-weight:600;text-decoration:underline}
-/* API 항공사 로고는 비율이 제각각이라 칸 안에 맞춘다. */
-img.ai-airline-logo{object-fit:contain}
+
+/* API 항공사 로고는 비율이 제각각이라 칸 안에 맞춘다. */img.ai-airline-logo{object-fit:contain}
 .ai-dialog-actions button:disabled{opacity:.6;cursor:default}
-/* 조건 검색의 .search-glyph 규칙이 뒤에 있어 시안의 모바일 숨김을 덮으므로 한 단계 구체적으로 숨긴다. */
-@media(max-width:699px){.ai-dialog-actions .search-glyph.ai-action-label-desktop{display:none}}
-/* 조건 검색: 기존 메인 화면의 색상과 타이포그래피를 재사용한다. */
-.prompt-form{transition:background-color .15s,box-shadow .15s,border-radius .28s cubic-bezier(.22,1,.36,1)}
+
+/* 조건 검색의 .search-glyph 규칙이 뒤에 있어 시안의 모바일 숨김을 덮으므로 한 단계 구체적으로 숨긴다. */@media(max-width:699px){.ai-dialog-actions .search-glyph.ai-action-label-desktop{display:none}}
+
+/* 조건 검색: 기존 메인 화면의 색상과 타이포그래피를 재사용한다. */.prompt-form{transition:background-color .15s,box-shadow .15s,border-radius .28s cubic-bezier(.22,1,.36,1)}
 .prompt-form:hover{background:#fff;box-shadow:inset 0 0 0 1px var(--pink),0 4px 12px #00000012}
 [hidden]{display:none!important}
 .search-panel.condition-mode{width:600px;gap:16px;padding-bottom:22px}
@@ -236,108 +234,19 @@ img.ai-airline-logo{object-fit:contain}
 .condition-field strong{font-size:15px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .condition-actions{display:flex;align-items:center;justify-content:space-between;gap:12px}
 #condition-error{color:#bd114a;font-size:12px;line-height:1.5}
-.condition-submit,.picker-done{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:42px;border-radius:12px;background:var(--pink);color:#fff;font-weight:700;padding:0 24px;white-space:nowrap}
+.condition-submit{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:42px;border-radius:12px;background:var(--pink);color:#fff;font-weight:700;padding:0 24px;white-space:nowrap}
 .condition-submit{width:213px;max-width:100%;height:56px;min-height:56px;flex-shrink:0;border-radius:20px;background:#ff385c}
-.condition-submit:hover,.picker-done:hover{background:#e31c5a}
+.condition-submit:hover{background:#e31c5a}
 .search-glyph{position:relative;width:13px;height:13px;border:2px solid currentColor;border-radius:50%;display:inline-block;flex:none;margin-right:2px}
 .search-glyph:after{content:'';position:absolute;width:6px;height:2px;background:currentColor;right:-5px;bottom:-3px;transform:rotate(45deg);border-radius:2px}
-.picker-backdrop{position:fixed;inset:0;background:#10182880;z-index:30}
-.picker-panel{position:fixed;z-index:31;top:50%;left:50%;transform:translate(-50%,-50%);width:min(440px,calc(100vw - 28px));max-height:min(680px,calc(100dvh - 28px));overflow:hidden;border-radius:24px;background:#fff;box-shadow:0 24px 80px #10182838;display:flex;flex-direction:column}
-.picker-header{height:70px;flex:none;display:flex;align-items:center;justify-content:space-between;padding:0 24px;border-bottom:1px solid #eef0f3}
-.picker-header h2{font-size:20px;line-height:1.3}
-.picker-close{font-size:26px;color:#667085;width:32px;height:32px;line-height:1}
-.picker-body{overflow:auto;padding:22px 24px 26px;overscroll-behavior:contain}
-.picker-search-label,.cabin-label{display:block;font-size:13px;font-weight:700;margin-bottom:9px}
-.picker-search{display:flex;align-items:center;gap:10px;border:1px solid #d9dce2;border-radius:12px;padding:0 13px}
-.picker-search:focus-within{border-color:var(--pink);box-shadow:0 0 0 3px #ff385c1a}
-.picker-search span{font-size:22px;color:var(--pink)}
-.picker-search input{height:46px;min-width:0;width:100%;outline:none;border:0;background:none}
-.picker-hint{color:#777;font-size:13px;line-height:1.5;margin:18px 0 12px}
-.airport-list{display:flex;flex-direction:column;max-height:340px;overflow:auto}
-.airport-option{display:flex;align-items:center;gap:12px;width:100%;min-height:65px;padding:8px;text-align:left;border-radius:10px}
-.airport-option:hover,.airport-option:focus-visible{background:#fff0f2}
-.airport-symbol{width:36px;height:36px;border-radius:10px;background:#fff0f2;color:var(--pink);display:grid;place-items:center;flex:none}
-.airport-option>span:nth-child(2){display:flex;flex-direction:column;gap:5px;min-width:0;flex:1}
-.airport-option strong{font-size:14px}
-.airport-option small{color:#888;font-size:12px}
-.airport-option b{color:var(--pink);font-size:13px}
-.picker-empty{padding:20px;text-align:center;color:#888}
+
+.cabin-label{display:block;font-size:13px;font-weight:700;margin-bottom:9px}
+
 .date-summary{display:flex;justify-content:space-between;align-items:center;gap:8px;background:#fff4f8;border-radius:12px;padding:14px;color:#9b1649;font-weight:600;font-size:13px}
-.calendar-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
-.calendar-top strong{font-size:16px}
-.calendar-top button{font-size:26px;width:34px;height:34px;border-radius:9px}
-.calendar-top button:hover:not(:disabled){background:#fff0f2}
-.calendar-top button:disabled{opacity:.25}
-.calendar-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;text-align:center}
-.calendar-grid>b{padding:8px 0;color:#888;font-size:12px;font-weight:500}
-.calendar-day{aspect-ratio:1;border-radius:10px;font-size:13px}
-.calendar-day:hover:not(:disabled){background:#fff0f2}
-.calendar-day.selected{background:var(--pink);color:#fff;font-weight:700}
-.calendar-day.between{background:#fff0f2;color:var(--pink)}
-.calendar-day:disabled{color:#c4c4c4;cursor:default}
-.picker-done{width:100%;margin-top:18px}
-.passenger-list{display:flex;flex-direction:column}
-.passenger-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 0;border-bottom:1px solid #eef0f3}
-.passenger-row>span{display:flex;flex-direction:column;gap:5px}
-.passenger-row strong{font-size:14px}
-.passenger-row small{font-size:12px;color:#888}
-.counter{display:flex;align-items:center;gap:10px}
-.counter button{width:30px;height:30px;border:1px solid #d9dce2;border-radius:50%;font-size:18px}
-.counter button:hover:not(:disabled){border-color:var(--pink);color:var(--pink)}
-.counter button:disabled{opacity:.35}
-.counter output{min-width:18px;text-align:center;font-weight:700}
+
 .cabin-label{margin-top:22px}
 #cabin-select{width:100%;height:46px;border:1px solid #d9dce2;border-radius:12px;background:#fff;padding:0 12px;color:var(--ink)}
-/* Passenger picker keeps its 300px content area while adding 2px padding per side. */
-.picker-panel.passenger-picker{position:absolute;z-index:33;width:min(352px,calc(100vw - 24px));height:531px;max-height:none;overflow:hidden;padding:26px;border-radius:24px;background:#fff;box-shadow:0 2px 6px #0000001a,0 10px 60px #0003;transform:none;gap:36px;animation:calendar-pop-in 220ms cubic-bezier(.22,1,.36,1) both}
-.passenger-picker .picker-header{height:19px;min-height:19px;padding:0;border:0}
-.passenger-picker .picker-header h2{font-family:"Noto Sans KR",sans-serif;font-size:16px;font-weight:700;line-height:19px;color:#333}
-.passenger-picker .picker-close{position:absolute;width:1px;height:1px;padding:0;overflow:hidden;clip-path:inset(50%)}
-.passenger-picker .picker-close:focus-visible{clip-path:none;width:28px;height:28px;right:12px;top:12px;background:#fff;border-radius:8px}
-.passenger-picker .picker-body{display:flex;flex:none;flex-direction:column;gap:20px;width:100%;height:424px;padding:0;overflow:visible}
-.passenger-controls{display:flex;flex:none;flex-direction:column;gap:24px;width:100%;height:371px}
-.passenger-picker .passenger-list{display:flex;flex:none;flex-direction:column;gap:24px;width:100%;height:174px}
-.passenger-picker .passenger-row{display:flex;align-items:center;justify-content:space-between;gap:0;width:100%;height:42px;padding:0;border:0}
-.passenger-picker .passenger-row>span{display:flex;flex-direction:column;gap:6px}
-.passenger-picker .passenger-row strong{color:#333;font-family:"Noto Sans KR",sans-serif;font-size:16px;font-weight:500;line-height:19px}
-.passenger-picker .passenger-row small{color:#888;font-family:"Noto Sans KR",sans-serif;font-size:12px;font-weight:400;line-height:17px}
-.passenger-picker .counter{display:flex;align-items:center;gap:12px;width:94px;height:30px}
-.passenger-picker .counter button{position:relative;flex:none;width:30px;height:30px;border:.6px solid #ccc;border-radius:10px;background:#fff;box-shadow:0 1px 4px #00000013;font-size:0;color:#333}
-.passenger-picker .counter button::before,.passenger-picker .counter button[data-step="1"]::after{content:'';position:absolute;top:50%;left:50%;width:10px;height:1px;border-radius:1px;background:currentColor;transform:translate(-50%,-50%)}
-.passenger-picker .counter button[data-step="1"]::after{transform:translate(-50%,-50%) rotate(90deg)}
-.passenger-picker .counter button:hover:not(:disabled){border-color:#333;color:#333;background:#f8f8f8}
-.passenger-picker .counter button:disabled{border-color:#eee;color:#ccc;box-shadow:0 1px 4px #00000008;opacity:1}
-.passenger-picker .counter output{min-width:10px;color:#333;font-family:"Noto Sans KR",sans-serif;font-size:16px;font-weight:400;line-height:19px;text-align:center}
-.cabin-options{display:flex;flex:none;flex-direction:column;gap:20px;width:100%;height:173px;padding:24px 0 0;margin:0;border:0;border-top:1px solid #eee}
-.cabin-options label{display:flex;align-items:center;gap:10px;height:22px;color:#333;cursor:pointer}
-.cabin-options input{position:relative;appearance:none;width:20px;height:20px;flex:none;margin:0;border:1px solid #ccc;border-radius:50%;background:#fff;box-shadow:0 0 0 .2px #ccc}
-.cabin-options input:checked{border-color:#ff385c;box-shadow:0 0 0 .2px #ff385c}
-.cabin-options input:checked::after{content:'';position:absolute;top:50%;left:50%;width:12px;height:12px;border-radius:50%;background:#ff385c;transform:translate(-50%,-50%)}
-.cabin-options input:focus-visible{outline:2px solid #ff385c;outline-offset:2px}
-.cabin-options span{font-family:"Noto Sans KR",sans-serif;font-size:16px;font-weight:400;line-height:22px;transform:translateY(-1px)}
-.passenger-action{display:flex;align-items:center;justify-content:flex-end;width:100%;height:33px}
-.passenger-picker .picker-done{width:80px;height:33px;min-height:33px;margin:0;padding:8px 14px;border-radius:12px;background:#ff385c;color:#fff;font-family:"Noto Sans KR",sans-serif;font-size:14px;font-weight:500;line-height:17px}
-/* Figma Origin 638:19536 shared by departure and arrival selection. */
-.picker-panel.location-picker{position:absolute;top:auto;bottom:auto;transform:none;width:354px;max-width:calc(100vw - 24px);height:492px;max-height:none;overflow:hidden;padding:26px 6px 6px;border-radius:24px;gap:16px;box-shadow:0 2px 6px #0000001a,0 10px 60px #0003;animation:calendar-pop-in 220ms cubic-bezier(.22,1,.36,1) both}
-.location-picker .picker-header{height:19px;padding:0 20px;border:0;flex:none}
-.location-picker .picker-header h2{font-size:16px;font-weight:700;line-height:19px}
-.location-picker .picker-close{position:absolute;width:1px;height:1px;padding:0;overflow:hidden;clip-path:inset(50%)}
-.location-picker .picker-close:focus-visible{clip-path:none;width:28px;height:28px;right:12px;top:12px;background:#fff;border-radius:8px}
-.location-picker .picker-body{min-height:0;flex:1;padding:6px 0 0;overflow:hidden;display:flex;flex-direction:column;gap:16px}
-.origin-search-wrap{padding:0 14px}
-.origin-search{display:flex;align-items:center;gap:10px;height:50px;padding:0 16px;border:1px solid #ddd;border-radius:12px;background:#fff}
-.origin-search:has(input:focus-visible){outline:2px solid #333;outline-offset:2px}
-.origin-search .search-glyph{width:12px;height:12px;border-width:1px;margin:0 2px 2px 0}
-.origin-search .search-glyph:after{width:5px;height:1px;right:-4px;bottom:-2px}
-.origin-search input{border:0;outline:0;min-width:0;width:100%;padding:0;background:none;color:#333;font-size:14px;font-weight:400;line-height:17px}
-.origin-search input::placeholder{color:#aaa}
-.origin-regions{min-height:0;flex:1;overflow-y:auto;overscroll-behavior:contain}
-.origin-region{display:flex;flex-direction:column;gap:6px;padding-bottom:20px}
-.origin-region h3{display:flex;align-items:center;gap:6px;height:46px;padding:0 20px;color:#333;font-size:16px;font-weight:500;line-height:21px}
-.origin-flag{display:block;width:22px;height:22px;flex:none;object-fit:contain;border-radius:50%}
-.origin-chips{display:flex;flex-wrap:wrap;column-gap:8px;row-gap:12px;padding:0 20px}
-.origin-chip{padding:6px 8px;background:#f6f6f6;color:#000;border-radius:8px;font-size:14px;font-weight:400;line-height:21px;white-space:nowrap}
-.origin-chip:hover{background:#eee;font-weight:500}
+
 .dialog-body{white-space:pre-line}
 @media(max-width:599px){
   .search-panel.condition-mode{width:100%;max-width:100%;padding:6px 12px 16px;gap:12px}
@@ -351,66 +260,15 @@ img.ai-airline-logo{object-fit:contain}
   .condition-field strong{font-size:13px}
   .condition-actions{align-items:stretch;flex-direction:column;gap:4px}
   .condition-submit{align-self:stretch;width:100%}
-  /* MBTI 패널도 길어서 시안대로 두면 402px에서 버튼이 본문에 가린다(시안 버그). 조건 탭과 같이 히어로를 늘린다. */
-  .hero:has(.condition-mode,.mbti-mode){height:auto;min-height:0;padding-bottom:56px}
-  .picker-panel{top:auto;bottom:0;left:0;transform:none;width:100%;max-height:min(86dvh,720px);border-radius:24px 24px 0 0}
-  .picker-header{height:62px;padding:0 20px}
-  .picker-body{padding:18px 20px 30px}
+  
+  /* MBTI 패널도 길어서 시안대로 두면 402px에서 버튼이 본문에 가린다(시안 버그). 조건 탭과 같이 히어로를 늘린다. */.hero:has(.condition-mode,.mbti-mode){height:auto;min-height:0;padding-bottom:56px}
+  
+  
+  
 }
 @media(prefers-reduced-motion:reduce){.trip-types::before,.trip-types span{transition:none}}
 
-/* Figma Calendar: 362 × 471 anchored date-range picker. */
-.picker-panel.date-picker{position:absolute;z-index:33;width:min(374px,calc(100vw - 24px));height:calc(var(--calendar-grid-height,326px) + 193px);max-height:none;overflow:hidden;transform:none;border-radius:24px;background:#fff;box-shadow:0 2px 6px #0000001a,0 10px 60px #0003;transition:height 260ms cubic-bezier(.22,1,.36,1);animation:calendar-pop-in 220ms cubic-bezier(.22,1,.36,1) both}
-.picker-panel.date-picker.is-opening,.date-picker.is-opening .calendar-viewport,.date-picker.is-opening .calendar-track{transition:none}
-.date-picker .picker-header{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip-path:inset(50%);border:0}
-.date-picker .picker-body{display:flex;min-height:0;height:100%;overflow:hidden;flex-direction:column;justify-content:flex-start;gap:16px;padding:26px;background:#fff}
-.date-picker .calendar{display:flex;flex-direction:column;gap:0;width:100%}
-.date-picker .calendar-top{display:grid;grid-template-columns:20px 1fr 20px;align-items:center;width:100%;height:20px;margin:0 0 16px}
-.date-picker .calendar-top strong{text-align:center;font-size:16px;font-weight:700;line-height:19px}
-.date-picker .calendar-top button{position:relative;display:flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%}
-.date-picker .calendar-top button::before{content:'';position:absolute;inset:50% auto auto 50%;width:32px;height:32px;border-radius:50%;background:transparent;transform:translate(-50%,-50%)}
-.date-picker .calendar-top button:hover:not(:disabled)::before{background:#f6f6f6}
-.date-picker .calendar-top button:disabled{opacity:.28}
-.date-picker .calendar-top img{position:relative;z-index:1;width:20px;height:20px}
-.calendar-phase{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap;border:0}
-.date-picker .calendar-weekdays{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));width:100%;height:46px;margin-bottom:10px;text-align:center}
-.date-picker .calendar-weekdays>b{display:flex;align-items:center;justify-content:center;color:#333;font-size:14px;font-weight:400;line-height:17px}
-.date-picker .calendar-weekdays>.sunday,.date-picker .calendar-weekdays>.saturday{color:var(--pink)}
-.date-picker .calendar-viewport{width:100%;height:var(--calendar-grid-height,326px);overflow:hidden;transition:height 260ms cubic-bezier(.22,1,.36,1)}
-.date-picker .calendar-track{display:flex;align-items:flex-start;width:100%;height:var(--calendar-grid-height,326px);overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;scroll-behavior:smooth;overscroll-behavior-x:contain;touch-action:pan-x;scrollbar-width:none;transition:height 260ms cubic-bezier(.22,1,.36,1)}
-.date-picker .calendar-track::-webkit-scrollbar{display:none;width:0;height:0}
-.date-picker .calendar-slide{flex:0 0 100%;width:100%;height:var(--slide-grid-height,326px);scroll-snap-align:center;scroll-snap-stop:always}
-.date-picker .calendar-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));grid-auto-rows:var(--calendar-row-height,46px);column-gap:0;row-gap:10px;width:100%;height:var(--slide-grid-height,326px);text-align:center}
-.date-picker .calendar-empty{display:block;width:100%;height:var(--calendar-row-height,46px)}
-.date-picker .calendar-day{position:relative;isolation:isolate;display:flex;align-items:center;justify-content:center;width:100%;height:var(--calendar-row-height,46px);aspect-ratio:auto;border-radius:0;color:#333;font-size:14px;font-weight:400;line-height:17px}
-.date-picker .calendar-day>span{position:relative;z-index:2}
-.date-picker .calendar-day::before,.date-picker .calendar-day::after{content:'';position:absolute;top:50%;height:var(--calendar-row-height,46px);transform:translateY(-50%);pointer-events:none}
-.date-picker .calendar-day::before{z-index:0;left:0;width:100%;background:transparent}
-.date-picker .calendar-day::after{z-index:1;left:50%;width:var(--calendar-row-height,46px);border-radius:50%;background:transparent;transform:translate(-50%,-50%)}
-.date-picker .calendar-day:hover:not(:disabled){background:transparent}
-.date-picker .calendar-day:hover:not(:disabled)::after,.date-picker .calendar-day:focus-visible::after{background:#f1f1f1}
-.date-picker .calendar-day:focus-visible{z-index:3;outline:0}
-.date-picker .calendar-day:focus-visible::after{box-shadow:inset 0 0 0 2px var(--pink)}
-.date-picker .calendar-day:disabled{color:#ccc}
-.date-picker .calendar-day.between{background:transparent;color:#333}
-.date-picker .calendar-day.range-week::before{background:rgb(51 51 51 / 6%)}
-.date-picker .calendar-day.range-row-start::before{border-radius:12px 0 0 12px}
-.date-picker .calendar-day.range-row-end::before{border-radius:0 12px 12px 0}
-.date-picker .calendar-day.range-start.range-week::before{left:50%;width:50%;border-radius:50% 0 0 50%}
-.date-picker .calendar-day.range-end.range-week::before{left:0;width:50%;border-radius:0 50% 50% 0}
-.date-picker .calendar-day.selected{background:transparent;color:#fff;font-weight:500}
-.date-picker .calendar-day.selected::after{background:#333}
-.date-picker .calendar-day.selected:hover::after,.date-picker .calendar-day.selected:focus-visible::after{background:#333}
-.date-picker .calendar-day.range-start.adjacent-range::before{left:50%;width:50%;background:#333}
-.date-picker .calendar-day.range-end.adjacent-range::before{width:50%;background:#333}
-.date-picker .calendar-done{align-self:flex-end;width:80px;height:33px;min-height:33px;margin:0;padding:8px 14px;border-radius:12px;background:#ff385c;color:#fff;font-family:"Noto Sans KR",sans-serif;font-size:14px;font-weight:500;line-height:17px}
-.date-picker .calendar-done:disabled{background:#ccc;color:#fff;opacity:1}
-.picker-panel.location-picker.is-closing,.picker-panel.date-picker.is-closing,.picker-panel.passenger-picker.is-closing{pointer-events:none;animation:calendar-pop-out 180ms ease-in both}
-@media(prefers-reduced-motion:reduce){.picker-panel.location-picker,.picker-panel.date-picker,.picker-panel.passenger-picker{animation:none}.picker-panel.date-picker,.date-picker .calendar-viewport,.date-picker .calendar-track{transition:none}.date-picker .calendar-track{scroll-behavior:auto}}
-
-
-/* Brand scrollbars; mobile keeps scrolling with hidden bars. */
-*{scrollbar-color:var(--pink) #fff0f2;scrollbar-width:thin}
+/* Brand scrollbars; mobile keeps scrolling with hidden bars. */*{scrollbar-color:var(--pink) #fff0f2;scrollbar-width:thin}
 @supports selector(::-webkit-scrollbar){
   *{scrollbar-width:auto;scrollbar-color:auto}
   ::-webkit-scrollbar{width:10px;height:10px}
@@ -424,8 +282,7 @@ img.ai-airline-logo{object-fit:contain}
   ::-webkit-scrollbar{display:none;width:0;height:0}
 }
 
-/* Keep the active hero background pinned while the hero content and white page content scroll above it. */
-&{--hero-height:589px}
+/* Keep the active hero background pinned while the hero content and white page content scroll above it. */&{--hero-height:589px}
 .hero-background{position:fixed;top:0;right:0;bottom:auto;left:0;height:var(--hero-height);z-index:0}
 .hero:after{position:fixed;top:0;right:0;bottom:auto;left:0;height:var(--hero-height);z-index:1;pointer-events:none}
 .hero-copy,.search-panel{position:relative;z-index:2}
@@ -435,20 +292,17 @@ footer{position:relative;z-index:3}
 @media(max-width:599px){&{--hero-height:588px}}
 @media(min-width:600px) and (max-width:740px){&{--hero-height:621px}}
 
-/* Keep the first content section clear of the fixed GNB without changing its visible starting position. */
-.content{padding-top:54px;margin-top:6px;scroll-margin-top:54px}
+/* Keep the first content section clear of the fixed GNB without changing its visible starting position. */.content{padding-top:54px;margin-top:6px;scroll-margin-top:54px}
 @media(max-width:599px){.content{padding-top:56px;margin-top:-16px;scroll-margin-top:56px}}
 @media(max-width:599px){.content::before{bottom:-40px}}
-/* 탭을 바꾸면 새 패널이 아래에서 떠오른다. */
-#search-content:not([hidden]),#condition-content:not([hidden]),#mbti-content:not([hidden]){animation:tab-content-in 300ms cubic-bezier(.22,1,.36,1) 55ms backwards}
+
+/* 탭을 바꾸면 새 패널이 아래에서 떠오른다. */#search-content:not([hidden]),#condition-content:not([hidden]),#mbti-content:not([hidden]){animation:tab-content-in 300ms cubic-bezier(.22,1,.36,1) 55ms backwards}
 @media(prefers-reduced-motion:reduce){#search-content,#condition-content,#mbti-content{animation:none!important}}
 
-/* ---------- 1105 시안: 메인 ---------- */
-&{--section-gap:60px}
+/* ---------- 1105 시안: 메인 ---------- */&{--section-gap:60px}
 .content{margin-top:0}
 
-/* 장점: 1200px 이상 4칸, 600~1199px 2칸, 모바일은 가로 한 줄 자동 넘김(BenefitList). */
-@media(min-width:1200px){.benefit-list{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));column-gap:24px;row-gap:40px}.benefit-list .benefit{width:auto;min-width:0}}
+/* 장점: 1200px 이상 4칸, 600~1199px 2칸, 모바일은 가로 한 줄 자동 넘김(BenefitList). */@media(min-width:1200px){.benefit-list{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));column-gap:24px;row-gap:40px}.benefit-list .benefit{width:auto;min-width:0}}
 @media(min-width:600px) and (max-width:1199px){.benefit-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:24px;row-gap:24px}.benefit-list .benefit{width:auto;min-width:0}}
 @media(max-width:599px){
   .benefits{gap:20px}
@@ -459,8 +313,7 @@ footer{position:relative;z-index:3}
   .benefit p{font-size:14px;line-height:20px}
 }
 
-/* 모바일 히어로: 부제를 숨기고 높이는 내용에 맞춘다. GNB는 스크롤 중 숨긴다(MainHeader). */
-@media(max-width:599px){
+/* 모바일 히어로: 부제를 숨기고 높이는 내용에 맞춘다. GNB는 스크롤 중 숨긴다(MainHeader). */@media(max-width:599px){
   .hero,.hero:has(.condition-mode,.mbti-mode){height:auto;min-height:0;padding-bottom:76px}
   .hero-text>p{display:none}
   .search-panel:not(.condition-mode):not(.mbti-mode) #search-content{margin-top:10px}
@@ -470,8 +323,7 @@ footer{position:relative;z-index:3}
 }
 @media(max-width:599px) and (prefers-reduced-motion:reduce){.header{transition:none}}
 
-/* 국가 카드: 세로형. 그라데이션과 hover 축소는 안쪽 묶음(.country-card-content)에 둔다. */
-.country-card,.travel-card{isolation:isolate}
+/* 국가 카드: 세로형. 그라데이션과 hover 축소는 안쪽 묶음(.country-card-content)에 둔다. */.country-card,.travel-card{isolation:isolate}
 .country-card{overflow:visible;height:340px}
 .country-card:after{content:none}
 @media(min-width:1200px) and (max-width:1499px){.country-card{height:340px}}
@@ -481,8 +333,7 @@ footer{position:relative;z-index:3}
 .country-card-content:after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,transparent 30%,#0009);pointer-events:none}
 .country-card-content picture{position:absolute;inset:0;width:auto;height:auto;transition:inset 240ms cubic-bezier(.22,1,.36,1)}
 
-/* 추천 여행지 카드 hover: 묶음을 97%로 줄이고 사진을 확대한다. */
-.travel-card{overflow:visible}
+/* 추천 여행지 카드 hover: 묶음을 97%로 줄이고 사진을 확대한다. */.travel-card{overflow:visible}
 .travel-card-content{display:flex;flex-direction:column;width:100%;margin:0 auto;transition:width 240ms cubic-bezier(.22,1,.36,1),margin-top 240ms cubic-bezier(.22,1,.36,1)}
 .travel-photo{transition:height 240ms cubic-bezier(.22,1,.36,1)}
 .travel-photo picture{position:absolute;inset:0;width:auto;height:auto;transition:inset 240ms cubic-bezier(.22,1,.36,1)}
@@ -499,17 +350,15 @@ footer{position:relative;z-index:3}
 }
 @media(prefers-reduced-motion:reduce){:is(.country-card-content,.country-card-content picture,.travel-card-content,.travel-photo,.travel-photo picture,.country-label,.travel-label){transition:none}}
 
-/* ---------- 1105 시안: 검색 패널 ---------- */
-/* AI 입력창(PromptForm): 여러 줄 textarea. 높이는 JS가 맞추고, 두 줄 이상이면 is-multiline. */
-.prompt-form{position:relative}
+/* ---------- 1105 시안: 검색 패널 ---------- *//* AI 입력창(PromptForm): 여러 줄 textarea. 높이는 JS가 맞추고, 두 줄 이상이면 is-multiline. */.prompt-form{position:relative}
 .prompt-form textarea{display:block;min-height:1.8em;height:1.8em;max-height:160px;resize:none;overflow-y:hidden;transition:height .28s cubic-bezier(.22,1,.36,1);scrollbar-width:none;-ms-overflow-style:none}
 .prompt-form textarea::-webkit-scrollbar{display:none;width:0;height:0}
 .prompt-form.is-multiline{align-items:flex-end;border-radius:20px}
 .prompt-form.is-multiline textarea{padding-right:0}
 .prompt-form.is-multiline>img{align-self:flex-start;margin-top:4px}
 .prompt-form.is-multiline .send{align-self:flex-end}
-/* 기본 스크롤바 대신 스크롤하는 동안만 보이는 분홍 막대. 순서: 입력 → 막대 → 전송. */
-.prompt-scrollbar{display:none;position:relative;order:2;flex:0 0 5px;width:5px;align-self:stretch;margin:8px 0;border-radius:999px;opacity:0;pointer-events:none;transition:opacity .28s ease}
+
+/* 기본 스크롤바 대신 스크롤하는 동안만 보이는 분홍 막대. 순서: 입력 → 막대 → 전송. */.prompt-scrollbar{display:none;position:relative;order:2;flex:0 0 5px;width:5px;align-self:stretch;margin:8px 0;border-radius:999px;opacity:0;pointer-events:none;transition:opacity .28s ease}
 .prompt-scrollbar-thumb{position:absolute;top:0;left:0;width:100%;min-height:18px;border-radius:999px;background:var(--pink)}
 .prompt-form.has-scrollbar .prompt-scrollbar{display:block}
 .prompt-form.is-scrolling .prompt-scrollbar{opacity:1}
@@ -522,8 +371,8 @@ footer{position:relative;z-index:3}
   .prompt-form:not(.is-multiline)>img,.prompt-form:not(.is-multiline) .send{align-self:center;margin-top:0}
   .prompt-form:not(.is-multiline) textarea{align-self:center;height:20px;min-height:20px;max-height:20px;line-height:20px;white-space:pre-wrap;overflow-x:hidden;overflow-y:hidden}
   .prompt-form.is-multiline textarea{white-space:pre-wrap;overflow-x:hidden!important;overflow-y:auto!important}
-  /* 모바일 placeholder는 직접 그려 칸보다 길면 좌우로 흐르게 한다. */
-  .prompt-form textarea::placeholder{color:transparent}
+  
+  /* 모바일 placeholder는 직접 그려 칸보다 길면 좌우로 흐르게 한다. */.prompt-form textarea::placeholder{color:transparent}
   .prompt-placeholder{position:absolute;top:16px;left:36px;right:50px;display:block;overflow:hidden;color:#aaa;font-size:14px;font-weight:400;line-height:20px;white-space:nowrap;pointer-events:none}
   .prompt-placeholder-text{display:inline-block;white-space:nowrap;transform:translateX(0)}
   .prompt-form:not(.has-custom-placeholder) .prompt-placeholder{display:none}
@@ -531,59 +380,43 @@ footer{position:relative;z-index:3}
 }
 @media(prefers-reduced-motion:reduce){.prompt-form,.prompt-form textarea,.prompt-scrollbar{transition:none}.prompt-form.placeholder-overflow .prompt-placeholder-text{animation:none}}
 
-/* 조건 검색: 열린 칸 이름은 분홍, 칸 위아래 16px. 버튼을 누르는 순간 진한 색. */
-.condition-field{padding-block:16px}
+/* 조건 검색: 열린 칸 이름은 분홍, 칸 위아래 16px. 버튼을 누르는 순간 진한 색. */.condition-field{padding-block:16px}
 .condition-field>span{transition:color .18s ease}
 .condition-field[aria-expanded=true]>span{color:var(--pink)}
-:is(.send,.condition-submit,.picker-done,.calendar-done,.mbti-submit):hover{background:#e31c5a}
-:is(.login,.send,.condition-submit,.picker-done,.calendar-done,.ai-more-flights,.ai-followup-form button):active{background:#c8104f}
+:is(.send,.condition-submit,.mbti-submit):hover{background:#e31c5a}
+:is(.login,.send,.condition-submit,.ai-more-flights,.ai-followup-form button):active{background:#c8104f}
 
-/* 출발지·도착지 선택기: 돋보기 아이콘, 지역 제목 66px, 국기는 22px 둥근 사각형. */
-.origin-search .search-icon-image{display:block;width:20px;height:20px;flex:0 0 20px;object-fit:contain}
-.origin-search:has(.search-icon-image){gap:4px}
-.origin-regions{padding-bottom:20px;box-sizing:border-box}
-.origin-region h3{display:flex;align-items:center;gap:10px;height:66px;padding:10px 20px;color:#333;font-size:18px;font-weight:500;line-height:24px}
-.origin-flag{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;flex:none;overflow:hidden;border-radius:8px;background:#fff;box-shadow:0 2px 4px rgba(0,0,0,.16)}
-.origin-flag img{display:block;width:100%;height:100%;object-fit:cover;transform:none}
-.location-picker .picker-header h2,.passenger-picker .picker-header h2{font-size:18px;line-height:22px}
-.passenger-picker .passenger-row strong{font-size:18px;line-height:22px}
-.passenger-picker .counter output{font-weight:600}
-.date-picker .calendar-top strong{font-size:18px;line-height:21px}
-
-/* ---------- 1105 시안: AI 다이얼로그 ---------- */
-/* 대화 묶음(.ai-turn): 질문 + 답변. 두 번째 묶음부터 구분선(위 여백 36 = 로그 간격 16 + 20). */
-.ai-chat-log{margin-top:0}
+/* ---------- 1105 시안: AI 다이얼로그 ---------- *//* 대화 묶음(.ai-turn): 질문 + 답변. 두 번째 묶음부터 구분선(위 여백 36 = 로그 간격 16 + 20). */.ai-chat-log{margin-top:0}
 .ai-turn{display:flex;flex-direction:column;gap:16px;width:100%;min-width:0}
 .ai-turn+.ai-turn{margin-top:20px;padding-top:28px;border-top:1px solid #eee}
 .ai-user-message{line-height:30px;scroll-margin-top:76px}
 @media(min-width:700px){.ai-answer,.ai-answer p{line-height:1.8}}
-/* 답변 대기: 점 3개 말풍선. */
-.ai-thinking{display:flex;align-self:flex-start;align-items:center;justify-content:center;width:65px;height:46px;margin-top:8px;border-radius:24px;background:#f6f6f6;animation:ai-thinking-breathe 1.8s cubic-bezier(.22,1,.36,1) infinite}
+
+/* 답변 대기: 점 3개 말풍선. */.ai-thinking{display:flex;align-self:flex-start;align-items:center;justify-content:center;width:65px;height:46px;margin-top:8px;border-radius:24px;background:#f6f6f6;animation:ai-thinking-breathe 1.8s cubic-bezier(.22,1,.36,1) infinite}
 .ai-thinking i{display:inline-flex;align-items:center;gap:5px;font-style:normal}
 .ai-thinking b{display:block;width:6px;height:6px;border-radius:50%;background:var(--pink);animation:ai-thinking-dot 1s cubic-bezier(.22,1,.36,1) infinite}
 .ai-thinking b:nth-child(2){animation-delay:.16s}
 .ai-thinking b:nth-child(3){animation-delay:.32s}
-/* 부족한 조건 안내 + 비활성 검색 버튼. */
-.ai-dialog-actions{flex-wrap:wrap;row-gap:22px}
+
+/* 부족한 조건 안내 + 비활성 검색 버튼. */.ai-dialog-actions{flex-wrap:wrap;row-gap:22px}
 .ai-missing-conditions{flex:0 0 100%;margin:0;color:#333;font-size:16px;font-weight:400;line-height:1.8;text-align:left;white-space:pre-line}
 .ai-more-flights:disabled{background:#eee;color:#aaa;cursor:not-allowed;box-shadow:none}
 .ai-more-flights:disabled:hover{background:#eee}
 @media(min-width:700px) and (max-width:1199px){.ai-missing-conditions{font-size:14px}}
-/* 토스트는 대화창 안, 입력칸 위에 띄운다. */
-.ai-dialog .toast{position:absolute;bottom:126px;z-index:30;max-width:calc(100% - 48px);text-align:center;white-space:normal}
-/* 항공권 카드: 올리면 1px 떠오르고 테두리가 진해진다. */
-.ai-flight-card{transition:border-color .2s,box-shadow .2s,transform .2s}
+
+/* 토스트는 대화창 안, 입력칸 위에 띄운다. */.ai-dialog .toast{position:absolute;bottom:126px;z-index:30;max-width:calc(100% - 48px);text-align:center;white-space:normal}
+
+/* 항공권 카드: 올리면 1px 떠오르고 테두리가 진해진다. */.ai-flight-card{transition:border-color .2s,box-shadow .2s,transform .2s}
 .ai-flight-card:hover{border-color:#ccc;box-shadow:0 4px 12px rgba(0,0,0,.035);transform:translateY(-1px)}
 .ai-followup-form button:hover{background:#e31c5a}
 .ai-followup-form:hover,.ai-followup-form:active,.ai-followup-form:focus-within{background:#fff;box-shadow:inset 0 0 0 1px var(--pink),0 8px 24px #00000024}
 
-/* 열 때(is-entering) 차례로 떠오른다. */
-.ai-dialog.is-entering :is(.ai-dialog-header>*,.ai-dialog-content>*,.ai-dialog-footer>form){opacity:0;animation:ai-dialog-content-in 420ms cubic-bezier(.22,1,.36,1) var(--ai-entry-delay,0ms) both}
+/* 열 때(is-entering) 차례로 떠오른다. */.ai-dialog.is-entering :is(.ai-dialog-header>*,.ai-dialog-content>*,.ai-dialog-footer>form){opacity:0;animation:ai-dialog-content-in 420ms cubic-bezier(.22,1,.36,1) var(--ai-entry-delay,0ms) both}
 .ai-dialog.is-entering .ai-dialog-header>.ai-dialog-close{--ai-entry-delay:55ms}
 .ai-dialog.is-entering .ai-dialog-content>.ai-chat-log{--ai-entry-delay:105ms}
 .ai-dialog.is-entering .ai-dialog-content>.ai-dialog-actions{--ai-entry-delay:450ms}
-/* 새 답변(is-new is-revealing): 답변 → 조건 칸 6개 → 장소 후보 순서로 시차를 두고 나타난다. */
-.ai-turn.is-revealing>.ai-answer>:is(strong,p),.ai-turn.is-revealing>.ai-trip-summary>div>:is(span,strong),.ai-turn.is-revealing>.ai-location-picks{opacity:0;animation:ai-dialog-content-in 460ms cubic-bezier(.22,1,.36,1) var(--ai-item-delay,0ms) both}
+
+/* 새 답변(is-new is-revealing): 답변 → 조건 칸 6개 → 장소 후보 순서로 시차를 두고 나타난다. */.ai-turn.is-revealing>.ai-answer>:is(strong,p),.ai-turn.is-revealing>.ai-trip-summary>div>:is(span,strong),.ai-turn.is-revealing>.ai-location-picks{opacity:0;animation:ai-dialog-content-in 460ms cubic-bezier(.22,1,.36,1) var(--ai-item-delay,0ms) both}
 .ai-turn.is-revealing>.ai-answer>p{--ai-item-delay:110ms}
 .ai-turn.is-revealing>.ai-trip-summary>div:nth-child(1)>span{--ai-item-delay:180ms}
 .ai-turn.is-revealing>.ai-trip-summary>div:nth-child(1)>strong{--ai-item-delay:215ms}
@@ -598,9 +431,8 @@ footer{position:relative;z-index:3}
 .ai-turn.is-revealing>.ai-trip-summary>div:nth-child(6)>span{--ai-item-delay:530ms}
 .ai-turn.is-revealing>.ai-trip-summary>div:nth-child(6)>strong{--ai-item-delay:565ms}
 .ai-turn.is-revealing>.ai-location-picks{--ai-item-delay:600ms}
-/* 답변이 오면 점 말풍선 자리에서 분홍 빛이 번진다(데스크톱, 2초). 위치는 JS가 --ai-wake-x/y로 준다. */
-/* 빛(20배 확대)이 다이얼로그의 스크롤 영역을 넓히면 버튼 포커스 때 다이얼로그 자체가 옆으로 밀린다. clip은 스크롤 자체를 막는다. */
-.ai-dialog{--ai-wake-x:52px;--ai-wake-y:180px;overflow:clip}
+
+/* 답변이 오면 점 말풍선 자리에서 분홍 빛이 번진다(데스크톱, 2초). 위치는 JS가 --ai-wake-x/y로 준다. *//* 빛(20배 확대)이 다이얼로그의 스크롤 영역을 넓히면 버튼 포커스 때 다이얼로그 자체가 옆으로 밀린다. clip은 스크롤 자체를 막는다. */.ai-dialog{--ai-wake-x:52px;--ai-wake-y:180px;overflow:clip}
 .ai-dialog.is-waking::before{content:'';position:absolute;top:var(--ai-wake-y);left:var(--ai-wake-x);width:260px;height:180px;z-index:10;pointer-events:none;border-radius:50%;background:radial-gradient(ellipse at 28% 32%,rgba(255,198,224,.7) 0,rgba(214,202,255,.52) 34%,rgba(175,222,255,.37) 62%,rgba(161,231,232,0) 84%),linear-gradient(120deg,rgba(255,210,230,.3),rgba(211,205,255,.24) 46%,rgba(166,229,240,.28));filter:blur(18px);animation:ai-dialog-wake-scale 2000ms cubic-bezier(.16,1,.3,1) both,ai-dialog-wake-opacity 2000ms ease-out both;contain:paint}
 @media(prefers-reduced-motion:reduce){
   .ai-thinking,.ai-thinking b{animation:none}
@@ -608,8 +440,7 @@ footer{position:relative;z-index:3}
   .ai-dialog.is-waking::before{animation:none;opacity:0}
 }
 
-/* 모바일(699px 이하): 헤더를 본문 위에 겹쳐 띄우고 스크롤 중 숨긴다. 아래 입력칸은 포커스 때 살짝 넓어진다. 닫을 때도 페이드아웃. */
-@media(max-width:699px){
+/* 모바일(699px 이하): 헤더를 본문 위에 겹쳐 띄우고 스크롤 중 숨긴다. 아래 입력칸은 포커스 때 살짝 넓어진다. 닫을 때도 페이드아웃. */@media(max-width:699px){
   .ai-dialog-header{height:60px;min-height:60px;padding:18px 20px;transition:transform 420ms cubic-bezier(.22,1,.36,1)}
   .ai-dialog-header.is-scroll-hidden{transform:translateY(-100%)}
   .ai-dialog-content{padding-top:80px}
@@ -640,8 +471,7 @@ footer{position:relative;z-index:3}
   .ai-followup-form input{font-size:14px;line-height:20px;height:20px;padding:0}
 }
 
-/* ---------- 1105 시안: AI 카드 하트(테두리·채움 두 장 + 터짐) ---------- */
-.ai-flight-heart{position:relative;overflow:visible;transform-origin:center}
+/* ---------- 1105 시안: AI 카드 하트(테두리·채움 두 장 + 터짐) ---------- */.ai-flight-heart{position:relative;overflow:visible;transform-origin:center}
 .ai-flight-heart:hover{background:#f7f7f7;border-radius:50%}
 .ai-heart-icon{position:relative;z-index:1;display:block;width:22px;height:22px;transform-origin:center}
 .ai-heart-icon img{position:absolute;inset:0;display:block;width:100%!important;height:100%!important;max-width:none!important;max-height:none!important;transition:none}
@@ -662,26 +492,15 @@ footer{position:relative;z-index:3}
 @media(prefers-reduced-motion:reduce){.ai-flight-heart.is-activating,.ai-flight-heart.is-deactivating,.ai-flight-heart :is(.ai-heart-stroke,.ai-heart-fill,.ai-heart-burst,.ai-heart-burst::before){animation:none!important}.ai-heart-burst{display:none}}
 }
 
-/* 로그인 후 헤더(둘러보기 시안 "♡ 위시리스트 · 닉네임님 ▾"). 메인 헤더는 밝아서 글자·아이콘을 진하게 쓴다. */
-.main-page .account-nav{display:flex;align-items:center}
+/* 로그인 후 헤더(둘러보기 시안 "♡ 위시리스트 · 닉네임님 ▾"). 메인 헤더는 밝아서 글자·아이콘을 진하게 쓴다. */.main-page .account-nav{display:flex;align-items:center}
 .main-page .wishlist-button{display:flex;align-items:center;gap:4px;border-radius:12px;padding:8px 14px 8px 10px;border:1px solid rgb(0 0 0 / 10%);color:#333;font-size:14px;line-height:20px;font-weight:500}
 .main-page .wishlist-button img{margin:0 6px 0 0}
 .main-page .user-button{display:flex;align-items:center;gap:8px;padding:8px 0 8px 24px;color:#333;font-size:14px;line-height:20px;font-weight:500;white-space:nowrap}
 .main-page .account-nav img{filter:brightness(.2)}
 @media(max-width:599px){.main-page .wishlist-button{border:0}.main-page .user-button{padding:8px 0 8px 4px;gap:6px}}
 @media(max-width:360px){.main-page .wishlist-button{padding-inline:8px}.main-page .wishlist-button span{display:none}}
-/* 유아 좌석 선택(시안 없음): 왕복·편도 토글과 같은 톤의 작은 세그먼트. 이 줄이 생기면 탑승객 피커 고정 높이를 푼다. */
-.main-page .infant-types{display:flex;gap:4px;width:max-content;padding:2px;border-radius:12px;background:#eee}
-.main-page .infant-types label{cursor:pointer}
-.main-page .infant-types input{position:absolute;opacity:0;width:1px;height:1px}
-.main-page .infant-types span{display:block;padding:6px 10px;border-radius:10px;color:#aaa;font-size:13px;font-weight:500}
-.main-page .infant-types input:checked+span{color:#333;background:#fff;box-shadow:0 1px 3px #00000040}
-.main-page .infant-types input:focus-visible+span{outline:2px solid var(--pink);outline-offset:2px}
-.main-page .passenger-picker:has(.infant-types),.main-page .passenger-picker:has(.infant-types) :is(.picker-body,.passenger-controls){height:auto}
 
-
-/* 로딩 화면이 사라질 때 메인 구역을 차례로 띄운다. fill-mode가 backwards라 끝나면 transform이 남지 않는다(position:fixed 자식 보호). */
-.main-page{overflow-x:clip}
+/* 로딩 화면이 사라질 때 메인 구역을 차례로 띄운다. fill-mode가 backwards라 끝나면 transform이 남지 않는다(position:fixed 자식 보호). */.main-page{overflow-x:clip}
 .main-page :is(.header,.hero-copy,.search-panel,.content,footer){animation:site-content-in 440ms cubic-bezier(.22,1,.36,1) backwards}
 .main-page .header{animation-delay:910ms}
 .main-page .hero-background{animation:site-hero-in 440ms cubic-bezier(.22,1,.36,1) 950ms backwards}
@@ -693,11 +512,11 @@ footer{position:relative;z-index:3}
 @keyframes site-hero-in{from{opacity:0;transform:scale(1.015)}to{opacity:1;transform:none}}
 @keyframes site-content-fade{from{opacity:0}}
 @media (prefers-reduced-motion:reduce){.main-page :is(.header,.hero-background,.hero-copy,.search-panel,.content,footer){animation:site-content-fade 180ms 340ms backwards}}
-/* AI 편도 카드는 한 줄이라 시안 원래 높이(900px대 120px, 모바일 117px)로 돌린다. */
-@media(min-width:700px) and (max-width:1199px){.ai-flight-card.is-one-way{height:120px;min-height:120px}}
+
+/* AI 편도 카드는 한 줄이라 시안 원래 높이(900px대 120px, 모바일 117px)로 돌린다. */@media(min-width:700px) and (max-width:1199px){.ai-flight-card.is-one-way{height:120px;min-height:120px}}
 @media(max-width:699px){.ai-flight-card.is-one-way{height:117px;min-height:117px}}
-/* AI 왕복 카드는 눌러서 최종 선택 요약으로 간다. */
-.ai-flight-card[role=button]{cursor:pointer}
+
+/* AI 왕복 카드는 눌러서 최종 선택 요약으로 간다. */.ai-flight-card[role=button]{cursor:pointer}
 .ai-flight-card[role=button]:focus-visible{outline:2px solid var(--pink);outline-offset:2px}
 @keyframes prompt-placeholder-marquee{0%,16%{transform:translateX(0)}84%,100%{transform:translateX(calc(-1 * var(--prompt-placeholder-distance,0px)))}}
 @keyframes ai-dialog-content-in{from{opacity:0;transform:translate3d(0,10px,0)}to{opacity:1;transform:translate3d(0,0,0)}}

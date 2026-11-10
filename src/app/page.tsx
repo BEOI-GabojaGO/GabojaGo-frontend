@@ -7,6 +7,8 @@ import { BenefitList, MainHeader } from "@/components/main/main-scroll";
 import { SearchPanel } from "@/components/main/search-panel";
 import { readConditionSearchParams } from "@/lib/flight-search-params";
 import "./main.css";
+// 조건 검색 선택기(목록 조건 수정 서랍과 공용).
+import "./condition-picker.css";
 // 로그인 다이얼로그 규칙이 main.css의 input:focus-visible 외곽선을 덮어야 하므로 뒤에 둔다.
 import "./auth.css";
 
