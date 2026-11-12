@@ -2,9 +2,9 @@
 
 import { useRouter } from "next/navigation";
 import { createPortal } from "react-dom";
-import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type FormEvent, type ReactNode } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type FormEvent, type ReactNode, type RefObject } from "react";
 import { cityName } from "@/components/flight/search-condition-fields";
-import { Img, prefersReducedMotion } from "@/components/main/main-ui";
+import { Img, prefersReducedMotion, useMediaQuery } from "@/components/main/main-ui";
 import { toSearchQuery, type InitialSearch } from "@/lib/flight-search-params";
 import type { LocationOption, OneWaySearchRequest, TravelClass } from "@/lib/flight-types";
 import { findLocation, searchLocations } from "@/lib/locations";
@@ -55,6 +55,9 @@ const LOCATION_REGIONS = [
 }));
 
 type PickerType = keyof typeof PICKER_TITLES;
+const isLocation = (type: PickerType | null) => type === "origin" || type === "destination";
+/** 899px 이하에서 장소·일정 선택기는 화면 전체를 덮는다(1111 시안). 탑승객은 계속 칸 아래 창. */
+const FULL_SCREEN_QUERY = "(max-width: 899px)";
 type PassengerKey = (typeof PASSENGER_ROWS)[number]["key"];
 
 export type Condition = {
@@ -137,8 +140,12 @@ export function useConditionForm(
   const panel = useRef<HTMLElement>(null);
   const closeTimer = useRef<number>(undefined);
   const [panelPosition, setPanelPosition] = useState<{ left: number; top: number }>();
+  const narrow = useMediaQuery(FULL_SCREEN_QUERY);
+  const fullScreen = narrow && !!picker && picker !== "passengers";
+  // 전체 화면 장소 선택기는 안쪽 내용이 차례로 사라진 뒤(340ms) 닫는다(시안).
+  const closeDelay = fullScreen && isLocation(picker) ? 340 : 180;
 
-  /** 닫힘 애니메이션(180ms) 뒤에 피커를 내리고 누른 칸으로 포커스를 돌려준다. */
+  /** 닫힘 애니메이션 뒤에 피커를 내리고 누른 칸으로 포커스를 돌려준다. */
   function closePicker() {
     if (!picker) return;
     const finish = () => {
@@ -149,7 +156,19 @@ export function useConditionForm(
     if (prefersReducedMotion()) return finish();
     setClosing(true);
     window.clearTimeout(closeTimer.current);
-    closeTimer.current = window.setTimeout(finish, 180);
+    closeTimer.current = window.setTimeout(finish, closeDelay);
+  }
+
+  /** 전체 화면 도착지 → 출발지: 지금 선택기를 닫고 70ms 뒤 새로 연다(시안 mobileLocationTransition). */
+  function switchPicker(type: PickerType) {
+    window.clearTimeout(closeTimer.current);
+    if (prefersReducedMotion()) return setPicker(type);
+    setClosing(true);
+    closeTimer.current = window.setTimeout(() => {
+      setPicker(null);
+      setClosing(false);
+      closeTimer.current = window.setTimeout(() => setPicker(type), 70);
+    }, closeDelay);
   }
 
   function openPicker(type: PickerType) {
@@ -160,7 +179,7 @@ export function useConditionForm(
 
   // 누른 칸 바로 아래에 붙인다. 일정은 출발지 칸 왼쪽에 맞춘다(시안).
   useLayoutEffect(() => {
-    if (!picker) return;
+    if (!picker || fullScreen) return;
     function place() {
       const trigger = triggers.current[picker!]?.getBoundingClientRect();
       const anchor = triggers.current[picker === "dates" ? dateAnchor : picker!]?.getBoundingClientRect();
@@ -173,7 +192,14 @@ export function useConditionForm(
     place();
     window.addEventListener("resize", place);
     return () => window.removeEventListener("resize", place);
-  }, [picker, dateAnchor]);
+  }, [picker, dateAnchor, fullScreen]);
+
+  // 전체 화면 선택기 뒤 페이지는 스크롤하지 않는다.
+  useEffect(() => {
+    if (!fullScreen) return;
+    document.body.classList.add("picker-open");
+    return () => document.body.classList.remove("picker-open");
+  }, [fullScreen]);
 
   function update(patch: Partial<Condition>) {
     setState((current) => ({ ...current, ...patch }));
@@ -188,7 +214,7 @@ export function useConditionForm(
   useEffect(() => {
     if (!picker) return;
     // 패널 위치를 잡기 전에 포커스가 가면 브라우저가 그쪽으로 페이지를 스크롤한다(1,000px 넘게 튐). 스크롤은 막는다.
-    panel.current?.querySelector<HTMLElement>("input,button:not(.picker-close)")?.focus({ preventScroll: true });
+    panel.current?.querySelector<HTMLElement>("input,button:not(.picker-close):not(.origin-selected-switch):not(.origin-clear-button)")?.focus({ preventScroll: true });
 
     function onPointerDown(event: MouseEvent) {
       const target = event.target as Element;
@@ -302,9 +328,11 @@ export function useConditionForm(
     picker &&
     createPortal(
       <section
+        // 종류가 바뀌면 새로 그려 등장 애니메이션을 다시 돌린다.
+        key={picker}
         ref={panel}
-        className={`picker-panel ${PICKER_CLASSES[picker]}${closing ? " is-closing" : ""}`}
-        style={panelPosition}
+        className={`picker-panel ${PICKER_CLASSES[picker]}${isLocation(picker) ? ` ${picker}-picker` : ""}${closing ? " is-closing" : ""}`}
+        style={fullScreen ? undefined : panelPosition}
         id="picker-panel"
         role="dialog"
         aria-modal="false"
@@ -313,13 +341,28 @@ export function useConditionForm(
         <header className="picker-header">
           <h2 id="picker-title">{PICKER_TITLES[picker]}</h2>
           <button className="picker-close" type="button" aria-label="닫기" onClick={closePicker}>
-            ×
+            <svg viewBox="0 0 12 12" aria-hidden="true">
+              <path d="M1 1l10 10M11 1 1 11" />
+            </svg>
           </button>
         </header>
         <div className="picker-body">
           {(picker === "origin" || picker === "destination") && (
             <LocationPicker
               label={PICKER_TITLES[picker]}
+              // 전체 화면 도착지 선택기는 위에 고른 출발지를 보여 준다. 누르면 출발지 선택으로, X는 출발지를 비우고 출발지 선택으로.
+              selectedOrigin={
+                fullScreen && picker === "destination"
+                  ? {
+                      option: origin,
+                      onSwitch: () => switchPicker("origin"),
+                      onClear: () => {
+                        update({ origin: null });
+                        switchPicker("origin");
+                      },
+                    }
+                  : undefined
+              }
               onSelect={(option) => {
                 const other = picker === "origin" ? destination : origin;
                 if (other && cityName(other) === cityName(option)) {
@@ -341,8 +384,55 @@ export function useConditionForm(
   return { state, update, error, setError, picker, closePicker, field, triggerProps, pickerPanel, submit, datesText, passengersText, reset: setState };
 }
 
-function LocationPicker({ label, onSelect }: { label: string; onSelect: (option: LocationOption) => void }) {
+type SelectedOrigin = { option: LocationOption | null; onSwitch: () => void; onClear: () => void };
+
+/** 칩이 속한 지역 국기. 칩에 없는 도시는 한국 국기. */
+const regionFlag = (option: LocationOption) => LOCATION_REGIONS.find((region) => region.chips.some((chip) => chip.option.code === option.code))?.flag ?? "flag-korea.png";
+
+/**
+ * 4~5px 분홍 스크롤 막대(시안 go-scrollbar). 기본 막대는 CSS로 숨기고 target의 스크롤 위치·비율을 따라 그린다.
+ * 그릴 때마다 다시 맞춘다(검색으로 목록 길이가 바뀌는 경우).
+ */
+function GoScrollbar({ target }: { target: RefObject<HTMLElement | null> }) {
+  const track = useRef<HTMLDivElement>(null);
+  const thumb = useRef<HTMLSpanElement>(null);
+  useEffect(() => {
+    const element = target.current;
+    if (!element) return;
+    function sync() {
+      const bar = track.current;
+      const handle = thumb.current;
+      if (!element || !bar || !handle) return;
+      const viewport = element.clientHeight;
+      const content = element.scrollHeight;
+      const height = bar.clientHeight;
+      if (!viewport || !content || !height) return;
+      const scrollable = content > viewport + 1;
+      bar.style.visibility = scrollable ? "" : "hidden";
+      if (!scrollable) return;
+      const size = Math.max(28, Math.min(height, (height * viewport) / content));
+      handle.style.height = `${size}px`;
+      handle.style.transform = `translateY(${(element.scrollTop / Math.max(1, content - viewport)) * (height - size)}px)`;
+    }
+    sync();
+    element.addEventListener("scroll", sync, { passive: true });
+    const observer = new ResizeObserver(sync);
+    observer.observe(element);
+    return () => {
+      element.removeEventListener("scroll", sync);
+      observer.disconnect();
+    };
+  });
+  return (
+    <div ref={track} className="go-scrollbar" aria-hidden="true">
+      <span ref={thumb} className="go-scrollbar-thumb" />
+    </div>
+  );
+}
+
+function LocationPicker({ label, onSelect, selectedOrigin }: { label: string; onSelect: (option: LocationOption) => void; selectedOrigin?: SelectedOrigin }) {
   const [query, setQuery] = useState("");
+  const list = useRef<HTMLDivElement>(null);
   const q = query.trim().toLowerCase();
   const regions = LOCATION_REGIONS.map((region) => ({
     ...region,
@@ -361,13 +451,32 @@ function LocationPicker({ label, onSelect }: { label: string; onSelect: (option:
   return (
     <>
       <div className="origin-search-wrap">
-        <label className="sr-only" htmlFor="airport-query">{label} 검색</label>
-        <div className="origin-search">
-          <Img className="search-icon-image" name="search.svg" />
-          <input id="airport-query" autoComplete="off" placeholder={`${label}를 검색해 주세요.`} value={query} onChange={(event) => setQuery(event.target.value)} />
+        <div className="origin-search-stack">
+          {selectedOrigin?.option && (
+            <div className="origin-search origin-selected-search">
+              <button className="origin-selected-switch" type="button" aria-label={`출발지 ${cityName(selectedOrigin.option)} 변경`} onClick={selectedOrigin.onSwitch}>
+                <span className="origin-selected-flag">
+                  <Img name={regionFlag(selectedOrigin.option)} />
+                </span>
+                <span className="origin-selected-value">{cityName(selectedOrigin.option)}</span>
+                <span className="origin-selected-label">출발지</span>
+              </button>
+              <button className="origin-clear-button" type="button" aria-label="출발지 선택 지우기" onClick={selectedOrigin.onClear}>
+                <span className="origin-clear-icon" aria-hidden="true" />
+              </button>
+            </div>
+          )}
+          <label className="sr-only" htmlFor="airport-query">
+            {label} 검색
+          </label>
+          <div className={`origin-search${selectedOrigin ? " origin-destination-search" : ""}`}>
+            <Img className="search-icon-image" name="search.svg" />
+            <input id="airport-query" autoComplete="off" placeholder={`${label}를 검색해 주세요.`} value={query} onChange={(event) => setQuery(event.target.value)} />
+          </div>
         </div>
       </div>
-      <div className="origin-regions" aria-live="polite">
+      <div className="origin-scroll-wrap">
+        <div ref={list} className="origin-regions" aria-live="polite">
         {regions.map((region) => (
           <section key={region.label} className="origin-region" aria-label={region.label}>
             <h3>
@@ -386,6 +495,8 @@ function LocationPicker({ label, onSelect }: { label: string; onSelect: (option:
           </section>
         )}
         {!regions.length && !fallback.length && <p className="picker-empty">검색 결과가 없습니다.</p>}
+        </div>
+        <GoScrollbar target={list} />
       </div>
     </>
   );
@@ -399,6 +510,7 @@ const ROW_GAP = 10;
 
 /** Figma Calendar(362 × 471). 왕복이면 출발~귀국을 주 단위 띠로 칠한다(시안 calendarMonthMarkup). */
 function DatePicker({ state, update, onDone }: PickerProps) {
+  const scroll = useRef<HTMLDivElement>(null);
   const [month, setMonth] = useState(() => {
     const base = state.depart ? new Date(`${state.depart}T00:00:00`) : new Date();
     return new Date(base.getFullYear(), base.getMonth(), 1);
@@ -460,8 +572,11 @@ function DatePicker({ state, update, onDone }: PickerProps) {
   }
   while (cells.length < rows * 7) cells.push(<span key={`tail-${cells.length}`} className="calendar-empty" aria-hidden="true" />);
 
+  // 전체 화면(899px 이하)에서는 달력이 가운데 스크롤 영역에 들어가고 "선택하기"는 아래에 고정된다.
+  // 넓은 화면에서는 감싼 칸이 display:contents라 배치가 그대로다.
   return (
-    <>
+    <div className="calendar-scroll-wrap">
+      <div ref={scroll} className="calendar-scroll-content">
       {/* 패널 높이(--calendar-grid-height)가 이 달의 주 수를 따른다. */}
       <div className="calendar" ref={(element) => element?.closest<HTMLElement>(".picker-panel")?.style.setProperty("--calendar-grid-height", `${gridHeight}px`)}>
         <div className="calendar-top">
@@ -496,7 +611,9 @@ function DatePicker({ state, update, onDone }: PickerProps) {
       <button className="picker-done calendar-done" type="button" disabled={!complete} onClick={onDone}>
         선택하기
       </button>
-    </>
+      </div>
+      <GoScrollbar target={scroll} />
+    </div>
   );
 }
 

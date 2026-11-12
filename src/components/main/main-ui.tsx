@@ -9,20 +9,21 @@ export function Img({ name, alt = "", className }: { name: string; alt?: string;
   return <img className={className} src={asset(name)} alt={alt} />;
 }
 
-const MOBILE_QUERY = "(max-width: 599px)";
-
-/** 모바일 시안에서만 달라지는 placeholder 등에 쓴다. 서버 렌더링은 데스크톱 기준. */
-export function useIsMobile() {
+/** 미디어 쿼리가 맞는지. 서버 렌더링은 false(데스크톱 기준). */
+export function useMediaQuery(query: string) {
   return useSyncExternalStore(
     (onChange) => {
-      const media = matchMedia(MOBILE_QUERY);
+      const media = matchMedia(query);
       media.addEventListener("change", onChange);
       return () => media.removeEventListener("change", onChange);
     },
-    () => matchMedia(MOBILE_QUERY).matches,
+    () => matchMedia(query).matches,
     () => false,
   );
 }
+
+/** 모바일 시안에서만 달라지는 placeholder 등에 쓴다. */
+export const useIsMobile = () => useMediaQuery("(max-width: 599px)");
 
 export const prefersReducedMotion = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
 
