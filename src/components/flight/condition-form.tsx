@@ -73,6 +73,11 @@ export type Condition = {
 
 const dateKey = (d: Date) => [d.getFullYear(), String(d.getMonth() + 1).padStart(2, "0"), String(d.getDate()).padStart(2, "0")].join("-");
 const formatDate = (value: string) => value.slice(5).replace("-", ".");
+/** "3박 4일". 날짜는 YYYY-MM-DD라 UTC로 읽어 서머타임 영향을 피한다. */
+const formatTripDuration = (start: string, end: string) => {
+  const nights = Math.max(0, Math.round((Date.parse(`${end}T00:00:00Z`) - Date.parse(`${start}T00:00:00Z`)) / 86400000));
+  return `${nights}박 ${nights + 1}일`;
+};
 
 /** 항공권 목록에서 넘어온 조건 → 조건 검색 칸. 유아는 좌석이 하나라도 있으면 좌석, 아니면 무릎으로 본다. */
 export function conditionFrom({ request, locations }: InitialCondition): Condition {
@@ -223,7 +228,9 @@ export function useConditionForm(
   const datesText = state.depart
     ? oneway
       ? formatDate(state.depart)
-      : `${formatDate(state.depart)} - ${state.return ? formatDate(state.return) : "귀국일 선택"}`
+      : state.return
+        ? `${formatDate(state.depart)} - ${formatDate(state.return)} (${formatTripDuration(state.depart, state.return)})`
+        : `${formatDate(state.depart)} - 귀국일 선택`
     : oneway
       ? "출발일을 선택해 주세요"
       : "출발일과 귀국일을 선택해 주세요";

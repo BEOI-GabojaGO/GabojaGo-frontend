@@ -108,7 +108,7 @@ export function SearchPanel({ initialCondition, conditionTab }: { initialConditi
 
   const placeholder =
     mode === "사주"
-      ? "생년월일과 선호하는 여행 스타일을 알려 주세요."
+      ? "생년월일과 선호하는 여행을 알려주세요."
       : isMobile
         ? "여행 조건을 자유롭게 말씀해 주세요."
         : "여행 조건(예산, 날짜, 특징, 스타일 등)을 자유롭게 말씀해 주세요.";
