@@ -4,6 +4,7 @@ body.login-open{overflow:hidden}
 @keyframes login-fade-out{from{opacity:1;transform:translateY(0)}to{opacity:0;transform:translateY(24px)}}
 @keyframes login-backdrop-in{from{opacity:0}to{opacity:1}}
 @keyframes login-backdrop-out{from{opacity:1}to{opacity:0}}
+@keyframes login-content-in{from{opacity:0;transform:translate3d(0,10px,0)}to{opacity:1;transform:translate3d(0,0,0)}}
 .auth-ui{
 --pink:#ff385c;
 /* Figma Sign In: 440 × 660 desktop/tablet dialog, 402 × 723 mobile page. */
@@ -67,9 +68,21 @@ body.login-open{overflow:hidden}
 @media(min-width:600px) and (prefers-reduced-motion:no-preference){
   .login-dialog[open]{animation:login-fade-in 240ms cubic-bezier(.22,1,.36,1) both}
   .login-dialog[open]::backdrop{animation:login-backdrop-in 240ms ease-out both}
+}
+/* 닫힘은 모바일 전체 화면에서도 흐려진다(1111 시안). */
+@media(prefers-reduced-motion:no-preference){
   .login-dialog[open].is-closing{animation:login-fade-out 180ms ease-in both}
   .login-dialog[open].is-closing::backdrop{animation:login-backdrop-out 180ms ease-in both}
   .login-dialog.is-closing{pointer-events:none}
+}
+/* 로그인 다이얼로그를 열거나 로그인↔회원가입을 바꾸면 내용이 70ms 간격으로 나타난다(1111 시안 is-entering). /login 페이지(section)는 제외. */
+@media(prefers-reduced-motion:no-preference){
+  dialog.login-dialog :is(.login-view,.signup-view)>*{animation:login-content-in 420ms cubic-bezier(.22,1,.36,1) var(--login-content-delay,0ms) both}
+  dialog.login-dialog :is(.login-view,.signup-view)>:nth-child(2){--login-content-delay:70ms}
+  dialog.login-dialog :is(.login-view,.signup-view)>:nth-child(3){--login-content-delay:140ms}
+  dialog.login-dialog :is(.login-view,.signup-view)>:nth-child(4){--login-content-delay:210ms}
+  dialog.login-dialog :is(.login-view,.signup-view)>:nth-child(5){--login-content-delay:280ms}
+  dialog.login-dialog :is(.login-view,.signup-view)>:nth-child(6){--login-content-delay:350ms}
 }
 
 /* 비밀번호 보기(시안 없음): 입력칸 오른쪽 안쪽의 눈 버튼. 누르는 동안만 보인다. */

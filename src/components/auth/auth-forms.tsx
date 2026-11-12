@@ -145,7 +145,8 @@ export function AuthForms({ initialView = "login", onSuccess, onClose }: AuthFor
   const signup = view === "signup";
 
   return (
-    <div className={signup ? "signup-view" : "login-view"}>
+    // key: 로그인↔회원가입을 바꿀 때 새로 그려 등장 애니메이션(auth.css)을 다시 돌린다.
+    <div key={view} className={signup ? "signup-view" : "login-view"}>
       <div className="login-dialog-header">
         <span className="brand">
           가보자 <span>GO</span>

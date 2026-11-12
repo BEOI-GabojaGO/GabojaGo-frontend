@@ -59,6 +59,35 @@ const TABS: { mode: Mode; id: string; label: string; icon: ReactNode }[] = [
 
 const SUGGESTIONS = ["가성비 좋은 일본 온천 여행", "아이와 함께 갈만한 동남아 여행", "혼자 떠나는 힐링 여행"];
 
+const CONTENT_ID: Record<Mode, string> = { AI: "search-content", 사주: "search-content", 조건: "condition-content", MBTI: "mbti-content" };
+const isTall = (mode: Mode) => mode === "조건" || mode === "MBTI";
+const TAB_MOTION = { duration: 420, easing: "cubic-bezier(.22,1,.36,1)" };
+
+/** 탭 전환 직전 상태. 바뀐 화면이 그려진 뒤(useLayoutEffect) 이 값에서 새 높이로 움직인다. */
+type TabTransition = { fromPanel: number; fromHero: number; fromContentTop: number; mobileEntry: boolean; ghost: HTMLElement | null };
+
+/** 나가는 탭 내용을 그 자리에 복제해 흐리게 지운다(시안 createTabContentGhost). id·name·포커스를 없애 접근성 트리에서 뺀다. */
+function createGhost(panel: HTMLElement, content: HTMLElement) {
+  const p = panel.getBoundingClientRect();
+  const r = content.getBoundingClientRect();
+  const ghost = content.cloneNode(true) as HTMLElement;
+  for (const node of [ghost, ...ghost.querySelectorAll<HTMLElement>("[id]")]) node.removeAttribute("id");
+  ghost.querySelectorAll("[name]").forEach((node) => node.removeAttribute("name"));
+  ghost.classList.add("tab-content-ghost");
+  ghost.setAttribute("aria-hidden", "true");
+  ghost.inert = true;
+  Object.assign(ghost.style, { left: `${r.left - p.left}px`, top: `${r.top - p.top}px`, width: `${r.width}px`, height: `${r.height}px` });
+  // MBTI 버튼 폭·여백은 #mbti-content 선택자로 정해지므로 id를 지운 복제본에는 계산값을 그대로 옮긴다.
+  const from = content.querySelector<HTMLElement>(".mbti-submit");
+  const to = ghost.querySelector<HTMLElement>(".mbti-submit");
+  if (from && to) {
+    const c = getComputedStyle(from);
+    Object.assign(to.style, { width: c.width, height: c.height, margin: c.margin, padding: c.padding, alignSelf: c.alignSelf });
+  }
+  panel.append(ghost);
+  return ghost;
+}
+
 const MBTI_TYPES = ["INTJ", "INTP", "INFJ", "INFP", "ISTJ", "ISTP", "ISFJ", "ISFP", "ENTJ", "ENTP", "ENFJ", "ENFP", "ESTJ", "ESTP", "ESFJ", "ESFP"];
 
 /** conditionTab: ?search=condition으로 오면 조건이 없어도 조건 검색 탭을 연다(항공권 목록에 조건 없이 들어온 경우). */
@@ -69,6 +98,9 @@ export function SearchPanel({ initialCondition, conditionTab }: { initialConditi
   const promptInput = useRef<HTMLTextAreaElement>(null);
   const tabRefs = useRef<(HTMLButtonElement | null)[]>([]);
   const tabList = useRef<HTMLDivElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
+  const transition = useRef<TabTransition | null>(null);
+  const animations = useRef<Animation[]>([]);
   const indicator = useRef<HTMLSpanElement>(null);
   const { show, dialog } = useInfoDialog();
   const { notify, toast } = useToast();
@@ -106,6 +138,53 @@ export function SearchPanel({ initialCondition, conditionTab }: { initialConditi
     return () => observer.disconnect();
   }, [activeIndex]);
 
+  // 탭 전환: 나가는 내용은 170ms 흐려지며 올라가고 새 내용은 아래에서 올라온다. 패널·히어로 높이는 420ms에 걸쳐 바뀐다.
+  // 모바일에서 짧은 탭 → 조건·MBTI는 패널을 clip-path로 펼치고 아래 본문이 따라 내려간다(시안 activateTab).
+  useLayoutEffect(() => {
+    const t = transition.current;
+    transition.current = null;
+    const panel = panelRef.current;
+    if (!t || !panel) return;
+    const hero = panel.closest<HTMLElement>(".hero")!;
+    const content = document.querySelector<HTMLElement>(".main-page .content");
+    const incoming = document.getElementById(CONTENT_ID[mode])!;
+    const list: Animation[] = [];
+    if (t.ghost) {
+      const ghost = t.ghost;
+      const out = ghost.animate([{ opacity: 1, transform: "translateY(0)" }, { opacity: 0, transform: "translateY(-6px)" }], { duration: 170, easing: "ease-out", fill: "forwards" });
+      out.finished.catch(() => {}).then(() => ghost.remove());
+      list.push(out, incoming.animate([{ opacity: 0, transform: "translateY(10px)" }, { opacity: 1, transform: "translateY(0)" }], { duration: 300, delay: 55, easing: "cubic-bezier(.22,1,.36,1)", fill: "backwards" }));
+    } else list.push(incoming.animate([{ opacity: 0.72 }, { opacity: 1 }], { duration: 200, easing: "ease-out" }));
+
+    const toPanel = panel.getBoundingClientRect().height;
+    const toHero = hero.getBoundingClientRect().height;
+    const reset = () => {
+      panel.style.overflow = hero.style.overflow = "";
+      panel.classList.remove("mobile-condition-entering");
+      content?.classList.remove("mobile-condition-following");
+    };
+    if (Math.abs(t.fromPanel - toPanel) >= 0.5 || Math.abs(t.fromHero - toHero) >= 0.5) {
+      let sized: Animation[];
+      if (t.mobileEntry && content) {
+        const radius = getComputedStyle(panel).borderRadius || "30px";
+        panel.style.overflow = "hidden";
+        panel.classList.add("mobile-condition-entering");
+        content.classList.add("mobile-condition-following");
+        sized = [
+          panel.animate([{ clipPath: `inset(0 0 ${Math.max(0, toPanel - t.fromPanel)}px 0 round ${radius})` }, { clipPath: `inset(0 0 0 0 round ${radius})` }], TAB_MOTION),
+          content.animate([{ transform: `translateY(${t.fromContentTop - content.getBoundingClientRect().top}px)` }, { transform: "translateY(0)" }], TAB_MOTION),
+        ];
+      } else {
+        panel.style.overflow = hero.style.overflow = "hidden";
+        sized = [panel.animate([{ height: `${t.fromPanel}px` }, { height: `${toPanel}px` }], TAB_MOTION), hero.animate([{ height: `${t.fromHero}px` }, { height: `${toHero}px` }], TAB_MOTION)];
+      }
+      list.push(...sized);
+      // 다음 전환이 cancel하면 그쪽이 정리하므로, 끝까지 간 경우에만 되돌린다.
+      void Promise.all(sized.map((a) => a.finished)).then(reset, () => {});
+    }
+    animations.current = list;
+  }, [mode]);
+
   const placeholder =
     mode === "사주"
       ? "생년월일과 선호하는 여행을 알려주세요."
@@ -114,7 +193,28 @@ export function SearchPanel({ initialCondition, conditionTab }: { initialConditi
         : "여행 조건(예산, 날짜, 특징, 스타일 등)을 자유롭게 말씀해 주세요.";
 
   function selectTab(index: number) {
-    setMode(TABS[index].mode);
+    const next = TABS[index].mode;
+    const panel = panelRef.current;
+    if (next !== mode && panel && !prefersReducedMotion()) {
+      animations.current.forEach((a) => a.cancel());
+      animations.current = [];
+      panel.querySelectorAll(".tab-content-ghost").forEach((ghost) => ghost.remove());
+      panel.style.overflow = "";
+      panel.classList.remove("mobile-condition-entering");
+      const hero = panel.closest<HTMLElement>(".hero")!;
+      hero.style.overflow = "";
+      const content = document.querySelector<HTMLElement>(".main-page .content");
+      content?.classList.remove("mobile-condition-following");
+      const contentChange = isTall(mode) !== isTall(next) || (isTall(mode) && isTall(next));
+      transition.current = {
+        fromPanel: panel.getBoundingClientRect().height,
+        fromHero: hero.getBoundingClientRect().height,
+        fromContentTop: content?.getBoundingClientRect().top ?? 0,
+        mobileEntry: isMobile && mode !== "조건" && isTall(next),
+        ghost: contentChange ? createGhost(panel, document.getElementById(CONTENT_ID[mode])!) : null,
+      };
+    }
+    setMode(next);
     // 모바일에서는 탭 줄이 가로로 스크롤되므로 고른 탭이 보이게 한다.
     tabRefs.current[index]?.scrollIntoView({ block: "nearest", inline: "nearest", behavior: prefersReducedMotion() ? "auto" : "smooth" });
   }
@@ -163,7 +263,7 @@ export function SearchPanel({ initialCondition, conditionTab }: { initialConditi
   );
 
   return (
-    <div className={`search-panel${condition ? " condition-mode" : ""}${mbti ? " mbti-mode" : ""}`}>
+    <div ref={panelRef} className={`search-panel${condition ? " condition-mode" : ""}${mbti ? " mbti-mode" : ""}`}>
       <div ref={tabList} className="search-tabs" role="tablist" aria-label="여행 검색 방식">
         <div className="tab-pair">{TABS.slice(0, 2).map((tab, i) => renderTab(tab, i))}</div>
         <div className="tab-pair">{TABS.slice(2).map((tab, i) => renderTab(tab, i + 2))}</div>
