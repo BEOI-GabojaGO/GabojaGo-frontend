@@ -51,7 +51,8 @@
   .hero h1 { font-size: 52px; line-height: 75px; font-weight: 700; }
   .hero-title-group > p { margin-left: 4px; font-size: 20px; line-height: 29px; }
   .primary-button { display: inline-flex; align-items: center; justify-content: center; padding: 18px 34px; background: var(--pink); border-radius: 20px; font-size: 14px; line-height: 20px; font-weight: 500; transition: background .18s; }
-  .primary-button:hover { background: #bc0044; }
+  .primary-button:hover { background: #e31c5a; }
+  .primary-button:active { background: #c8104f; }
 
   /* Horizontal lists */
   .collections { padding-top: 40px; display: flex; flex-direction: column; gap: 30px; padding-bottom: 120px; }
