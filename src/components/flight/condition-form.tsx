@@ -392,8 +392,9 @@ const regionFlag = (option: LocationOption) => LOCATION_REGIONS.find((region) =>
 /**
  * 4~5px 분홍 스크롤 막대(시안 go-scrollbar). 기본 막대는 CSS로 숨기고 target의 스크롤 위치·비율을 따라 그린다.
  * 그릴 때마다 다시 맞춘다(검색으로 목록 길이가 바뀌는 경우).
+ * pinned: 막대가 스크롤되는 요소 안에 있을 때(목록 조건 수정 서랍) 스크롤한 만큼 내려 화면에 붙여 둔다.
  */
-function GoScrollbar({ target }: { target: RefObject<HTMLElement | null> }) {
+export function GoScrollbar({ target, className = "go-scrollbar", pinned = false }: { target: RefObject<HTMLElement | null>; className?: string; pinned?: boolean }) {
   const track = useRef<HTMLDivElement>(null);
   const thumb = useRef<HTMLSpanElement>(null);
   useEffect(() => {
@@ -410,6 +411,7 @@ function GoScrollbar({ target }: { target: RefObject<HTMLElement | null> }) {
       const scrollable = content > viewport + 1;
       bar.style.visibility = scrollable ? "" : "hidden";
       if (!scrollable) return;
+      if (pinned) bar.style.transform = `translateY(${element.scrollTop}px)`;
       const size = Math.max(28, Math.min(height, (height * viewport) / content));
       handle.style.height = `${size}px`;
       handle.style.transform = `translateY(${(element.scrollTop / Math.max(1, content - viewport)) * (height - size)}px)`;
@@ -424,8 +426,8 @@ function GoScrollbar({ target }: { target: RefObject<HTMLElement | null> }) {
     };
   });
   return (
-    <div ref={track} className="go-scrollbar" aria-hidden="true">
-      <span ref={thumb} className="go-scrollbar-thumb" />
+    <div ref={track} className={className} aria-hidden="true">
+      <span ref={thumb} className={`${className}-thumb`} />
     </div>
   );
 }

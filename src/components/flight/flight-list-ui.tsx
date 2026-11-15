@@ -33,6 +33,8 @@ const TIME_SLOTS = [0, 4, 8, 12, 16, 20].map((start) => ({
   start,
   label: `${String(start).padStart(2, "0")}시 - ${String(start + 4).padStart(2, "0")}시`,
 }));
+/** 데스크톱 사이드바에서 숨기는 칸(1111 시안 departTimeOptions·returnTimeOptions): 가는편 20–24시, 오는편 00–04시. 시트는 6칸 모두. */
+const SIDEBAR_HIDDEN: Record<Leg, number> = { outbound: 20, inbound: 0 };
 
 export const FLAGS: Record<string, string> = {
   대한민국: "flag-korea.png",
@@ -151,13 +153,15 @@ function FilterGroups({
   };
   const animate = (event: { currentTarget: HTMLInputElement }) => playCheck([event.currentTarget], event.currentTarget.checked);
 
+  // 사이드바는 5칸만 보인다. 시트에서 고른 숨은 칸은 적용 중일 때만 사이드바에 남겨 풀 수 있게 한다.
+  const slotsOf = (leg: Leg) => (panel ? TIME_SLOTS : TIME_SLOTS.filter(({ start }) => start !== SIDEBAR_HIDDEN[leg] || value.times[leg].includes(start)));
   // 모두 선택 ↔ 모두 해제. 전부 체크한 상태와 아무것도 안 고른 상태는 결과가 같다(둘 다 전체).
   const allAirlines = airlines.length > 0 && airlines.every((name) => value.airlines.includes(name));
-  const allTimes = (leg: Leg) => TIME_SLOTS.every(({ start }) => value.times[leg].includes(start));
+  const allTimes = (leg: Leg) => slotsOf(leg).every(({ start }) => value.times[leg].includes(start));
   const selectAll = (group: "airline" | Leg, section: HTMLElement | null) => {
     const on = group === "airline" ? !allAirlines : !allTimes(group);
     if (group === "airline") onChange({ ...value, airlines: on ? [...airlines] : [] });
-    else onChange({ ...value, times: { ...value.times, [group]: on ? TIME_SLOTS.map(({ start }) => start) : [] } });
+    else onChange({ ...value, times: { ...value.times, [group]: on ? slotsOf(group).map(({ start }) => start) : [] } });
     if (section) playCheck(section.querySelectorAll("input"), on, true);
   };
   const title = (heading: ReactNode, group: "airline" | Leg, all: boolean) => (
@@ -235,7 +239,7 @@ function FilterGroups({
             allTimes(leg),
           )}
           <div className="check-list">
-            {TIME_SLOTS.map(({ start, label }) => (
+            {slotsOf(leg).map(({ start, label }) => (
               <label className="check-row" key={start} htmlFor={`${idPrefix}-${leg}-${start}`}>
                 <input
                   id={`${idPrefix}-${leg}-${start}`}
@@ -352,7 +356,9 @@ function FilterDrawer({
             초기화
           </button>
           <button className="close-filter" type="button" aria-label="필터 닫기" onClick={onClose}>
-            ×
+            <svg viewBox="0 0 12 12" aria-hidden="true">
+              <path d="M1 1l10 10M11 1 1 11" />
+            </svg>
           </button>
         </div>
         <FilterGroups value={draft} onChange={setDraft} airlines={airlines} legs={legs} idPrefix="panel" options={options} panel />
@@ -641,11 +647,21 @@ export function DateShiftStrip({
     syncEdges();
   }, [outboundDate, returnDate]);
 
-  const move = (direction: 1 | -1) => ref.current?.scrollBy({ left: direction * ref.current.clientWidth * 0.7 });
+  // 화살표: 띠 폭의 75%(최소 160px)씩 넘기고, 누른 화살표가 살짝 튀며 그 방향으로 밀린다(1111 시안 is-next-click).
+  const move = (direction: 1 | -1, button: HTMLButtonElement) => {
+    const box = ref.current;
+    if (!box) return;
+    box.scrollBy({ left: direction * Math.max(160, box.clientWidth * 0.75) });
+    const name = direction > 0 ? "is-next-click" : "is-previous-click";
+    button.classList.remove(name);
+    void button.offsetWidth;
+    button.classList.add(name);
+    setTimeout(() => button.classList.remove(name), 340);
+  };
 
   return (
     <nav className="date-strip" aria-label="여행 날짜별로 다시 검색">
-      <button className="date-arrow previous" type="button" aria-label="이전 날짜" disabled={edges.start} onClick={() => move(-1)}>
+      <button className="date-arrow previous" type="button" aria-label="이전 날짜" disabled={edges.start} onClick={(event) => move(-1, event.currentTarget)}>
         <img src="/flight/chevron-left.svg" alt="" />
       </button>
       <div className="date-options" ref={ref} onScroll={syncEdges}>
@@ -669,7 +685,7 @@ export function DateShiftStrip({
           ))}
         </div>
       </div>
-      <button className="date-arrow next" type="button" aria-label="다음 날짜" disabled={edges.end} onClick={() => move(1)}>
+      <button className="date-arrow next" type="button" aria-label="다음 날짜" disabled={edges.end} onClick={(event) => move(1, event.currentTarget)}>
         <img src="/flight/chevron-right.svg" alt="" />
       </button>
     </nav>
