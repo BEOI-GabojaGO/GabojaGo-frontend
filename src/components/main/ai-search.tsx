@@ -1,7 +1,7 @@
 /* eslint-disable @next/next/no-img-element -- API의 항공사 로고 URL과 디자인 원본 SVG를 그대로 쓴다. */
 // 클라이언트 컴포넌트 전용(React 훅 포함). 서버 컴포넌트에서는 import하지 않는다.
 import { useRouter } from "next/navigation";
-import { Fragment, useEffect, useRef, useState, type FormEvent, type KeyboardEvent, type ReactNode } from "react";
+import { Fragment, useCallback, useEffect, useLayoutEffect, useRef, useState, type FormEvent, type KeyboardEvent, type ReactNode } from "react";
 import { airlinesOf, FlightHeart } from "@/components/flight/flight-list-ui";
 import { saveSelectedTrip } from "@/components/flight/selected-trip";
 import { closeDialogAnimated, Img, isBackdropClick, prefersReducedMotion, useToast } from "@/components/main/main-ui";
@@ -108,6 +108,8 @@ export function useAiSearch() {
   const { notify, toast } = useToast();
   const router = useRouter();
   const headerTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const missingTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const followup = useRef<HTMLTextAreaElement>(null);
 
   function open() {
     const dialog = ref.current;
@@ -396,6 +398,91 @@ export function useAiSearch() {
     void send(text);
   }
 
+  /**
+   * 추가 입력창 높이를 내용에 맞춘다(최대 160px·모바일 126px, 1111 시안 resizeAiFollowupInput).
+   * 한 줄을 넘으면 is-multiline이 되고, 입력칸 아래 끝이 제자리에 있도록 바닥 영역 높이·아래 여백을 맞춘다.
+   */
+  const resizeFollowup = useCallback((instant = false) => {
+    const input = followup.current;
+    const form = input?.form;
+    const footer = form?.parentElement;
+    if (!input || !form || !footer) return;
+    const mobile = matchMedia("(max-width: 599px)").matches;
+    const previousBottom = form.getBoundingClientRect().bottom;
+    const lineHeight = parseFloat(getComputedStyle(input).lineHeight) || 20;
+    const maxHeight = mobile ? 126 : 160;
+    if (instant) input.style.transition = "none";
+    input.style.maxHeight = "none";
+    input.style.height = "auto";
+    const content = input.scrollHeight;
+    input.style.maxHeight = `${maxHeight}px`;
+    const target = Math.min(Math.max(content, lineHeight), maxHeight);
+    const multiline = target > lineHeight + 1;
+    form.classList.toggle("is-multiline", multiline);
+    input.style.height = `${target}px`;
+    input.style.overflowY = content > target + 1 ? "auto" : "hidden";
+    if (multiline) {
+      const style = getComputedStyle(footer);
+      const padding = (parseFloat(style.paddingTop) || 0) + (parseFloat(style.paddingBottom) || 0);
+      footer.style.height = `${Math.max(mobile ? 96 : 112, form.offsetHeight + padding)}px`;
+      requestAnimationFrame(() => {
+        const delta = form.getBoundingClientRect().bottom - previousBottom;
+        if (Math.abs(delta) < 0.5) return;
+        footer.style.paddingBottom = `${Math.max(0, (parseFloat(getComputedStyle(footer).paddingBottom) || 0) + delta)}px`;
+      });
+    } else {
+      footer.style.removeProperty("height");
+      footer.style.removeProperty("padding-bottom");
+    }
+    if (instant) requestAnimationFrame(() => input.style.removeProperty("transition"));
+  }, []);
+
+  useLayoutEffect(() => resizeFollowup(), [draft, resizeFollowup]);
+  useEffect(() => {
+    const onResize = () => resizeFollowup(true);
+    window.addEventListener("resize", onResize, { passive: true });
+    return () => window.removeEventListener("resize", onResize);
+  }, [resizeFollowup]);
+
+  /** 최신 조건 카드에서 빠졌거나 애매한 칸의 글자를 튀어 오르게 한다(1111 시안 highlightMissingAiSummary, 5초 뒤 해제). */
+  function highlightMissing() {
+    const summary = ref.current?.querySelector<HTMLElement>(".ai-turn.is-live .ai-trip-summary");
+    if (!summary) return null;
+    const cells = [...summary.querySelectorAll<HTMLElement>(":scope > div")];
+    cells.forEach((cell) => cell.classList.remove("is-missing"));
+    // 연달아 눌러도 애니메이션이 다시 돌도록 레이아웃을 한 번 확정한다.
+    void summary.offsetWidth;
+    cells.filter((cell) => cell.classList.contains("is-flagged")).forEach((cell) => cell.classList.add("is-missing"));
+    clearTimeout(missingTimer.current);
+    missingTimer.current = setTimeout(() => cells.forEach((cell) => cell.classList.remove("is-missing")), 5000);
+    return summary;
+  }
+
+  /**
+   * 검색 버튼(1111 시안: 비활성도 누를 수 있다).
+   * 최신 묶음에서 켜져 있으면 검색. 이전 묶음의 버튼이면 최신 묶음으로 데려간다(켜진 검색 버튼은 깜빡이고, 아니면 빠진 칸 강조).
+   * 최신 버튼이 꺼져 있으면 빠진 칸을 강조하고 토스트로 알려 준다.
+   */
+  function onSearchClick(live: boolean) {
+    if (live && canSearch) return void searchFlights();
+    const smooth: ScrollBehavior = prefersReducedMotion() ? "auto" : "smooth";
+    if (!live) {
+      const active = ref.current?.querySelector<HTMLElement>(".ai-turn.is-live .ai-search-flights:not([aria-disabled='true'])");
+      if (active) {
+        active.scrollIntoView({ behavior: smooth, block: "center" });
+        active.classList.remove("is-scroll-target");
+        void active.offsetWidth;
+        active.classList.add("is-scroll-target");
+        setTimeout(() => active.classList.remove("is-scroll-target"), 900);
+        return;
+      }
+      highlightMissing()?.scrollIntoView({ behavior: smooth, block: "center" });
+      return;
+    }
+    highlightMissing();
+    notify(missing.length ? `다음 조건을 입력해 주세요.\n${missing.join(" · ")}` : "필수 조건을 입력해 주세요.");
+  }
+
   async function submitFollowup(event: FormEvent) {
     event.preventDefault();
     if (await send(draft)) setDraft("");
@@ -408,6 +495,76 @@ export function useAiSearch() {
   // 빠졌거나 애매한 조건이 있으면 검색 버튼을 비활성으로 보여 주고 무엇을 정해야 하는지 알려 준다(1105 시안).
   const missing = turn && !search && !expired && !quotaExceeded ? missingLabels(turn) : [];
   const turns = groupTurns(messages);
+  // 버튼 줄·결과는 최신 조건 카드가 있는 묶음에 붙는다. 조건 카드가 아직 없으면 마지막 묶음에.
+  const liveTurn = lastCard >= 0 ? turns.findIndex((group) => group.some(({ index }) => index === lastCard)) : turns.length - 1;
+  const flightList = results && (
+    <div className="ai-flight-list" aria-label="추천 항공권">
+      {results.notice && <p className="ai-result-notice">{results.notice}</p>}
+      {results.items.slice(0, PAGE).map((item) => (
+        <AiFlightCard
+          key={item.key}
+          item={item}
+          onSelect={() => void selectTrip(item)}
+          heart={
+            <FlightHeart
+              className="ai-flight-heart"
+              // 편도는 inbound가 없어 그 항공편 하나를 담는다(위시리스트 편도 형식).
+              request={{
+                ...passengersOf(search!.conditions),
+                price: item.price,
+                stayMinutes: item.stayMinutes,
+                sameAirline: item.sameAirline,
+                outbound: item.outbound,
+                inbound: item.inbound,
+              }}
+              notify={notify}
+            />
+          }
+        />
+      ))}
+    </div>
+  );
+
+  /** 묶음 아래 버튼 줄. live: 최신 조건 묶음(실제 상태). 이전 묶음은 그때의 빠진 조건·준비 여부로 모양만 보여 준다. */
+  const actions = (live: boolean, labels: string[], ready: boolean) => (
+    <div className="ai-dialog-actions">
+      {labels.length > 0 && (
+        <p className="ai-missing-conditions" role={live ? "status" : undefined}>
+          항공권을 보려면 다음 조건을 입력해 주세요
+          {"\n"}
+          {labels.join(" · ")}
+        </p>
+      )}
+      {(ready || labels.length > 0) && (
+        <button className="ai-more-flights ai-search-flights" type="button" aria-disabled={!ready} title={ready ? undefined : "필수 조건을 입력해 주세요."} onClick={() => onSearchClick(live)}>
+          <span className="search-glyph" aria-hidden="true" />
+          <span className="ai-action-label-mobile">항공권 찾기</span>
+          <span className="ai-action-label-desktop">이 조건으로 항공권 찾기</span>
+        </button>
+      )}
+      {/* 조건 바꾸기는 아래 입력창으로 한다. 이 버튼은 대화·조건을 모두 비우고 처음부터 시작한다. */}
+      <button className="ai-new-chat" type="button" disabled={!messages.length || resetting || pending || searching} onClick={confirmReset}>
+        <svg className="ai-action-icon" aria-hidden="true" width="20" height="20" viewBox="0 0 20 20" fill="none">
+          <path d="M3.75 10A6.25 6.25 0 1 0 5.58 5.58" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+          <path d="M3.75 3.333V6.667H7.083" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+        <span className="ai-action-label-mobile">새 대화</span>
+        <span className="ai-action-label-desktop">새 대화 시작하기</span>
+      </button>
+      {live && results && (
+        <button className="ai-more-flights" type="button" onClick={() => void openFlightList()}>
+          <span className="search-glyph ai-action-label-desktop" aria-hidden="true" />
+          <svg className="ai-action-icon" aria-hidden="true" width="20" height="20" viewBox="0 0 20 20" fill="none">
+            <circle cx="8.75" cy="8.75" r="5.583" stroke="currentColor" strokeWidth="1.5" />
+            <path d="M12.708 12.708L16.667 16.667" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+          </svg>
+          <span className="ai-action-label-mobile">더 많은 항공권</span>
+          <span className="ai-action-label-desktop">더 많은 항공권 찾기</span>
+        </button>
+      )}
+    </div>
+  );
+
 
   const dialog = (
     <dialog
@@ -439,11 +596,16 @@ export function useAiSearch() {
             </div>
           )}
           {/* 질문 하나와 그 답변을 한 묶음(.ai-turn)으로 그린다. 두 번째 묶음부터 위에 구분선이 생긴다. */}
-          {turns.map((group, turnIndex) => (
-            <div key={turnIndex} className={`ai-turn${revealLast && turnIndex === turns.length - 1 ? " is-new is-revealing" : ""}`}>
+          {turns.map((group, turnIndex) => {
+            const live = turnIndex === liveTurn;
+            // 이전 조건 카드 묶음은 그때의 응답으로 안내·버튼 모양을 정한다(누르면 최신 묶음으로 데려간다).
+            const card = group.find(({ entry }) => hasCard(entry))?.entry;
+            const old = !live && card?.role === "ai" ? card.turn : null;
+            return (
+            <div key={turnIndex} className={`ai-turn${live ? " is-live" : ""}${revealLast && turnIndex === turns.length - 1 ? " is-new is-revealing" : ""}`}>
               {group.map(({ entry: message, index }) =>
                 message.role === "user" ? (
-                  <p key={index} className="ai-user-message">
+                  <p key={index} className={`ai-user-message${isEmojiOnly(message.text) ? " is-emoji-only" : ""}`}>
                     {message.text}
                   </p>
                 ) : (
@@ -462,11 +624,14 @@ export function useAiSearch() {
                   </Fragment>
                 ),
               )}
+              {live && results && flightList}
+              {live ? actions(true, missing, canSearch) : old && actions(false, missingLabels(old), readyToSearch(old))}
             </div>
-          ))}
+            );
+          })}
           {pending && (
             <div className="ai-turn is-thinking">
-              <p className="ai-user-message">{question}</p>
+              <p className={`ai-user-message${isEmojiOnly(question) ? " is-emoji-only" : ""}`}>{question}</p>
               {/* 답변 대기: 점 3개 말풍선(시안 .ai-thinking). ai-pending은 점검 스크립트가 대기 여부를 보는 표시다. */}
               <div className="ai-thinking ai-pending" role="status" aria-label="AI가 답변을 준비하고 있습니다">
                 <i aria-hidden="true">
@@ -491,74 +656,6 @@ export function useAiSearch() {
             </p>
           )}
         </div>
-        {results && (
-          <div className="ai-flight-list" aria-label="추천 항공권">
-            {results.notice && <p className="ai-result-notice">{results.notice}</p>}
-            {results.items.slice(0, PAGE).map((item) => (
-              <AiFlightCard
-                key={item.key}
-                item={item}
-                onSelect={() => void selectTrip(item)}
-                heart={
-                  <FlightHeart
-                    className="ai-flight-heart"
-                    // 편도는 inbound가 없어 그 항공편 하나를 담는다(위시리스트 편도 형식).
-                    request={{
-                      ...passengersOf(search!.conditions),
-                      price: item.price,
-                      stayMinutes: item.stayMinutes,
-                      sameAirline: item.sameAirline,
-                      outbound: item.outbound,
-                      inbound: item.inbound,
-                    }}
-                    notify={notify}
-                  />
-                }
-              />
-            ))}
-          </div>
-        )}
-        <div className="ai-dialog-actions">
-          {missing.length > 0 && (
-            <p className="ai-missing-conditions" role="status">
-              항공권을 보려면 다음 조건을 입력해 주세요
-              {"\n"}
-              {missing.join(" · ")}
-            </p>
-          )}
-          {(canSearch || missing.length > 0) && (
-            <button className="ai-more-flights" type="button" disabled={searching || !canSearch} onClick={() => void searchFlights()}>
-              <span className="search-glyph" aria-hidden="true" />
-              <span className="ai-action-label-mobile">항공권 찾기</span>
-              <span className="ai-action-label-desktop">이 조건으로 항공권 찾기</span>
-            </button>
-          )}
-          {/* 조건 바꾸기는 아래 입력창으로 한다. 이 버튼은 대화·조건을 모두 비우고 처음부터 시작한다. */}
-          <button
-            className="ai-new-chat"
-            type="button"
-            disabled={!messages.length || resetting || pending || searching}
-            onClick={confirmReset}
-          >
-            <svg className="ai-action-icon" aria-hidden="true" width="20" height="20" viewBox="0 0 20 20" fill="none">
-              <path d="M3.75 10A6.25 6.25 0 1 0 5.58 5.58" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-              <path d="M3.75 3.333V6.667H7.083" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-            <span className="ai-action-label-mobile">새 대화</span>
-            <span className="ai-action-label-desktop">새 대화 시작하기</span>
-          </button>
-          {results && (
-            <button className="ai-more-flights" type="button" onClick={() => void openFlightList()}>
-              <span className="search-glyph ai-action-label-desktop" aria-hidden="true" />
-              <svg className="ai-action-icon" aria-hidden="true" width="20" height="20" viewBox="0 0 20 20" fill="none">
-                <circle cx="8.75" cy="8.75" r="5.583" stroke="currentColor" strokeWidth="1.5" />
-                <path d="M12.708 12.708L16.667 16.667" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-              </svg>
-              <span className="ai-action-label-mobile">더 많은 항공권</span>
-              <span className="ai-action-label-desktop">더 많은 항공권 찾기</span>
-            </button>
-          )}
-        </div>
       </div>
       <div className="ai-dialog-footer">
         <form className="ai-followup-form" onSubmit={submitFollowup}>
@@ -566,12 +663,20 @@ export function useAiSearch() {
           <label className="sr-only" htmlFor="ai-followup-input">
             여행 조건 추가 입력
           </label>
-          <input
+          {/* 여러 줄 입력. 데스크톱 Enter는 보내기·Shift+Enter는 줄바꿈, 모바일 Enter는 줄바꿈(시안). 한글 조합 중 Enter는 무시. */}
+          <textarea
+            ref={followup}
             id="ai-followup-input"
+            rows={1}
             maxLength={MAX_MESSAGE}
             placeholder="여행 조건을 자유롭게 말씀해 주세요."
             value={draft}
             onChange={(event) => setDraft(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.nativeEvent.isComposing || event.key !== "Enter" || event.shiftKey || matchMedia("(max-width: 599px)").matches) return;
+              event.preventDefault();
+              event.currentTarget.form?.requestSubmit();
+            }}
           />
           <button type="submit" aria-label="추가 조건 보내기" disabled={pending}>
             <Img name="imgSendIcon.svg" />
@@ -584,6 +689,16 @@ export function useAiSearch() {
   );
 
   return { ask, dialog };
+}
+
+/** 그 응답만으로 검색할 준비가 됐는지(이전 묶음 버튼 모양용). 최신 묶음은 canSearch로 따로 판단한다. */
+const readyToSearch = (turn: ChatMessageResponse) => turn.state === "AWAITING_CONFIRMATION" && !turn.missingFields.length && !turn.ambiguousFields.length;
+
+/** 이모지만 쓴 메시지는 크게 보여 준다(1111 시안 isEmojiOnlyMessage). */
+function isEmojiOnly(value: string) {
+  const compact = value.replace(/[\s\u200d\ufe0f\ufe0e\u20e3]/gu, "");
+  if (!compact || /[\p{L}\p{N}]/u.test(compact)) return false;
+  return /[\p{Extended_Pictographic}\p{Emoji_Presentation}]/u.test(compact);
 }
 
 /** AI 답변 하나는 그때의 응답 전체(조건·누락·애매 항목)를 함께 보관한다. */

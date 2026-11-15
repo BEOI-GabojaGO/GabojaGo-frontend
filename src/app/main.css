@@ -115,20 +115,24 @@ dialog{border:0;border-radius:24px;padding:32px;max-width:540px;width:calc(100% 
 .ai-more-flights{background:var(--pink);color:#fff}.ai-more-flights:hover{background:#e31c5a}
 .ai-followup-form{display:flex;align-items:center;gap:12px;min-height:56px;margin-top:0;padding:10px 10px 10px 14px;border-radius:24px;background:#f6f6f6;transition:background-color .15s,box-shadow .15s}
 .ai-followup-form:hover{background:#fff;box-shadow:inset 0 0 0 1px var(--pink),0 4px 12px #00000012}
-.ai-followup-form>img{width:16px;height:16px;flex:none}.ai-followup-form input{min-width:0;width:100%;flex:1;border:0;outline:0;background:transparent;color:#333;font-size:14px;line-height:1.8}.ai-followup-form input::placeholder{color:#aaa}
+.ai-followup-form>img{width:16px;height:16px;flex:none}.ai-followup-form textarea{display:block;min-width:0;width:100%;flex:1;height:25px;min-height:25px;max-height:160px;padding:0;border:0;outline:0;resize:none;overflow-y:hidden;background:transparent;color:#333;font-family:inherit;font-size:14px;line-height:25px;transition:height .28s cubic-bezier(.22,1,.36,1)}.ai-followup-form textarea::placeholder{color:#aaa}
+.ai-followup-form.is-multiline{align-items:flex-end}.ai-followup-form.is-multiline>img{align-self:flex-start;margin-top:4px}.ai-followup-form.is-multiline button{align-self:flex-end}
+.ai-dialog-footer:has(.ai-followup-form.is-multiline){height:auto;min-height:112px;align-items:flex-end}
 .ai-followup-form button{display:flex;align-items:center;justify-content:center;width:36px;height:36px;flex:none;border-radius:12px;background:var(--pink)}.ai-followup-form button img{width:16px;height:16px}
 @media(min-width:700px){
   .ai-dialog{padding:0}
   .ai-dialog-header{height:64px;min-height:64px;padding:20px 30px}
   .ai-dialog-content{position:absolute;top:0;right:30px;bottom:30px;left:30px;flex:none;padding-top:64px;padding-bottom:94px}
-  .ai-dialog-footer{position:absolute;bottom:0;left:0;right:0;height:112px;padding:36px 60px 20px}
+  .ai-dialog-footer{position:absolute;bottom:0;left:0;right:0;height:112px;padding:36px 80px 20px;transition:padding-left .28s cubic-bezier(.22,1,.36,1),padding-right .28s cubic-bezier(.22,1,.36,1)}
+  .ai-dialog-footer:has(.ai-followup-form:hover),.ai-dialog-footer:has(.ai-followup-form:active),.ai-dialog-footer:has(.ai-followup-form:focus-within){padding-left:60px;padding-right:60px}
   .ai-flight-route{padding-inline:20px}
 }
 @media(min-width:700px) and (max-width:1199px){
   .ai-dialog{width:580px;height:800px}
   .ai-dialog-header{height:84px;min-height:84px;padding:30px}
   .ai-dialog-content{top:0;right:30px;bottom:30px;left:30px;padding-top:84px;padding-bottom:94px}
-  .ai-dialog-footer{padding:36px 30px 20px}
+  .ai-dialog-footer{padding:36px 50px 20px}
+  .ai-dialog-footer:has(.ai-followup-form:hover),.ai-dialog-footer:has(.ai-followup-form:active),.ai-dialog-footer:has(.ai-followup-form:focus-within){padding-left:30px;padding-right:30px}
   .ai-user-message{font-size:14px;line-height:1.8}
   .ai-answer{font-size:14px;line-height:1.8}
   .ai-trip-summary strong{font-size:14px;line-height:17px}
@@ -164,26 +168,27 @@ dialog{border:0;border-radius:24px;padding:32px;max-width:540px;width:calc(100% 
   .ai-trip-summary strong{font-size:14px;line-height:17px}
   .ai-flight-list{gap:10px}
   .ai-flight-card{position:relative;display:block;width:100%;height:182px;min-height:182px;padding:20px;border:1px solid #eee;border-radius:20px;background:#fff;box-shadow:none;overflow:hidden}
-  .ai-flight-card:hover{border-color:var(--pink);box-shadow:0 4px 12px #0000000f}
+  .ai-flight-card:active{transform:translate3d(0,1px,0) scale(.985);border-color:#d2d2d2;background:#fafafa;box-shadow:inset 0 2px 5px rgba(0,0,0,.08),0 1px 4px rgba(0,0,0,.035);transition:transform 110ms cubic-bezier(.32,0,.67,0),border-color 110ms ease,box-shadow 110ms ease,background-color 110ms ease}
+  .ai-flight-card:hover{border-color:#ccc;box-shadow:0 4px 12px rgba(0,0,0,.035);transform:none}
   .ai-flight-leg{position:relative;display:block}
-  .ai-airline-logo{position:absolute;top:0;right:54px;width:24px;height:24px}
-  .ai-airline{position:absolute;top:0;right:0;width:44px;min-width:44px}
-  .ai-airline strong{font-size:12px;line-height:14px}
-  .ai-airline small{font-size:10px;line-height:12px}
+  .ai-airline-logo{position:absolute;top:0;right:80px;width:22px;height:22px;border-radius:7px;object-fit:contain}
+  .ai-airline{position:absolute;top:0;right:0;width:72px;min-width:72px}
+  .ai-airline strong{display:block;width:72px;overflow:hidden;color:#333;font-size:14px;font-weight:500;line-height:20px;text-overflow:ellipsis;white-space:nowrap}
+  .ai-airline small{display:block;width:72px;overflow:hidden;color:#888;font-size:12px;line-height:normal;text-overflow:ellipsis;white-space:nowrap}
   .ai-flight-legs{position:absolute;top:20px;right:20px;left:20px;gap:8px}
-  .ai-flight-route{position:relative;width:116px;height:67px;padding:0;grid-template-columns:40px 12px 40px;grid-template-rows:17px 14px;column-gap:12px;row-gap:4px;text-align:left}
-  .ai-flight-route>strong{font-size:14px;line-height:17px;font-weight:500;text-align:center}
-  .ai-flight-route>strong:nth-of-type(2),.ai-destination-code{text-align:center}
-  .ai-flight-route>span{position:relative;grid-column:2;grid-row:1/3;align-self:start;width:12px;height:17px}
-  .ai-flight-route>span::before{content:'';position:absolute;top:8px;left:0;width:12px;height:1px;background:#ccc}
+  .ai-flight-route{position:relative;width:128px;height:67px;padding:0;grid-template-columns:42px 10px 42px;grid-template-rows:20px 14px;column-gap:12px;row-gap:4px;text-align:left}
+  .ai-flight-route>strong{font-size:16px;line-height:20px;font-weight:500;text-align:left}
+  .ai-flight-route>strong:nth-of-type(2),.ai-destination-code{text-align:left}
+  .ai-flight-route>span{position:relative;grid-column:2;grid-row:1/3;align-self:start;width:10px;height:20px}
+  .ai-flight-route>span::before{content:'';position:absolute;top:10px;left:0;width:10px;height:1px;background:#dedede}
   .ai-route-plane{display:none}
-  .ai-flight-route>span small{position:absolute;top:48px;left:-52px;width:max-content;font-size:12px;line-height:14px;color:#888}
+  .ai-flight-route>span small{position:absolute;top:48px;left:-54px;width:max-content;font-size:12px;line-height:normal;color:#888}
   .ai-flight-route>small{font-size:12px;line-height:14px;text-align:left}
-  .ai-flight-price{position:absolute;right:50px;bottom:20px;font-size:16px;line-height:20px}
-  .ai-flight-price small{font-size:12px;line-height:14px}
+  .ai-flight-price{position:absolute;right:50px;bottom:20px;font-size:18px;font-weight:500;line-height:normal}
+  .ai-flight-price small{margin-left:0;font-size:12px;line-height:normal}
   .ai-flight-heart{position:absolute;right:20px;bottom:20px;width:20px;height:20px}
   .ai-flight-heart img{width:20px;height:20px}
-  .ai-dialog-actions{width:100%;height:48px;flex:none;gap:10px;margin-top:30px}
+  .ai-dialog-actions{width:100%;height:auto;min-height:48px;flex:none;gap:10px;row-gap:20px}
   .ai-dialog-actions button{height:48px;min-height:48px;gap:4px;padding:14px 20px 14px 16px;border-radius:16px;font-size:14px;line-height:20px;font-weight:500}
   .ai-action-icon{display:block;width:20px;height:20px;flex:0 0 20px}
   .ai-action-label-mobile{display:inline}.ai-action-label-desktop{display:none}
@@ -192,8 +197,8 @@ dialog{border:0;border-radius:24px;padding:32px;max-width:540px;width:calc(100% 
 }
 @media(max-width:599px){
   .ai-dialog-header h2{font-size:18px;line-height:24px}
-  .ai-trip-summary span{font-size:11px}.ai-trip-summary strong{font-size:12px;line-height:17px}
-  .ai-followup-form input{font-size:12px}
+  .ai-trip-summary span{font-size:11px}.ai-trip-summary strong{font-size:14px;line-height:20px}
+  .ai-followup-form textarea{font-size:12px}
 }
 @media(max-width:374px){
   .ai-trip-summary{grid-template-columns:1fr 1fr;padding:16px;gap:14px 8px}
@@ -400,24 +405,31 @@ footer{position:relative;z-index:3}
 .ai-user-message{line-height:30px;scroll-margin-top:76px}
 @media(min-width:700px){.ai-answer,.ai-answer p{line-height:1.8}}
 
-/* 답변 대기: 점 3개 말풍선. */.ai-thinking{display:flex;align-self:flex-start;align-items:center;justify-content:center;width:65px;height:46px;margin-top:8px;border-radius:24px;background:#f6f6f6;animation:ai-thinking-breathe 1.8s cubic-bezier(.22,1,.36,1) infinite}
+/* 답변 대기: 점 3개 말풍선. */.ai-thinking{display:flex;align-self:flex-start;align-items:center;justify-content:center;width:65px;height:46px;margin-top:24px;border-radius:24px;background:#f6f6f6;animation:ai-thinking-breathe 1.8s cubic-bezier(.22,1,.36,1) infinite}
 .ai-thinking i{display:inline-flex;align-items:center;gap:5px;font-style:normal}
 .ai-thinking b{display:block;width:6px;height:6px;border-radius:50%;background:var(--pink);animation:ai-thinking-dot 1s cubic-bezier(.22,1,.36,1) infinite}
 .ai-thinking b:nth-child(2){animation-delay:.16s}
 .ai-thinking b:nth-child(3){animation-delay:.32s}
 
 /* 부족한 조건 안내 + 비활성 검색 버튼. */.ai-dialog-actions{flex-wrap:wrap;row-gap:22px}
-.ai-missing-conditions{flex:0 0 100%;margin:0;color:#333;font-size:16px;font-weight:400;line-height:1.8;text-align:left;white-space:pre-line}
-.ai-more-flights:disabled{background:#eee;color:#aaa;cursor:not-allowed;box-shadow:none}
-.ai-more-flights:disabled:hover{background:#eee}
+.ai-missing-conditions{flex:0 0 100%;margin:0 0 20px;color:#333;font-size:16px;font-weight:400;line-height:1.8;text-align:left;white-space:pre-line}
+/* 1111 시안: 비활성 검색 버튼도 누를 수 있다(aria-disabled). 누르면 빠진 칸을 강조하거나 켜진 버튼을 깜빡인다(ai-search.tsx onSearchClick). */
+.ai-more-flights[aria-disabled="true"]{background:#eee;color:#aaa;cursor:pointer;box-shadow:none}.ai-more-flights[aria-disabled="true"]:hover,.ai-more-flights[aria-disabled="true"]:active{background:#e7e7e7;color:#999}
+.ai-more-flights.is-scroll-target{animation:ai-more-flights-target 900ms ease-out both}
+.ai-trip-summary>div.is-missing>span{color:var(--pink);animation:ai-missing-label-bounce 920ms cubic-bezier(.22,1,.36,1) both}
+.ai-trip-summary>div.is-missing>strong{animation:ai-missing-label-bounce 920ms cubic-bezier(.22,1,.36,1) both}
+@media(prefers-reduced-motion:reduce){.ai-trip-summary>div.is-missing>:is(span,strong),.ai-more-flights.is-scroll-target{animation:none}}
+/* 1111 시안: 버튼 줄·항공권이 대화 묶음 안에 붙는다. 묶음 gap(16) + 4 = 시안 위 여백 20. 이모지만 쓴 메시지는 크게. */
+.ai-turn>:is(.ai-flight-list,.ai-dialog-actions){margin-top:4px}
+.ai-user-message.is-emoji-only{font-size:3em;line-height:1.1;overflow-wrap:normal}
 @media(min-width:700px) and (max-width:1199px){.ai-missing-conditions{font-size:14px}}
 
-/* 토스트는 대화창 안, 입력칸 위에 띄운다. */.ai-dialog .toast{position:absolute;bottom:126px;z-index:30;max-width:calc(100% - 48px);text-align:center;white-space:normal}
+/* 토스트는 대화창 안, 입력칸 위에 띄운다. */.ai-dialog .toast{position:absolute;bottom:126px;z-index:30;max-width:calc(100% - 48px);text-align:center;white-space:pre-line;line-height:1.6}
 
 /* 항공권 카드: 올리면 1px 떠오르고 테두리가 진해진다. */.ai-flight-card{transition:border-color .2s,box-shadow .2s,transform .2s}
 .ai-flight-card:hover{border-color:#ccc;box-shadow:0 4px 12px rgba(0,0,0,.035);transform:translateY(-1px)}
 .ai-followup-form button:hover{background:#e31c5a}
-.ai-followup-form:hover,.ai-followup-form:active,.ai-followup-form:focus-within{background:#fff;box-shadow:inset 0 0 0 1px var(--pink),0 8px 24px #00000024}
+.ai-followup-form:hover,.ai-followup-form:active,.ai-followup-form:focus-within{background:#fff;box-shadow:inset 0 0 0 .6px var(--pink),0 8px 24px #00000024}
 
 /* 열 때(is-entering) 차례로 떠오른다. */.ai-dialog.is-entering :is(.ai-dialog-header>*,.ai-dialog-content>*,.ai-dialog-footer>form){opacity:0;animation:ai-dialog-content-in 420ms cubic-bezier(.22,1,.36,1) var(--ai-entry-delay,0ms) both}
 .ai-dialog.is-entering .ai-dialog-header>.ai-dialog-close{--ai-entry-delay:55ms}
@@ -476,9 +488,28 @@ footer{position:relative;z-index:3}
   .ai-answer p{margin-top:8px}
   .ai-followup-form{min-height:52px;padding:8px 8px 8px 14px;border-radius:20px;gap:6px;transition:background-color .15s,box-shadow .15s,padding .24s cubic-bezier(.22,1,.36,1),border-radius .24s cubic-bezier(.22,1,.36,1)}
   .ai-dialog-footer:has(.ai-followup-form:hover) .ai-followup-form,.ai-dialog-footer:has(.ai-followup-form:active) .ai-followup-form,.ai-dialog-footer:has(.ai-followup-form:focus-within) .ai-followup-form{padding:10px 10px 10px 16px;border-radius:22px}
-  .ai-followup-form input{font-size:14px;line-height:20px;height:20px;padding:0}
+  .ai-followup-form textarea{font-size:14px;font-weight:400;line-height:20px;height:20px;min-height:20px;padding:0;max-height:126px}
+  .ai-followup-form textarea::placeholder{font-size:14px;font-weight:400;line-height:20px}
 }
 
+/* 1111 시안: 마지막 버튼 아래 스크롤 여유 300px, 하트 누르는 영역(데스크톱 36·태블릿 28·600–699 24·모바일 20). */.ai-dialog-content{padding-bottom:300px}
+@media(max-width:699px){.ai-dialog-content{padding-bottom:300px}}
+.ai-flight-card{grid-template-columns:40px 90px 300px minmax(0,1fr) 36px}
+.ai-flight-heart{display:grid;width:36px;height:36px;padding:0;border-radius:50%;background:transparent;place-items:center}
+.ai-flight-heart:hover{background:#f7f7f7}
+@media(min-width:700px) and (max-width:1199px){.ai-flight-heart{width:28px;height:28px}}
+@media(min-width:600px) and (max-width:699px){.ai-flight-heart{width:24px;height:24px}}
+@media(max-width:599px){.ai-flight-heart{width:20px;height:20px}}
+/* 1111 시안: 새 답변의 항공권(360·580·800ms)·버튼 줄(안내 1020, 버튼 1140·1260ms)도 차례로 나타난다. */.ai-turn.is-revealing>.ai-flight-list>.ai-flight-card{opacity:0;animation:ai-dialog-content-in 760ms cubic-bezier(.22,1,.36,1) var(--ai-flight-delay,0ms) both}
+.ai-turn.is-revealing>.ai-flight-list>.ai-flight-card:nth-child(1){--ai-flight-delay:360ms}
+.ai-turn.is-revealing>.ai-flight-list>.ai-flight-card:nth-child(2){--ai-flight-delay:580ms}
+.ai-turn.is-revealing>.ai-flight-list>.ai-flight-card:nth-child(3){--ai-flight-delay:800ms}
+.ai-turn.is-revealing>.ai-dialog-actions>:is(.ai-missing-conditions,button){opacity:0;animation:ai-dialog-content-in 420ms cubic-bezier(.22,1,.36,1) var(--ai-action-item-delay,0ms) both}
+.ai-turn.is-revealing>.ai-dialog-actions>.ai-missing-conditions{--ai-action-item-delay:1020ms}
+.ai-turn.is-revealing>.ai-dialog-actions>button:nth-of-type(1){--ai-action-item-delay:1140ms}
+.ai-turn.is-revealing>.ai-dialog-actions>button:nth-of-type(2){--ai-action-item-delay:1260ms}
+@keyframes ai-missing-label-bounce{0%,100%{transform:translateY(0)}22%{transform:translateY(-4px)}48%{transform:translateY(1px)}72%{transform:translateY(-1px)}}
+@keyframes ai-more-flights-target{0%{box-shadow:0 0 0 0 rgba(255,56,92,0)}35%{box-shadow:0 0 0 5px rgba(255,56,92,.18)}100%{box-shadow:0 0 0 0 rgba(255,56,92,0)}}
 /* ---------- 1105 시안: AI 카드 하트(테두리·채움 두 장 + 터짐) ---------- */.ai-flight-heart{position:relative;overflow:visible;transform-origin:center}
 .ai-flight-heart:hover{background:#f7f7f7;border-radius:50%}
 .ai-heart-icon{position:relative;z-index:1;display:block;width:22px;height:22px;transform-origin:center}
@@ -525,7 +556,7 @@ footer{position:relative;z-index:3}
 .search-panel.mobile-condition-entering{will-change:clip-path}.content.mobile-condition-following{will-change:transform}
 
 /* AI 편도 카드는 한 줄이라 시안 원래 높이(900px대 120px, 모바일 117px)로 돌린다. */@media(min-width:700px) and (max-width:1199px){.ai-flight-card.is-one-way{height:120px;min-height:120px}}
-@media(max-width:699px){.ai-flight-card.is-one-way{height:117px;min-height:117px}}
+@media(max-width:699px){.ai-flight-card.is-one-way{height:110px;min-height:110px}}
 
 /* AI 왕복 카드는 눌러서 최종 선택 요약으로 간다. */.ai-flight-card[role=button]{cursor:pointer}
 .ai-flight-card[role=button]:focus-visible{outline:2px solid var(--pink);outline-offset:2px}
