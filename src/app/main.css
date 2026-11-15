@@ -498,6 +498,7 @@ footer{position:relative;z-index:3}
 .ai-flight-heart.is-activating .ai-heart-burst::before{animation:ticket-heart-sparks 520ms cubic-bezier(.22,1,.36,1) both}
 @media(max-width:699px){.ai-heart-icon{width:20px;height:20px}}
 @media(prefers-reduced-motion:reduce){.ai-flight-heart.is-activating,.ai-flight-heart.is-deactivating,.ai-flight-heart :is(.ai-heart-stroke,.ai-heart-fill,.ai-heart-burst,.ai-heart-burst::before){animation:none!important}.ai-heart-burst{display:none}}
+/* 1105 하트 블록의 position:relative가 태블릿·모바일 위치(오른쪽 아래)를 덮어 하트가 카드 왼쪽 위로 가던 문제. 시안처럼 뒤에서 다시 둔다. */@media(max-width:1199px){.ai-flight-heart{position:absolute;right:20px;bottom:20px}}
 }
 
 /* 로그인 후 헤더(둘러보기 시안 "♡ 위시리스트 · 닉네임님 ▾"). 메인 헤더는 밝아서 글자·아이콘을 진하게 쓴다. */.main-page .account-nav{display:flex;align-items:center}
