@@ -22,7 +22,8 @@ export default async function CountryExplorePage(props: PageProps<"/explore/[cou
       <ExploreHeader overHero />
       <section className="hero" aria-labelledby="page-title">
         {/* 1111 시안: 사진은 화면에 고정되고 본문이 그 위로 올라온다. */}
-        <HeroSlides images={heroImages(country)} />
+        {/* 전용 사진이 없는 나라는 관광명소 사진을 이어 붙인다. */}
+        <HeroSlides images={heroImages(country)} placesOf={country.heroes ? undefined : country.code} />
         <div className="hero-shade" />
         <div className="hero-content page-container">
           <div className="hero-title-group">
