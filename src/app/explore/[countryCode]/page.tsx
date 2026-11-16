@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { CountryExplore } from "@/components/explore/country-explore";
 import { ExploreHeader } from "@/components/explore/explore-header";
 import { HeroSlides } from "@/components/explore/hero-slides";
+import { SiteFooter } from "@/components/main/footer-nav";
 import { findCountry, heroImages } from "@/lib/explore";
 import "../explore.css";
 
@@ -36,6 +37,7 @@ export default async function CountryExplorePage(props: PageProps<"/explore/[cou
       <main className="collections page-container" aria-label={`${country.nameKo} 여행 정보`}>
         <CountryExplore countryCode={country.code} countryName={country.nameKo} />
       </main>
+      <SiteFooter />
     </div>
   );
 }

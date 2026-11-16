@@ -4,7 +4,7 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { prefersReducedMotion } from "@/components/main/main-ui";
 
-/** 둘러보기 디자인의 가로 목록. 화살표는 카드 한 장씩 이동하고, ←/→ 키는 포커스된 목록의 기본 스크롤을 쓴다. */
+/** 둘러보기 디자인의 가로 목록. 화살표 버튼과 목록에 포커스한 뒤 ←/→ 키는 카드 한 장씩, Home/End는 처음·끝으로 간다(1111 시안). */
 export function Carousel({ id, title, children }: { id: string; title: string; children: ReactNode }) {
   const track = useRef<HTMLDivElement>(null);
   const [edges, setEdges] = useState({ start: true, end: false });
@@ -47,7 +47,25 @@ export function Carousel({ id, title, children }: { id: string; title: string; c
           </button>
         </div>
       </div>
-      <div ref={track} className="card-track" id={`${id}-track`} tabIndex={0} role="region" aria-label={`${title} 카드 목록`}>
+      <div
+        ref={track}
+        className="card-track"
+        id={`${id}-track`}
+        tabIndex={0}
+        role="region"
+        aria-label={`${title} 카드 목록`}
+        onKeyDown={(event) => {
+          if (event.target !== event.currentTarget) return;
+          if (event.key === "ArrowLeft" || event.key === "ArrowRight") {
+            event.preventDefault();
+            scrollByCard(event.key === "ArrowLeft" ? -1 : 1);
+          } else if (event.key === "Home" || event.key === "End") {
+            event.preventDefault();
+            const element = event.currentTarget;
+            element.scrollTo({ left: event.key === "Home" ? 0 : element.scrollWidth, behavior: prefersReducedMotion() ? "instant" : "smooth" });
+          }
+        }}
+      >
         {children}
       </div>
     </section>
