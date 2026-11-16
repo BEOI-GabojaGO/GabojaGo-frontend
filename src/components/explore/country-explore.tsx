@@ -62,8 +62,9 @@ export function CountryExplore({ countryCode, countryName }: { countryCode: stri
   // 묶을 때는 id 순(= 데이터셋 문서 순서, V9 시드)으로 정렬한다. 도시 순서대로 이으면 문서 순서와 달라진다.
   const groups =
     countryCode === "JP"
-      ? cities.map((city) => ({
-          id: `attractions-${city.cityCode}`,
+      ? cities.map((city, index) => ({
+          // 히어로 "가보자 GO"(#attractions)가 첫 도시 줄로 오게 첫 줄만 id를 attractions로 둔다.
+          id: index === 0 ? "attractions" : `attractions-${city.cityCode}`,
           title: `${cities.length === 1 ? countryName : city.cityNameKo} 관광명소`,
           places: city.attractions,
         }))
@@ -77,7 +78,7 @@ export function CountryExplore({ countryCode, countryName }: { countryCode: stri
 
   return (
     <>
-      {/* 히어로의 "가보자 GO" 버튼이 첫 줄(#foods)로 이동한다. */}
+      {/* 히어로의 "가보자 GO" 버튼은 관광명소(#attractions)로 이동한다(1111 시안). */}
       {foods.length === 0 ? (
         <p className="status" id="foods">
           아직 등록된 음식이 없습니다.
@@ -88,7 +89,11 @@ export function CountryExplore({ countryCode, countryName }: { countryCode: stri
         </Carousel>
       )}
 
-      {groups.length === 0 && <p className="status">아직 등록된 관광명소가 없습니다.</p>}
+      {groups.length === 0 && (
+        <p className="status" id="attractions">
+          아직 등록된 관광명소가 없습니다.
+        </p>
+      )}
       {groups.map((group) => (
         <Carousel key={group.id} id={group.id} title={group.title}>
           {group.places.map((place) => card("attraction", place))}

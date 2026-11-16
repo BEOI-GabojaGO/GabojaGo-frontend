@@ -27,35 +27,48 @@
   .page-container { margin-inline: var(--page-gutter); }
 
   /* Header */
-  .site-header { position: absolute; top: 0; left: 0; width: 100%; height: 54px; z-index: 2; background: rgb(0 0 0 / 10%); color: white; }
-  .header-inner { height: 100%; display: flex; align-items: center; justify-content: space-between; gap: 16px; }
-  .brand-group { display: flex; align-items: center; gap: 14px; flex-shrink: 0; }
-  .back-button { width: 16px; height: 30px; display: grid; place-items: center; }
-  .back-button img { transform: rotate(180deg); }
-  .brand { font-size: 18px; line-height: 26px; font-weight: 700; white-space: nowrap; }
+  /* 1111 시안: 화면에 고정된 흐린 헤더. 첫 목록이 밑으로 오면 밝은 헤더(is-light, explore-header.tsx useHeroHeader). -webkit-을 앞에(Tailwind 최적화). */
+  .site-header { position: fixed; top: 0; left: 0; width: 100%; height: 54px; z-index: 32; background: rgb(0 0 0 / 10%); -webkit-backdrop-filter: blur(15px); backdrop-filter: blur(15px); box-shadow: 0 2px 2px rgb(0 0 0 / 6%); color: white; transition: background-color 280ms ease, color 280ms ease, box-shadow 280ms ease; }
+  .site-header.is-light { background: rgba(255,255,255,.1); color: #101828; box-shadow: 0 2px 2px #0000000f; }
+  .site-header .brand, .site-header .brand span { transition: color 90ms ease; }
+  .site-header .back-button img, .site-header .account-nav img { transition: filter 180ms ease, opacity 180ms ease; }
+  .site-header.is-light .back-button img, .site-header.is-light .account-nav img { filter: brightness(0) saturate(100%); opacity: .78; }
+  .site-header.is-light .wishlist-button { border-color: rgb(0 0 0 / 10%); }
+  .header-inner { height: 100%; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+  .brand-group { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+  .back-button { width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; flex: none; }
+  .back-button img { display: block; width: 20px; height: 20px; }
+  .brand { font-size: 18px; line-height: 22px; font-weight: 700; white-space: nowrap; }
   .brand span { color: var(--pink); }
   .account-nav { display: flex; align-items: center; }
   .wishlist-button { display: flex; align-items: center; gap: 4px; border-radius: 12px; padding: 8px 14px 8px 10px; border: 1px solid rgb(255 255 255 / 20%); font-size: 14px; line-height: 20px; font-weight: 500; }
   .wishlist-button img { margin: 0 6px 0 0; }
   .user-button { padding: 8px 24px; font-size: 14px; line-height: 20px; font-weight: 500; white-space: nowrap; display: flex; align-items: center; gap: 8px; }
-  /* 로그아웃: 메인 시안의 분홍 "로그인". 사진 위라 모바일도 알약 모양을 유지하고 아이콘은 쓰지 않는다. */
-  .login-button { border-radius: 12px; padding: 8px 14px; background: var(--pink); font-size: 14px; line-height: 20px; font-weight: 500; white-space: nowrap; }
-  .login-icon { display: none; }
+  /* 로그아웃: 분홍 "로그인"(1111 시안). 모바일은 분홍 글자 + 아이콘. */
+  .login-button { display: flex; align-items: center; justify-content: center; height: 36px; border-radius: 12px; padding: 8px 14px; background: var(--pink); color: #fff; font-size: 14px; line-height: 20px; font-weight: 500; white-space: nowrap; }
+  .login-icon { display: none; flex: none; }
+  /* 헤더 내용 폭: 메인·목록·예약하기와 같게(1200–1499는 좌우 60, 1500 이상은 가운데 1440). */
+  @media (min-width: 1200px) and (max-width: 1499px) { .header-inner { max-width: calc(100% - 120px); margin-left: auto; margin-right: auto; } }
+  @media (min-width: 1500px) { .header-inner { max-width: 1440px; margin-left: auto; margin-right: auto; } }
 
   /* Full-width hero */
-  .hero { position: relative; height: 520px; color: #fff; overflow: hidden; background: #1f2937; }
-  .hero-photo { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center; }
-  .hero-shade { position: absolute; inset: 0; background: linear-gradient(90deg, rgb(0 0 0 / 60%) 0%, rgb(0 0 0 / 40%) 40%, transparent 80%); }
-  .hero-content { position: absolute; top: 277px; left: 0; right: 0; display: flex; flex-direction: column; align-items: flex-start; gap: 40px; }
+  /* 1111 시안: 사진·그늘은 화면에 고정되고 본문(.collections, 흰 바탕)이 그 위로 올라온다. 사진은 6.5초마다 1.5초 겹쳐 바뀐다(hero-slides.tsx). */
+  .hero { position: relative; z-index: 0; height: 520px; color: #fff; overflow: hidden; }
+  .hero-slides { position: fixed; z-index: 0; top: 0; left: 0; width: 100%; height: 520px; overflow: hidden; pointer-events: none; background: #1f2937; }
+  .hero-photo { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center; opacity: 0; transition: opacity 1.5s ease-in-out; will-change: opacity; }
+  .hero-photo.is-active { opacity: 1; }
+  .hero-shade { position: fixed; z-index: 1; top: 0; left: 0; width: 100%; height: 520px; background: linear-gradient(90deg, rgb(0 0 0 / 60%) 0%, rgb(0 0 0 / 40%) 40%, transparent 80%); pointer-events: none; }
+  .hero-content { position: absolute; z-index: 2; top: 260px; left: 0; right: 0; display: flex; flex-direction: column; align-items: flex-start; gap: 30px; }
   .hero-title-group { display: flex; flex-direction: column; gap: 4px; }
   .hero h1 { font-size: 52px; line-height: 75px; font-weight: 700; }
   .hero-title-group > p { margin-left: 4px; font-size: 20px; line-height: 29px; }
-  .primary-button { display: inline-flex; align-items: center; justify-content: center; padding: 18px 34px; background: var(--pink); border-radius: 20px; font-size: 14px; line-height: 20px; font-weight: 500; transition: background .18s; }
+  .primary-button { display: inline-flex; align-items: center; justify-content: center; height: 56px; padding: 18px 60px; background: var(--pink); border-radius: 20px; font-size: 14px; line-height: 20px; font-weight: 500; transition: background .18s; }
   .primary-button:hover { background: #e31c5a; }
   .primary-button:active { background: #c8104f; }
 
   /* Horizontal lists */
-  .collections { padding-top: 40px; display: flex; flex-direction: column; gap: 30px; padding-bottom: 120px; }
+  .collections { position: relative; z-index: 3; padding-top: 40px; display: flex; flex-direction: column; gap: 30px; padding-bottom: 120px; }
+  .collections::before { content: ""; position: absolute; z-index: -1; top: 0; bottom: 0; left: 50%; width: 100vw; transform: translateX(-50%); background: #fff; pointer-events: none; }
   .collection { min-width: 0; scroll-margin-top: 24px; }
   .section-heading { height: 40px; display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 20px; }
   .section-heading h2 { padding-left: 4px; font-size: 26px; line-height: 37px; font-weight: 700; }
@@ -89,7 +102,7 @@
   /* Tablet frame: 700px in Figma. */
   @media (min-width: 700px) and (max-width: 1439px) {
     & { --page-gutter: 30px; }
-    .hero { height: 580px; }
+    .hero, .hero-slides, .hero-shade { height: 580px; }
     .hero-content { top: 311px; margin-inline: 40px; }
     .collections { gap: 40px; }
   }
@@ -99,16 +112,20 @@
     & { --page-gutter: 20px; --card-width: 200px; --card-gap: 16px; }
     .site-header { height: 56px; }
     .header-inner { gap: 8px; }
+    .header-inner { margin-left: 20px; margin-right: 10px; }
     .brand-group { gap: 10px; }
-    .brand { font-size: 16px; line-height: 24px; }
-    .back-button { width: 13px; }
+    .brand { font-size: 16px; line-height: 19px; }
+    .login-button { height: auto; padding: 8px 14px 8px 10px; background: transparent; color: var(--pink); font-size: 14px; font-weight: 500; line-height: 17px; gap: 4px; }
+    .login-icon { display: block; width: 20px; height: 20px; }
+    .site-header { transition: background-color 280ms ease, color 280ms ease, box-shadow 280ms ease, transform 420ms cubic-bezier(.22,1,.36,1); will-change: transform; }
+    .site-header.is-scroll-hidden { transform: translateY(-100%); }
     .wishlist-button { border: 0; padding: 8px 14px 8px 10px; }
     .user-button { padding: 8px 0 8px 4px; gap: 6px; }
-    .hero-content { top: 332px; gap: 20px; }
+    .hero-content { top: 312px; gap: 20px; }
     .hero-title-group { gap: 6px; }
     .hero h1 { font-size: 32px; line-height: 46px; }
     .hero-title-group > p { font-size: 16px; line-height: 24px; font-weight: 500; }
-    .primary-button { padding: 14px 20px; border-radius: 16px; }
+    .primary-button { height: 48px; padding: 14px 26px; border-radius: 16px; font-weight: 700; line-height: normal; }
     .collections { gap: 40px; padding-bottom: 70px; }
     .section-heading { height: 30px; margin-bottom: 24px; }
     .section-heading h2 { font-size: 20px; line-height: 30px; }
