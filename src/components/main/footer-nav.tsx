@@ -1,8 +1,24 @@
 "use client";
 
+import Link from "next/link";
 import { useInfoDialog } from "@/components/main/main-ui";
 
 const LINKS = ["이용약관", "개인정보처리방침", "고객센터"];
+
+/** 메인·둘러보기 상세 공용 푸터(로고 · © · 서비스 안내). 스타일은 각 화면 CSS(main.css, explore.css)가 맡는다. */
+export function SiteFooter({ brandHref = "/" }: { brandHref?: string }) {
+  return (
+    <footer>
+      <div className="footer-inner">
+        <Link className="brand" href={brandHref}>
+          가보자 <span>GO</span>
+        </Link>
+        <p>© 2026 가보자GO. All rights reserved.</p>
+        <FooterNav />
+      </div>
+    </footer>
+  );
+}
 
 export function FooterNav() {
   const { show, dialog } = useInfoDialog();

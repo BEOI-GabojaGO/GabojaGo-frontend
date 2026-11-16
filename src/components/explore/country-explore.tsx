@@ -2,41 +2,33 @@
 
 import { useEffect, useState } from "react";
 import { Carousel } from "@/components/explore/carousel";
+import { loadCountryPlaces, type CountryPlaces } from "@/components/explore/country-places";
 import { PlaceCard } from "@/components/explore/place-card";
 import { usePlaceWishlist } from "@/components/explore/use-place-wishlist";
 import { useToast } from "@/components/main/main-ui";
-import { requestJson } from "@/lib/flight-client";
-import type { CountryAttractions, CountryFoods, Place, PlaceKind } from "@/lib/explore";
-
-type Data = { attractions: CountryAttractions; foods: CountryFoods };
+import type { Place, PlaceKind } from "@/lib/explore";
 
 /**
  * 나라 페이지 본문(서비스 플로우 · 둘러보기). 팀 결정(2026-10-11)으로 음식(나라 단위 한 목록)이 첫 줄이고,
  * 관광명소는 그 아래에 둔다. 일본은 도시별 여러 줄, 나머지 나라는 "{나라} 관광명소" 한 줄이다.
  */
 export function CountryExplore({ countryCode, countryName }: { countryCode: string; countryName: string }) {
-  const [data, setData] = useState<Data | null>(null);
+  const [data, setData] = useState<CountryPlaces | null>(null);
   const [error, setError] = useState("");
   const { notify, toast } = useToast();
   const wishlist = usePlaceWishlist(notify);
 
+  // 히어로 슬라이드와 같은 요청을 함께 쓴다(loadCountryPlaces).
   useEffect(() => {
-    const controller = new AbortController();
-    const base = `/api/v1/countries/${countryCode}`;
-
-    Promise.all([
-      requestJson<CountryAttractions>(`${base}/attractions`, { signal: controller.signal }),
-      requestJson<CountryFoods>(`${base}/foods`, { signal: controller.signal }),
-    ])
-      .then(([attractions, foods]) => {
-        if (attractions.ok && foods.ok) setData({ attractions: attractions.data, foods: foods.data });
-        else setError((!attractions.ok && attractions.message) || (!foods.ok && foods.message) || "");
-      })
-      .catch(() => {
-        // 언마운트로 취소된 요청
-      });
-
-    return () => controller.abort();
+    let alive = true;
+    void loadCountryPlaces(countryCode).then((result) => {
+      if (!alive) return;
+      if (result.ok) setData(result.data);
+      else setError(result.message);
+    });
+    return () => {
+      alive = false;
+    };
   }, [countryCode]);
 
   if (!data) {
@@ -62,8 +54,9 @@ export function CountryExplore({ countryCode, countryName }: { countryCode: stri
   // 묶을 때는 id 순(= 데이터셋 문서 순서, V9 시드)으로 정렬한다. 도시 순서대로 이으면 문서 순서와 달라진다.
   const groups =
     countryCode === "JP"
-      ? cities.map((city) => ({
-          id: `attractions-${city.cityCode}`,
+      ? cities.map((city, index) => ({
+          // 히어로 "가보자 GO"(#attractions)가 첫 도시 줄로 오게 첫 줄만 id를 attractions로 둔다.
+          id: index === 0 ? "attractions" : `attractions-${city.cityCode}`,
           title: `${cities.length === 1 ? countryName : city.cityNameKo} 관광명소`,
           places: city.attractions,
         }))
@@ -77,7 +70,7 @@ export function CountryExplore({ countryCode, countryName }: { countryCode: stri
 
   return (
     <>
-      {/* 히어로의 "가보자 GO" 버튼이 첫 줄(#foods)로 이동한다. */}
+      {/* 히어로의 "가보자 GO" 버튼은 관광명소(#attractions)로 이동한다(1111 시안). */}
       {foods.length === 0 ? (
         <p className="status" id="foods">
           아직 등록된 음식이 없습니다.
@@ -88,7 +81,11 @@ export function CountryExplore({ countryCode, countryName }: { countryCode: stri
         </Carousel>
       )}
 
-      {groups.length === 0 && <p className="status">아직 등록된 관광명소가 없습니다.</p>}
+      {groups.length === 0 && (
+        <p className="status" id="attractions">
+          아직 등록된 관광명소가 없습니다.
+        </p>
+      )}
       {groups.map((group) => (
         <Carousel key={group.id} id={group.id} title={group.title}>
           {group.places.map((place) => card("attraction", place))}

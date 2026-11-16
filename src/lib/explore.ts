@@ -47,8 +47,8 @@ export type Country = {
   nameEn: string;
   /** 메인 국가 카드 사진(public/main). */
   image: string;
-  /** 둘러보기 나라 페이지 상단 배너. 디자인이 나온 나라만 있다. */
-  hero?: { src: string; alt: string };
+  /** 둘러보기 나라 페이지 상단 배너 슬라이드(1111 시안). 없으면 메인 국가 카드 사진 한 장(heroImages). */
+  heroes?: { src: string; alt: string }[];
   tagline?: string;
 };
 
@@ -66,7 +66,12 @@ export const COUNTRIES: readonly Country[] = [
     nameKo: "싱가포르",
     nameEn: "Singapore",
     image: "imgCountryCard3.webp",
-    hero: { src: "/explore/sg/singapore-hero.webp", alt: "싱가포르 마리나 베이의 도심과 수변 야경" },
+    heroes: [
+      { src: "/explore/sg/singapore-hero.webp", alt: "싱가포르 마리나 베이의 도심과 수변 야경" },
+      { src: "/explore/sg/singapore-marina.webp", alt: "싱가포르 마리나 베이 샌즈와 수변" },
+      { src: "/explore/sg/singapore-skyline.webp", alt: "싱가포르 도심 스카이라인" },
+      { src: "/explore/sg/singapore-gardens-night.webp", alt: "싱가포르 가든스 바이 더 베이 야경" },
+    ],
     tagline: "아시아의 허브, 다채로운 문화와 미래 도시",
   },
   { code: "PH", nameKo: "필리핀", nameEn: "Philippines", image: "imgCountryCard4.webp" },
@@ -75,6 +80,9 @@ export const COUNTRIES: readonly Country[] = [
   { code: "TW", nameKo: "대만", nameEn: "Taiwan", image: "imgCountryCard8.webp" },
   { code: "HK", nameKo: "홍콩", nameEn: "Hong Kong", image: "imgCountryCard9.webp" },
 ];
+
+/** 히어로 슬라이드 사진. 전용 사진이 없는 나라는 메인 국가 카드 사진(public/main)을 다시 쓴다(2026-11-12 사용자 결정). */
+export const heroImages = (country: Country) => country.heroes ?? [{ src: `/main/${country.image}`, alt: `${country.nameKo} 풍경` }];
 
 export function findCountry(code: string) {
   return COUNTRIES.find((country) => country.code === code.toUpperCase());

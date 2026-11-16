@@ -1,6 +1,6 @@
 /* eslint-disable @next/next/no-img-element -- 디자인 원본의 이미지·아이콘을 그대로 쓴다. */
 import { Noto_Sans_KR } from "next/font/google";
-import { FooterNav } from "@/components/main/footer-nav";
+import { SiteFooter } from "@/components/main/footer-nav";
 import { LoginDialog } from "@/components/main/login-dialog";
 import { MainCarousels } from "@/components/main/main-carousels";
 import { BenefitList, MainHeader } from "@/components/main/main-scroll";
@@ -99,15 +99,7 @@ export default async function Home({ searchParams }: PageProps<"/">) {
         </div>
       </main>
 
-      <footer>
-        <div className="footer-inner">
-          <a className="brand" href="#home">
-            가보자 <span>GO</span>
-          </a>
-          <p>© 2026 가보자GO. All rights reserved.</p>
-          <FooterNav />
-        </div>
-      </footer>
+      <SiteFooter brandHref="#home" />
     </div>
   );
 }

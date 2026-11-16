@@ -2,7 +2,7 @@
 
 /* eslint-disable @next/next/no-img-element -- 국기 이미지를 그대로 쓴다. */
 import { useEffect, useRef, useState } from "react";
-import { conditionFrom, useConditionForm, type InitialCondition } from "@/components/flight/condition-form";
+import { conditionFrom, GoScrollbar, useConditionForm, type InitialCondition } from "@/components/flight/condition-form";
 import { FLAGS } from "@/components/flight/flight-list-ui";
 import { cityName } from "@/components/flight/search-condition-fields";
 import { useToast } from "@/components/main/main-ui";
@@ -172,6 +172,8 @@ export function SearchEditDrawer({ open, request, locations, onClose }: InitialC
             </div>
           </form>
         </div>
+        {/* 서랍 스크롤은 기본 막대 대신 분홍 막대(1111 시안 drawer-scrollbar). */}
+        {open && <GoScrollbar target={drawer} className="drawer-scrollbar" pinned />}
       </aside>
       {pickerPanel}
       {toast}

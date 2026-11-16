@@ -31,8 +31,8 @@ export function LoginDialog() {
     document.body.classList.add("login-open");
   }
 
-  // 데스크톱·태블릿은 닫힘 애니메이션이 끝난 뒤 닫는다.
-  const close = () => closeDialogAnimated(ref.current, 600);
+  // 닫힘 애니메이션이 끝난 뒤 닫는다(1111 시안부터 모바일 전체 화면에서도).
+  const close = () => closeDialogAnimated(ref.current, 0);
 
   return (
     <>

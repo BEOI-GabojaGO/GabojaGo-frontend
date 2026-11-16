@@ -10,7 +10,7 @@ const notoSansKr = Noto_Sans_KR({ subsets: ["latin"], preload: false, variable: 
 export default function BookingPage() {
   return (
     <div className={`booking-page ${notoSansKr.variable}`}>
-      <ExploreHeader />
+      <ExploreHeader hideOnScroll />
       <BookingView />
     </div>
   );

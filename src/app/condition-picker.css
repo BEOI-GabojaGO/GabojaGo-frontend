@@ -166,9 +166,83 @@
 .passenger-picker .passenger-row strong{font-size:18px;line-height:22px}
 .passenger-picker .counter output{font-weight:600}
 .date-picker .calendar-top strong{font-size:18px;line-height:21px}
+/*
+ * 1111 시안: 899px 이하에서 장소·일정 선택기는 화면 전체를 덮는다(메인 styles.css 1252-1640, 1842-1925의 최종 계산값).
+ * 넓은 화면에서는 새로 감싼 칸(origin-scroll-wrap·calendar-scroll-*)이 display:contents라 배치가 그대로고 분홍 막대도 숨긴다.
+ */
+:is(.origin-scroll-wrap,.calendar-scroll-wrap,.calendar-scroll-content,.origin-search-stack){display:contents}
+.go-scrollbar{display:none}
+/* 시안 1111: 달력과 "선택하기" 사이 간격 0(데스크톱도 같은 감싼 칸 구조). */
+.date-picker .picker-body{gap:0}
+.picker-close svg{display:block;width:12px;height:12px;fill:none;stroke:currentColor;stroke-width:1.2;stroke-linecap:round;stroke-linejoin:round}
+@media(max-width:899px){
+  #picker-panel:is(.location-picker,.date-picker){position:fixed;inset:0;z-index:1005;width:100vw;max-width:none;height:100dvh;max-height:none;margin:0;padding:40px 6px 6px;transform:none;border-radius:0;box-shadow:none;overflow:hidden;background:#fff;animation:picker-fade-in 220ms cubic-bezier(.22,1,.36,1) both}
+  #picker-panel:is(.location-picker,.date-picker).is-closing{animation:picker-fade-out 180ms ease-in both}
+  #picker-panel:is(.location-picker,.date-picker) .picker-header{position:relative;flex:0 0 19px;width:100%;height:19px;min-height:19px;margin:0;padding:0 20px;border:0;overflow:visible;clip-path:none;align-items:center}
+  #picker-panel:is(.location-picker,.date-picker) .picker-header h2{font-size:18px;line-height:22px;font-weight:700}
+  #picker-panel:is(.location-picker,.date-picker) .picker-close{position:absolute;top:-6px;right:14px;width:32px;height:32px;display:grid;place-items:center;padding:0;border-radius:50%;overflow:visible;clip-path:none;color:#666}
+  #picker-panel:is(.location-picker,.date-picker) .picker-close:hover{background:#f2f2f2}
+  .go-scrollbar{display:block;position:absolute;top:0;right:0;bottom:20px;width:4px;background:transparent;pointer-events:none;z-index:2}
+  .go-scrollbar-thumb{position:absolute;top:0;right:0;width:4px;min-height:32px;border-radius:999px;background:#ff385c;transition:transform .12s ease,height .12s ease}
+
+  /* 장소: 검색칸 16px 모서리, 목록은 기본 막대를 숨기고 분홍 막대. */
+  #picker-panel.location-picker .origin-search{border-radius:16px}
+  #picker-panel.location-picker .origin-region h3{height:46px;padding:0 20px}
+  #picker-panel.location-picker .origin-search-stack{display:flex;flex-direction:column;gap:10px}
+  #picker-panel.location-picker .origin-destination-search{border-color:#ff385c}
+  #picker-panel.location-picker .origin-destination-search:focus-within{outline:2px solid #ff385c;outline-offset:0}
+  #picker-panel.location-picker .origin-scroll-wrap{position:relative;min-height:0;flex:1 1 auto;display:flex;overflow:hidden}
+  #picker-panel.location-picker .origin-regions{min-height:0;flex:1 1 auto;overflow-x:hidden;overflow-y:scroll;scrollbar-width:none}
+  #picker-panel.location-picker .origin-regions::-webkit-scrollbar{display:none;width:0;height:0}
+
+  /* 도착지: 위에 고른 출발지(회색 상자·국기·분홍 "출발지"·지우기). */
+  #picker-panel.location-picker .origin-selected-search{height:50px;min-height:50px;padding:0 16px;gap:10px;border:0;border-radius:16px;background:#f6f6f6}
+  #picker-panel.location-picker .origin-selected-search:hover{background:#eee}
+  #picker-panel.location-picker .origin-selected-switch{display:flex;flex:1;min-width:0;height:100%;align-items:center;gap:inherit;text-align:left}
+  #picker-panel.location-picker .origin-selected-switch:focus-visible{outline:2px solid #ff385c;outline-offset:2px;border-radius:12px}
+  #picker-panel.location-picker .origin-selected-flag{display:inline-flex;width:22px;height:22px;flex:0 0 22px;border-radius:8px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.12)}
+  #picker-panel.location-picker .origin-selected-flag img{width:100%;height:100%;object-fit:contain}
+  #picker-panel.location-picker .origin-selected-value{overflow:hidden;color:#333;font-size:16px;font-weight:600;text-overflow:ellipsis;white-space:nowrap}
+  #picker-panel.location-picker .origin-selected-label{margin-left:auto;margin-right:10px;padding-left:10px;color:#ff385c;font-size:12px;font-weight:500;line-height:16px;white-space:nowrap}
+  #picker-panel.location-picker .origin-clear-button{display:grid;place-items:center;width:20px;height:20px;flex:none;padding:0;border-radius:50%;background:#c9c9c9}
+  #picker-panel.location-picker .origin-clear-icon{position:relative;display:block;width:11px;height:11px}
+  #picker-panel.location-picker .origin-clear-icon::before,#picker-panel.location-picker .origin-clear-icon::after{content:"";position:absolute;top:50%;left:50%;width:11px;height:1.5px;border-radius:2px;background:#fff;transform:translate(-50%,-50%) rotate(45deg)}
+  #picker-panel.location-picker .origin-clear-icon::after{transform:translate(-50%,-50%) rotate(-45deg)}
+
+  /* 일정: 가운데(최대 360px) 달력을 스크롤 영역에 두고 "선택하기"는 아래 고정. */
+  /* 시안 그대로: 패널은 width:100%, 제목 줄은 margin:0이라 왼쪽에 붙고 본문만 가운데(최대 520px)다. */
+  #picker-panel.date-picker{width:100%;display:flex;flex-direction:column;gap:36px}
+  #picker-panel.date-picker>:is(.picker-header,.picker-body){box-sizing:border-box;width:100%;max-width:520px;margin-inline:auto}
+  #picker-panel.date-picker .picker-header{margin:0}
+  #picker-panel.date-picker .picker-body{min-height:0;height:auto;flex:1 1 auto;padding:0;overflow:hidden;background:#fff}
+  #picker-panel.date-picker .calendar-scroll-wrap{position:relative;display:flex;min-height:0;height:100%;overflow:hidden}
+  #picker-panel.date-picker .calendar-scroll-content{display:flex;flex:1 1 auto;flex-direction:column;justify-content:flex-start;min-height:100%;height:100%;box-sizing:border-box;padding:8px 20px 100px;overflow-x:hidden;overflow-y:auto;scrollbar-width:none}
+  #picker-panel.date-picker .calendar-scroll-content::-webkit-scrollbar{display:none;width:0;height:0}
+  #picker-panel.date-picker .calendar{flex:0 0 auto;width:100%;max-width:360px;margin:auto}
+  #picker-panel.date-picker .calendar-done{position:fixed;left:50%;bottom:20px;z-index:3;width:calc(100% - 40px);max-width:520px;height:56px;min-height:56px;padding:0;border-radius:20px;transform:translateX(-50%);font-size:14px;line-height:20px;font-weight:700}
+  #picker-panel.date-picker .go-scrollbar{bottom:6px}
+}
+@media(max-width:699px){#picker-panel.location-picker .origin-selected-search{gap:8px}}
+/* 장소 선택기가 열리면 제목→검색→목록, 지역(90ms 간격)·칩(30ms 간격)이 차례로 나타나고, 닫힐 때 차례로 사라진다. */
+@media(max-width:899px) and (prefers-reduced-motion:no-preference){
+  #picker-panel.location-picker:not(.is-closing) :is(.picker-header,.origin-search-wrap,.origin-scroll-wrap){animation:picker-content-in 420ms cubic-bezier(.22,1,.36,1) var(--origin-picker-delay,0ms) both}
+  #picker-panel.location-picker .origin-search-wrap{--origin-picker-delay:42ms;--origin-picker-out-delay:35ms}
+  #picker-panel.location-picker .origin-scroll-wrap{--origin-picker-delay:84ms;--origin-picker-out-delay:70ms}
+  #picker-panel.location-picker:not(.is-closing) .origin-region{animation:picker-content-in 360ms cubic-bezier(.22,1,.36,1) var(--origin-region-delay,210ms) both}
+  #picker-panel.location-picker:not(.is-closing) .origin-chip{animation:picker-content-in 300ms cubic-bezier(.22,1,.36,1) var(--origin-chip-delay,300ms) both}
+  #picker-panel.location-picker .origin-region:nth-child(1){--origin-region-delay:210ms}#picker-panel.location-picker .origin-region:nth-child(2){--origin-region-delay:300ms}#picker-panel.location-picker .origin-region:nth-child(3){--origin-region-delay:390ms}#picker-panel.location-picker .origin-region:nth-child(4){--origin-region-delay:480ms}#picker-panel.location-picker .origin-region:nth-child(5){--origin-region-delay:570ms}#picker-panel.location-picker .origin-region:nth-child(6){--origin-region-delay:660ms}#picker-panel.location-picker .origin-region:nth-child(7){--origin-region-delay:750ms}#picker-panel.location-picker .origin-region:nth-child(8){--origin-region-delay:840ms}
+  #picker-panel.location-picker .origin-chip:nth-child(1){--origin-chip-delay:45ms}#picker-panel.location-picker .origin-chip:nth-child(2){--origin-chip-delay:75ms}#picker-panel.location-picker .origin-chip:nth-child(3){--origin-chip-delay:105ms}#picker-panel.location-picker .origin-chip:nth-child(4){--origin-chip-delay:135ms}#picker-panel.location-picker .origin-chip:nth-child(5){--origin-chip-delay:165ms}#picker-panel.location-picker .origin-chip:nth-child(6){--origin-chip-delay:195ms}#picker-panel.location-picker .origin-chip:nth-child(7){--origin-chip-delay:225ms}#picker-panel.location-picker .origin-chip:nth-child(8){--origin-chip-delay:255ms}#picker-panel.location-picker .origin-chip:nth-child(9){--origin-chip-delay:285ms}#picker-panel.location-picker .origin-chip:nth-child(10){--origin-chip-delay:315ms}#picker-panel.location-picker .origin-chip:nth-child(11){--origin-chip-delay:345ms}#picker-panel.location-picker .origin-chip:nth-child(12){--origin-chip-delay:375ms}#picker-panel.location-picker .origin-chip:nth-child(13){--origin-chip-delay:405ms}#picker-panel.location-picker .origin-chip:nth-child(14){--origin-chip-delay:435ms}
+  #picker-panel.location-picker.is-closing :is(.picker-header,.origin-search-wrap,.origin-scroll-wrap){animation:picker-content-out 260ms cubic-bezier(.22,1,.36,1) var(--origin-picker-out-delay,0ms) both}
+}
 }
 @keyframes calendar-pop-in{from{opacity:0;transform:translateY(-8px) scale(.985)}to{opacity:1;transform:translateY(0) scale(1)}}
 @keyframes calendar-pop-out{from{opacity:1;transform:translateY(0) scale(1)}to{opacity:0;transform:translateY(-8px) scale(.985)}}
+@keyframes picker-fade-in{from{opacity:0}to{opacity:1}}
+@keyframes picker-fade-out{from{opacity:1}to{opacity:0}}
+@keyframes picker-content-in{from{opacity:0;transform:translate3d(0,10px,0)}to{opacity:1;transform:translate3d(0,0,0)}}
+@keyframes picker-content-out{from{opacity:1;transform:translate3d(0,0,0)}to{opacity:0;transform:translate3d(0,10px,0)}}
+/* 전체 화면 선택기(899px 이하)가 열리면 뒤 페이지 스크롤을 막는다(condition-form.tsx). */
+body.picker-open{overflow:hidden}
 /* 유아 좌석 선택(시안 없음): 왕복·편도 토글과 같은 톤의 작은 세그먼트. 이 줄이 생기면 탑승객 피커 고정 높이를 푼다. */
 :is(.main-page,.flight-page) .infant-types{display:flex;gap:4px;width:max-content;padding:2px;border-radius:12px;background:#eee}
 :is(.main-page,.flight-page) .infant-types label{cursor:pointer}

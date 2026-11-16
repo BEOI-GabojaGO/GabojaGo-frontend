@@ -1,9 +1,10 @@
-/* eslint-disable @next/next/no-img-element -- 디자인 원본 배너 사진을 그대로 쓴다. */
 import { Noto_Sans_KR } from "next/font/google";
 import { notFound } from "next/navigation";
 import { CountryExplore } from "@/components/explore/country-explore";
 import { ExploreHeader } from "@/components/explore/explore-header";
-import { findCountry } from "@/lib/explore";
+import { HeroSlides } from "@/components/explore/hero-slides";
+import { SiteFooter } from "@/components/main/footer-nav";
+import { findCountry, heroImages } from "@/lib/explore";
 import "../explore.css";
 
 // 메인 페이지와 같은 설정. 한글 글리프는 unicode-range로 나뉘어 있어 preload 대신 필요한 조각만 받는다.
@@ -18,18 +19,18 @@ export default async function CountryExplorePage(props: PageProps<"/explore/[cou
 
   return (
     <div className={`explore-page ${notoSansKr.variable}`}>
-      <ExploreHeader />
+      <ExploreHeader overHero />
       <section className="hero" aria-labelledby="page-title">
-        {country.hero && (
-          <img className="hero-photo" src={country.hero.src} alt={country.hero.alt} width={1920} height={520} fetchPriority="high" decoding="async" />
-        )}
+        {/* 1111 시안: 사진은 화면에 고정되고 본문이 그 위로 올라온다. */}
+        {/* 전용 사진이 없는 나라는 관광명소 사진을 이어 붙인다. */}
+        <HeroSlides images={heroImages(country)} placesOf={country.heroes ? undefined : country.code} />
         <div className="hero-shade" />
         <div className="hero-content page-container">
           <div className="hero-title-group">
             <h1 id="page-title">{country.nameKo}</h1>
             {country.tagline && <p>{country.tagline}</p>}
           </div>
-          <a className="primary-button" href="#foods">
+          <a className="primary-button" href="#attractions">
             가보자 GO
           </a>
         </div>
@@ -37,6 +38,7 @@ export default async function CountryExplorePage(props: PageProps<"/explore/[cou
       <main className="collections page-container" aria-label={`${country.nameKo} 여행 정보`}>
         <CountryExplore countryCode={country.code} countryName={country.nameKo} />
       </main>
+      <SiteFooter />
     </div>
   );
 }

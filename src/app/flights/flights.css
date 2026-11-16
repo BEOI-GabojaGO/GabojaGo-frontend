@@ -64,11 +64,11 @@
   .query-search-icon { display:block; width:20px; height:20px; flex:none; }
   .query-route-arrow { height:20px; display:inline-flex; align-items:center; justify-content:center; flex:none; color:#888; font-size:14px; line-height:20px; font-weight:400; }
   .query-date-description { color:#333; }
-  .query-badge { height:20px; padding:1px 6px; border-radius:4px; background:rgba(215,6,81,.08); color:var(--brand); display:inline-flex; align-items:center; justify-content:center; flex:none; font-size:12px; line-height:18px; font-weight:500; }
+  .query-badge { height:20px; padding:1px 6px; border-radius:4px; background:rgba(255,56,92,.08); color:var(--brand); display:inline-flex; align-items:center; justify-content:center; flex:none; font-size:12px; line-height:18px; font-weight:500; }
   .query-divider { height:20px; color:#ccc; display:inline-flex; align-items:center; justify-content:center; flex:none; font-size:14px; line-height:20px; font-weight:400; }
   .edit-search { height:36px; margin-left:auto; padding:0 14px; border:0; border-radius:8px; background:transparent; color:var(--brand); font-size:14px; line-height:20px; font-weight:500; cursor:pointer; transition:background-color .18s ease; }
-  .edit-search:hover { background:rgba(215,6,81,.06); }
-  .edit-search:focus-visible { outline:2px solid rgba(215,6,81,.3); outline-offset:2px; }
+  .edit-search:hover { background:#f2f2f2; }
+  .edit-search:focus-visible { outline:2px solid rgba(255,56,92,.3); outline-offset:2px; }
   .page-layout { width:min(calc(100% - 48px),var(--content)); margin:0 auto; padding:35px 0 80px; display:grid; grid-template-columns:250px minmax(0,1fr); gap:40px; align-items:start; }
   .mobile-summary { display:none; }
   .desktop-filter { position:sticky; top:28px; padding-top:3px; }
@@ -136,7 +136,7 @@
   .flight-card { position:relative; width:100%; min-height:105px; padding:16px 22px; border:1px solid #eee; border-radius:22px; background:#fff; display:grid; grid-template-columns:165px 80px minmax(130px,1fr) 80px 160px 28px; align-items:center; gap:8px; box-shadow:0 4px 18px rgba(0,0,0,.035); transition:border-color .2s,box-shadow .2s,transform .2s; }
   .flight-card[role="button"] { text-align:left; cursor:pointer; }
   .flight-card[role="button"]:hover { border-color:#ddd; box-shadow:0 8px 24px rgba(0,0,0,.07); transform:translateY(-1px); }
-  .flight-card.is-chosen { border-color:var(--brand); box-shadow:0 3px 14px rgba(215,6,81,.12); }
+  .flight-card.is-chosen { border-color:var(--brand); box-shadow:0 3px 14px rgba(255,56,92,.12); }
   .airline { min-width:0; display:flex; align-items:center; gap:11px; }
   .airline-logo { width:40px; height:40px; flex:none; border-radius:11px; object-fit:contain; }
   .logo-fallback { width:40px; height:40px; flex:none; border-radius:11px; display:grid; place-content:center; color:#fff; font-size:9px; font-weight:800; line-height:1; text-align:center; letter-spacing:-.5px; }
@@ -313,7 +313,7 @@
   ::-webkit-scrollbar{width:5px; height:5px}
   ::-webkit-scrollbar-track{background:transparent; border-radius:999px}
   ::-webkit-scrollbar-thumb{background:#ff385c; border:1px solid transparent; border-radius:999px}
-  ::-webkit-scrollbar-thumb:hover{background:#b90446}
+  ::-webkit-scrollbar-thumb:hover{background:#e31c5a}
   ::-webkit-scrollbar-corner{background:transparent}; }
   @media(max-width:599px) {
     ::-webkit-scrollbar { display:none; width:0; height:0; }
@@ -1377,6 +1377,102 @@ html.content-revealing .flight-list .flight-card:nth-child(10){animation-delay:8
   .search-edit-actions { align-items: center; gap: 16px; }
   .search-edit-error { flex: 1; margin: 0; color: var(--brand-dark); font-size: 13px; line-height: 1.5; text-align: right; }
   .search-edit-error:empty { display: none; }
+  /* ---------- 1111 시안(가보자GO/gaboja-go-flight-list) ---------- */
+  /* 899px 이하 배경은 흰색(시안 styles.css:2706). */
+  @media (max-width: 899px) { & { background: #fff; } }
+
+  /* 날짜 칩: 누르면 살짝 눌림, 키보드 포커스 분홍 테두리(시안 214-246). 고르면 바로 다시 검색해 선택 튀김(is-just-selected)은 넣지 않는다. */
+  .date-option { -webkit-tap-highlight-color: transparent; touch-action: manipulation; transition: transform .22s cubic-bezier(.22,.8,.24,1), background-color .18s ease, color .18s ease, box-shadow .22s ease, border-color .18s ease; }
+  .date-option:hover:not(:disabled) { box-shadow: 0 3px 10px rgba(0,0,0,.07); }
+  .date-option:active:not(:disabled) { background: #f5f5f6; box-shadow: 0 1px 3px rgba(0,0,0,.08); transform: translateY(1px) scale(.965); transition-duration: .09s; }
+  .date-option:focus-visible { outline: 2px solid rgba(255,56,92,.45); outline-offset: 2px; }
+
+  /* 날짜 화살표: hover·누름, 누른 방향으로 튀김(시안 1850-1867, flight-list-ui.tsx DateShiftStrip). */
+  .date-arrow { -webkit-tap-highlight-color: transparent; transform-origin: center; transition: background-color .18s ease, border-color .18s ease, box-shadow .18s ease, transform .12s cubic-bezier(.22,.8,.24,1); }
+  .date-arrow img { transform-origin: center; transition: transform .2s cubic-bezier(.22,.8,.24,1), opacity .16s ease; }
+  .date-arrow:hover:not(:disabled) { background: #f6f6f6; border-color: rgba(0,0,0,.28); box-shadow: 0 2px 8px rgba(0,0,0,.08); }
+  .date-arrow:active:not(:disabled) { background: #eeeeef; box-shadow: 0 1px 3px rgba(0,0,0,.12); transform: scale(.94); transition-duration: .08s; }
+  .date-arrow:focus-visible { outline: 2px solid rgba(255,56,92,.42); outline-offset: 3px; }
+  .date-arrow:is(.is-next-click,.is-previous-click) { animation: date-arrow-button-pop .34s cubic-bezier(.22,.8,.24,1) both; }
+  .date-arrow.is-next-click img { animation: date-arrow-nudge-next .34s cubic-bezier(.22,.8,.24,1) both; }
+  .date-arrow.is-previous-click img { animation: date-arrow-nudge-previous .34s cubic-bezier(.22,.8,.24,1) both; }
+  @media (prefers-reduced-motion: reduce) { .date-arrow, .date-arrow img { animation: none !important; transition: none !important; } .date-arrow:active:not(:disabled) { transform: none; } }
+
+  /* 900–1199px: 긴 경로 이름은 자르지 않고 줄바꿈(시안 5023-5054). */
+  @media (min-width: 900px) and (max-width: 1199px) {
+    .query-inner { align-items: flex-start; }
+    .query-route { flex: 0 1 auto !important; min-width: 0; max-width: none !important; height: auto; min-height: 20px; overflow: visible !important; align-items: flex-start; flex-wrap: wrap; }
+    .query-route > span:not(.query-route-arrow) { min-width: 0; white-space: normal; overflow: visible !important; text-overflow: clip; overflow-wrap: anywhere; }
+    .query-route-arrow { flex: 0 0 auto; align-self: flex-start; }
+    .query-route + .query-badge { flex: 0 0 auto; align-self: flex-start; margin-left: 0; }
+  }
+
+  /* 모바일 요약: 날짜·탑승객 줄 말줄임(시안 3601-3607). */
+  @media (max-width: 599px) {
+    .summary-date, .summary-passengers { min-width: 0 !important; overflow: hidden !important; text-overflow: ellipsis !important; white-space: nowrap !important; }
+  }
+
+  /* 모바일 조건 수정 서랍 칸: 3줄 78px, 열 4.5 : 5.5, 바꾸기 45%, 칸 여백 17/20/14(시안 5056-5081). */
+  @media (max-width: 599px) {
+    .edit-field-label { margin-bottom: 2px !important; }
+    .search-edit-field, .search-edit-field[data-edit-field="from"], .search-edit-field[data-edit-field="to"], .search-edit-field[data-edit-field="date"], .search-edit-field[data-edit-field="passengers"] { padding: 17px 20px 14px !important; }
+    .search-edit-fields { grid-template-rows: repeat(3, 78px) !important; grid-template-columns: minmax(0, 4.5fr) minmax(0, 5.5fr) !important; }
+    .search-edit-swap { left: 45% !important; }
+  }
+
+  /* 서랍 스크롤: 기본 막대 대신 분홍 막대(시안 2881-2918, GoScrollbar pinned). */
+  .search-edit-drawer { scrollbar-width: none !important; }
+  .search-edit-drawer::-webkit-scrollbar { display: none !important; width: 0 !important; height: 0 !important; }
+  .drawer-scrollbar { position: absolute; z-index: 2; top: 8px; right: 4px; bottom: 8px; width: 5px; pointer-events: none; }
+  .drawer-scrollbar-thumb { display: block; width: 5px; min-height: 28px; border-radius: 999px; background: #ff385c; transition: transform .12s ease, height .12s ease; }
+  @media (max-width: 599px) { .drawer-scrollbar { width: 4px; right: 3px; } .drawer-scrollbar-thumb { width: 4px; } }
+
+  /* 모바일 필터 시트: 작은 글자·14px 체크박스·22px 로고·SVG 닫기(시안 Figma 1255:17214, styles.css 5083-5242). */
+  @media (max-width: 599px) {
+    .filter-panel { height: min(520px, calc(100dvh - 24px)) !important; max-height: calc(100dvh - 24px) !important; padding: 12px 30px calc(18px + env(safe-area-inset-bottom)) !important; border-radius: 30px 30px 0 0 !important; }
+    .filter-drag-handle { width: 80px; height: 8px; margin: 0 auto 16px; }
+    .filter-head { height: 24px; min-height: 24px; }
+    .filter-head .mobile-filter-reset { font-size: 14px; line-height: 20px; font-weight: 500; }
+    .close-filter { display: grid; width: 32px !important; height: 32px !important; margin-right: 0; margin-left: 0; padding: 0; place-items: center; border: 0; border-radius: 50% !important; background: transparent; font-size: 0 !important; line-height: 0; color: #666 !important; box-sizing: border-box; cursor: pointer; transition: background-color .18s ease; }
+    .close-filter::before, .close-filter::after { content: none !important; }
+    .close-filter svg { display: block; width: 12px; height: 12px; fill: none; stroke: currentColor; stroke-width: 1.2; stroke-linecap: round; stroke-linejoin: round; }
+    .close-filter:hover, .close-filter:focus-visible { background: #f2f2f2; color: #333; outline: none; }
+    .filter-panel .filter-groups { height: calc(100% - 94px); margin-top: 30px; padding-bottom: 64px; }
+    .filter-panel .filter-group { padding: 0 0 20px; margin: 0 0 20px; }
+    .filter-panel .filter-group:last-child { padding-bottom: 16px; }
+    .filter-panel .filter-group-title { margin-bottom: 16px !important; }
+    .filter-panel .filter-group-title h3 { font-size: 18px !important; line-height: 24px !important; font-weight: 700 !important; letter-spacing: 0; }
+    .filter-panel .check-list { gap: 12px !important; }
+    .filter-panel .filter-group:first-child .check-list { gap: 24px !important; }
+    .filter-panel .check-row { min-height: 20px; font-size: 12px; line-height: 16px; font-weight: 400; }
+    .filter-panel .check-row input { width: 14px; height: 14px; border-width: 1px; border-radius: 4px; }
+    .filter-panel .check-row input:checked::after, .filter-panel .check-row input.filter-animating:checked::after { width: 6px !important; height: 3px !important; border-left-width: 1.5px !important; border-bottom-width: 1.5px !important; }
+    .filter-panel .filter-airline-content { gap: 8px; }
+    .filter-panel .filter-airline-logo { width: 22px; height: 22px; flex-basis: 22px; border-radius: 7px; }
+    .filter-panel .filter-airline-name { font-size: 16px; line-height: 22px; }
+    .filter-panel .filter-airline-content em { margin-left: 2px; color: var(--brand); font-size: 12px; line-height: 16px; }
+    .filter-panel .filter-actions { right: 30px; bottom: calc(18px + env(safe-area-inset-bottom)); left: 30px; }
+    .filter-panel .filter-actions .apply-button { height: 44px; border-radius: 12px; font-size: 14px; font-weight: 700; }
+  }
+  /* 시트 머리 아래로 목록이 흐리게 지나가게(시안 5244-5268). 넓은 화면의 닫기 버튼도 SVG X. */
+  @media (max-width: 899px) {
+    .filter-panel .filter-head { position: relative; z-index: 4; isolation: isolate; }
+    .filter-panel .filter-head::after { content: ""; position: absolute; z-index: 0; top: -16px; right: -100px; left: -100px; height: 52px; pointer-events: none; background: linear-gradient(to bottom, #fff 0%, #fffc 55%, #fff3 100%); }
+    .filter-panel .filter-head > * { position: relative; z-index: 1; }
+  }
+  .close-filter svg { display: block; width: 12px; height: 12px; fill: none; stroke: currentColor; stroke-width: 1.2; stroke-linecap: round; stroke-linejoin: round; }
+  .close-filter { display: grid; place-items: center; }
+
+  /* 모바일 카드 누름: 126ms, 안쪽 그림자 없이(시안 5270-5305). */
+  @media (max-width: 599px) {
+    .flight-card[role="button"], .flight-card[role="button"] *, .heart-button { -webkit-tap-highlight-color: transparent; }
+    .flight-card[role="button"] { transition: border-color 126ms ease, box-shadow 126ms ease, transform 126ms cubic-bezier(.22,.8,.24,1); }
+    .flight-card[role="button"]:active:not(:has(.heart-button:active)) { box-shadow: 0 1px 4px rgba(0,0,0,.035) !important; transition: transform 126ms cubic-bezier(.22,.8,.24,1), border-color 126ms ease, box-shadow 126ms ease !important; }
+    .flight-card[role="button"].is-chosen:active:not(:has(.heart-button:active)) { box-shadow: 0 3px 14px rgba(255,56,92,.12) !important; }
+  }
+  @media (max-width: 599px) and (hover: hover) { .flight-card[role="button"]:hover:not(.is-chosen) { box-shadow: 0 4px 12px rgba(0,0,0,.035) !important; } }
+  @media (max-width: 599px) and (prefers-reduced-motion: reduce) { .flight-card[role="button"] { transition: none !important; } }
+
 }
 
 @keyframes card-in { from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)} }
@@ -1399,3 +1495,7 @@ html.content-revealing .flight-list .flight-card:nth-child(10){animation-delay:8
 @keyframes site-content-fade{from{opacity:0}}
 /* 조건 수정 서랍이 열린 동안 뒤 페이지 스크롤을 막는다(body라 .flight-page 블록 밖에 둔다). */
 body.search-edit-open { overflow: hidden; }
+/* 1111 시안 날짜 화살표 튀김(키프레임은 .flight-page 블록 밖). */
+@keyframes date-arrow-button-pop{0%{transform:scale(.94)}45%{transform:scale(1.04)}100%{transform:scale(1)}}
+@keyframes date-arrow-nudge-next{0%{transform:translateX(0)}38%{transform:translateX(3px)}100%{transform:translateX(0)}}
+@keyframes date-arrow-nudge-previous{0%{transform:translateX(0)}38%{transform:translateX(-3px)}100%{transform:translateX(0)}}
