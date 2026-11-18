@@ -45,7 +45,7 @@ export function CountryExplore({ countryCode, countryName }: { countryCode: stri
       place={place}
       saved={wishlist.isSaved(kind, place.id)}
       pending={wishlist.isPending(kind, place.id)}
-      onToggle={() => void wishlist.toggle(kind, place)}
+      onToggle={() => wishlist.toggle(kind, place)}
     />
   );
   const { cities } = data.attractions;
