@@ -5,6 +5,7 @@
  * 바꾼 것: 태블릿에서 계정 메뉴를 숨기고 시각용 로그인 버튼만 두던 규칙 → 계정 메뉴를 모든 폭에서 보여 준다.
  */
 .explore-page {
+  overflow-x: clip;
   --pink: #ff385c;
   --text: #333;
   --muted: #888;
@@ -12,6 +13,9 @@
   --card-width: 342px;
   --card-gap: 24px;
   min-height: 100vh;
+  /* 내용이 짧을 때(오류·빈 목록) 푸터를 화면 맨 아래에 붙인다(footer margin-top:auto). */
+  display: flex;
+  flex-direction: column;
   background: #fff;
   color: var(--text);
   font-family: var(--font-noto-kr), sans-serif;
@@ -69,7 +73,7 @@
   /* Horizontal lists */
   .collections { position: relative; z-index: 3; padding-top: 40px; display: flex; flex-direction: column; gap: 30px; padding-bottom: 120px; }
   .collections::before { content: ""; position: absolute; z-index: -1; top: 0; bottom: 0; left: 50%; width: 100vw; transform: translateX(-50%); background: #fff; pointer-events: none; }
-  .collection { min-width: 0; scroll-margin-top: 24px; }
+  .collection { min-width: 0; scroll-margin-top: 80px; } /* 고정 헤더(56) + 24 */
   .section-heading { height: 40px; display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 20px; }
   .section-heading h2 { padding-left: 4px; font-size: 26px; line-height: 31px; font-weight: 700; }
   .carousel-controls { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
@@ -96,7 +100,7 @@
   .description { font-size: 12px; line-height: 17px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .tags { display: flex; flex-wrap: wrap; gap: 6px; }
   .tags li { flex-shrink: 0; border-radius: 4px; padding: 4px 6px; background: #f3f4f6; color: #6a7282; font-size: 12px; line-height: 17px; }
-  .status { color: var(--muted); font-size: 14px; }
+  .status { color: var(--muted); font-size: 14px; scroll-margin-top: 80px; }
 
   /* useToast(main-ui)와 같은 클래스 이름을 쓴다 */
   .toast { position: fixed; bottom: 24px; left: 50%; transform: translate(-50%, 12px); padding: 12px 20px; max-width: calc(100% - 32px); width: max-content; color: white; background: rgb(28 31 38 / 94%); border-radius: 12px; font-size: 13px; opacity: 0; pointer-events: none; z-index: 10; transition: opacity .2s, transform .2s; }
@@ -191,7 +195,9 @@
   .favorite.is-deactivating .heart-outline { animation: detail-heart-stroke-in 300ms cubic-bezier(.22,1,.36,1) both; }
 
   /* 푸터(메인과 같은 SiteFooter). 고정 히어로 사진 위에 올라온다. */
-  footer { position: relative; z-index: 3; background: #f6f6f6; padding: 60px 0; }
+  footer { position: relative; z-index: 3; margin-top: auto; background: #f6f6f6; padding: 60px 0; }
+  /* 불러오는 중에는 푸터를 숨긴다("끝난 페이지"로 보이지 않게). */
+  &:has(.status.is-loading) footer { visibility: hidden; }
   .footer-inner { max-width: 1440px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; }
   .footer-inner > .brand { width: 342px; color: #101828; font-size: 18px; line-height: 22px; font-weight: 700; letter-spacing: -.425px; }
   .footer-inner > p { width: 220px; text-align: center; font-size: 12px; line-height: 14px; font-weight: 500; }
@@ -216,8 +222,9 @@
     .footer-inner { margin-inline: 30px; }
     .footer-inner > .brand, .footer-inner nav { width: auto; }
   }
-  /* 600–699: 카드는 342px·사진 220, 줄 양끝 30px 여유. */
-  @media (min-width: 600px) and (max-width: 1199px) { .card-track { margin-left: -30px; margin-right: -30px; padding-left: 30px; padding-right: 30px; scroll-padding-left: 30px; } }
+  @media (min-width: 1440px) and (max-width: 1499px) { .footer-inner { max-width: calc(100% - 120px); } }
+  /* 600–699: 카드는 342px·사진 220, 줄 양끝 20px 여유(거터 20px보다 넓으면 페이지가 넘친다). */
+  @media (min-width: 700px) and (max-width: 1199px) { .card-track { margin-left: -30px; margin-right: -30px; padding-left: 30px; padding-right: 30px; scroll-padding-left: 30px; } }
   @media (min-width: 600px) and (max-width: 699px) {
     .card { flex-basis: 342px; }
     .card-media { height: 220px; }

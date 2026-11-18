@@ -33,7 +33,7 @@ export function CountryExplore({ countryCode, countryName }: { countryCode: stri
 
   if (!data) {
     return (
-      <p className="status" role={error ? "alert" : "status"}>
+      <p className={error ? "status" : "status is-loading"} role={error ? "alert" : "status"}>
         {error || "둘러보기 정보를 불러오는 중..."}
       </p>
     );
