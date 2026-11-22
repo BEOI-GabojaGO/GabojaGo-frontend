@@ -248,6 +248,22 @@
   @media (prefers-reduced-motion: reduce) {
     .favorite, .favorite *, .favorite .heart-burst::before, .hero-content, .collection .section-heading, .collection .card, .footer-inner { animation: none !important; }
   }
+
+  /* 카드 임시 상세 창(1111 시안 detail-dialog 틀 + 사진·이름·설명·해시태그·하트). 상세 시안이 나오면 교체한다. */
+  .card { cursor: pointer; }
+  .card:focus-visible { outline: 3px solid var(--pink); outline-offset: 4px; }
+  .detail-dialog { position: fixed; inset: 0; margin: auto; width: min(540px, calc(100% - 40px)); max-width: 540px; max-height: calc(100dvh - 80px); overflow-y: auto; overscroll-behavior: contain; border: 0; border-radius: 24px; padding: 32px; color: var(--text); background: #fff; box-shadow: 0 20px 100px rgb(0 0 0 / 20%); }
+  .detail-dialog::backdrop { background: rgb(0 0 0 / 40%); -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px); }
+  .detail-close { position: absolute; top: 12px; right: 16px; width: 36px; height: 36px; color: var(--text); font-size: 28px; line-height: 36px; }
+  .detail-media { position: relative; height: 300px; margin-top: 20px; border-radius: 10px; overflow: hidden; background: #f3f4f6; }
+  .detail-dialog h2 { margin-top: 20px; font-size: 24px; line-height: 32px; font-weight: 700; }
+  .detail-description { margin-top: 12px; font-size: 14px; line-height: 1.8; white-space: pre-line; word-break: keep-all; overflow-wrap: anywhere; }
+  .detail-dialog .tags { margin-top: 16px; }
+  @media (max-width: 699px) {
+    .detail-dialog { width: calc(100% - 32px); max-height: calc(100dvh - 48px); padding: 28px 24px; border-radius: 20px; }
+    .detail-media { height: 200px; }
+    .detail-dialog h2 { font-size: 20px; line-height: 28px; }
+  }
 }
 /* 둘러보기 상세 등장·하트 키프레임(.explore-page 블록 밖). */
 @keyframes explore-content-in{from{opacity:0;transform:translate3d(0,10px,0)}to{opacity:1;transform:none}}

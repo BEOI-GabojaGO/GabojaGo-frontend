@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Carousel } from "@/components/explore/carousel";
 import { loadCountryPlaces, type CountryPlaces } from "@/components/explore/country-places";
 import { PlaceCard } from "@/components/explore/place-card";
+import { PlaceDetailDialog } from "@/components/explore/place-detail-dialog";
 import { usePlaceWishlist } from "@/components/explore/use-place-wishlist";
 import { useToast } from "@/components/main/main-ui";
 import type { Place, PlaceKind } from "@/lib/explore";
@@ -15,6 +16,8 @@ import type { Place, PlaceKind } from "@/lib/explore";
 export function CountryExplore({ countryCode, countryName }: { countryCode: string; countryName: string }) {
   const [data, setData] = useState<CountryPlaces | null>(null);
   const [error, setError] = useState("");
+  // 상세 창에 띄운 카드(임시 상세 창, 시안 나오면 교체).
+  const [detail, setDetail] = useState<{ kind: PlaceKind; place: Place } | null>(null);
   const { notify, toast } = useToast();
   const wishlist = usePlaceWishlist(notify);
 
@@ -39,14 +42,13 @@ export function CountryExplore({ countryCode, countryName }: { countryCode: stri
     );
   }
 
+  const heart = (kind: PlaceKind, place: Place) => ({
+    saved: wishlist.isSaved(kind, place.id),
+    pending: wishlist.isPending(kind, place.id),
+    onToggle: () => wishlist.toggle(kind, place),
+  });
   const card = (kind: PlaceKind, place: Place) => (
-    <PlaceCard
-      key={place.id}
-      place={place}
-      saved={wishlist.isSaved(kind, place.id)}
-      pending={wishlist.isPending(kind, place.id)}
-      onToggle={() => wishlist.toggle(kind, place)}
-    />
+    <PlaceCard key={place.id} place={place} onOpen={() => setDetail({ kind, place })} {...heart(kind, place)} />
   );
   // 관광명소가 없는 도시는 뺀다(빈 줄이 생기지 않고, "가보자 GO"가 내용 있는 첫 줄로 간다).
   const cities = data.attractions.cities.filter((city) => city.attractions.length > 0);
@@ -93,7 +95,14 @@ export function CountryExplore({ countryCode, countryName }: { countryCode: stri
         </Carousel>
       ))}
 
-      {toast}
+      <PlaceDetailDialog
+        place={detail?.place ?? null}
+        onClose={() => setDetail(null)}
+        {...(detail ? heart(detail.kind, detail.place) : { saved: false, pending: false, onToggle: async () => false })}
+      >
+        {detail && toast}
+      </PlaceDetailDialog>
+      {!detail && toast}
     </>
   );
 }
