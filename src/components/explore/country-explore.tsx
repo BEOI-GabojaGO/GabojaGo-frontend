@@ -48,7 +48,8 @@ export function CountryExplore({ countryCode, countryName }: { countryCode: stri
       onToggle={() => wishlist.toggle(kind, place)}
     />
   );
-  const { cities } = data.attractions;
+  // 관광명소가 없는 도시는 뺀다(빈 줄이 생기지 않고, "가보자 GO"가 내용 있는 첫 줄로 간다).
+  const cities = data.attractions.cities.filter((city) => city.attractions.length > 0);
   const { foods } = data.foods;
   // 팀 결정: 관광명소는 일본만 도시별로 나누고, 나머지 나라는 나라 단위 한 줄로 묶는다.
   // 묶을 때는 id 순(= 데이터셋 문서 순서, V9 시드)으로 정렬한다. 도시 순서대로 이으면 문서 순서와 달라진다.
