@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Carousel } from "@/components/explore/carousel";
 import { loadCountryPlaces, type CountryPlaces } from "@/components/explore/country-places";
 import { PlaceCard } from "@/components/explore/place-card";
+import { PlaceDetailDialog } from "@/components/explore/place-detail-dialog";
 import { usePlaceWishlist } from "@/components/explore/use-place-wishlist";
 import { useToast } from "@/components/main/main-ui";
 import type { Place, PlaceKind } from "@/lib/explore";
@@ -15,6 +16,8 @@ import type { Place, PlaceKind } from "@/lib/explore";
 export function CountryExplore({ countryCode, countryName }: { countryCode: string; countryName: string }) {
   const [data, setData] = useState<CountryPlaces | null>(null);
   const [error, setError] = useState("");
+  // 상세 창에 띄운 카드(임시 상세 창, 시안 나오면 교체).
+  const [detail, setDetail] = useState<{ kind: PlaceKind; place: Place } | null>(null);
   const { notify, toast } = useToast();
   const wishlist = usePlaceWishlist(notify);
 
@@ -33,22 +36,22 @@ export function CountryExplore({ countryCode, countryName }: { countryCode: stri
 
   if (!data) {
     return (
-      <p className="status" role={error ? "alert" : "status"}>
+      <p className={error ? "status" : "status is-loading"} role={error ? "alert" : "status"}>
         {error || "둘러보기 정보를 불러오는 중..."}
       </p>
     );
   }
 
+  const heart = (kind: PlaceKind, place: Place) => ({
+    saved: wishlist.isSaved(kind, place.id),
+    pending: wishlist.isPending(kind, place.id),
+    onToggle: () => wishlist.toggle(kind, place),
+  });
   const card = (kind: PlaceKind, place: Place) => (
-    <PlaceCard
-      key={place.id}
-      place={place}
-      saved={wishlist.isSaved(kind, place.id)}
-      pending={wishlist.isPending(kind, place.id)}
-      onToggle={() => void wishlist.toggle(kind, place)}
-    />
+    <PlaceCard key={place.id} place={place} onOpen={() => setDetail({ kind, place })} {...heart(kind, place)} />
   );
-  const { cities } = data.attractions;
+  // 관광명소가 없는 도시는 뺀다(빈 줄이 생기지 않고, "가보자 GO"가 내용 있는 첫 줄로 간다).
+  const cities = data.attractions.cities.filter((city) => city.attractions.length > 0);
   const { foods } = data.foods;
   // 팀 결정: 관광명소는 일본만 도시별로 나누고, 나머지 나라는 나라 단위 한 줄로 묶는다.
   // 묶을 때는 id 순(= 데이터셋 문서 순서, V9 시드)으로 정렬한다. 도시 순서대로 이으면 문서 순서와 달라진다.
@@ -92,7 +95,14 @@ export function CountryExplore({ countryCode, countryName }: { countryCode: stri
         </Carousel>
       ))}
 
-      {toast}
+      <PlaceDetailDialog
+        place={detail?.place ?? null}
+        onClose={() => setDetail(null)}
+        {...(detail ? heart(detail.kind, detail.place) : { saved: false, pending: false, onToggle: async () => false })}
+      >
+        {detail && toast}
+      </PlaceDetailDialog>
+      {!detail && toast}
     </>
   );
 }

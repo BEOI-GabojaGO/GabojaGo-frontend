@@ -961,7 +961,8 @@ export function FlightHeart({
       notify(saved === null ? "위시리스트에 담았어요." : "위시리스트에서 뺐어요.");
     } else if (result.status === 401) {
       notify("로그인이 필요해요. 로그인 화면으로 이동합니다.");
-      router.push(loginHref(pathname));
+      // 토스트를 읽을 틈을 두고 이동한다(둘러보기 하트와 같은 규칙).
+      window.setTimeout(() => router.push(loginHref(pathname)), 1000);
     } else if (result.code === "DUPLICATE_WISHLIST") {
       setSaved("duplicate");
       notify("이미 위시리스트에 담긴 항공권이에요.");
