@@ -1,0 +1,44 @@
+/*
+ * 로그인 후 헤더 계정 메뉴(11/23 시안 .account-nav·.wishlist-link·.account-menu). 메인·항공권 목록·예약하기·둘러보기가 같이 쓴다.
+ * 시안 값 그대로. 화면별 차이(둘러보기 사진 위 흰 글자·밝은 헤더)는 explore.css에 둔다.
+ */
+.account-nav{display:flex;align-items:center;justify-content:flex-end;gap:12px;height:36px;min-width:0}
+.account-nav .wishlist-link,.account-nav .account-menu-toggle{display:flex;align-items:center;color:#333;font-size:14px;line-height:17px;font-weight:500;white-space:nowrap}
+.account-nav .wishlist-link{box-sizing:border-box;height:36px;flex:0 0 auto;justify-content:center;padding:0 12px;border:1px solid rgba(0,0,0,.1);border-radius:12px;background:transparent;text-decoration:none;transform-origin:50% 50%;transition:transform .09s cubic-bezier(.22,.8,.24,1)}
+.account-nav .wishlist-link:hover{color:#ff385c}
+.account-nav .wishlist-link:active{color:#c8104f;transform:scale(.94)}
+.account-nav .wishlist-link:hover .wishlist-icon{filter:brightness(0) saturate(100%) invert(31%) sepia(99%) saturate(4508%) hue-rotate(337deg) brightness(101%) contrast(102%)}
+.account-nav .wishlist-link:active .wishlist-icon{filter:brightness(0) saturate(100%) invert(19%) sepia(82%) saturate(4102%) hue-rotate(326deg) brightness(80%) contrast(96%)}
+.account-nav .wishlist-link-content{display:inline-flex;align-items:center;gap:4px;height:20px;line-height:20px}
+.account-nav .wishlist-link-content>span{display:inline-flex;align-items:center;height:20px;line-height:20px}
+.account-nav .wishlist-icon{display:block;width:20px;height:20px;flex:none}
+.account-nav .account-menu-wrap{position:relative}
+.account-nav .account-menu-toggle{position:relative;height:36px;min-height:36px;padding:0;border:0;background:transparent;cursor:pointer}
+.account-nav .account-menu-toggle:hover{color:#111}
+.account-nav .account-toggle-content{display:inline-flex;position:relative;align-items:center;gap:8px;transform-origin:50% 50%;transition:transform .09s cubic-bezier(.22,.8,.24,1)}
+.account-nav .account-menu-toggle:active .account-toggle-content{transform:scale(.94)}
+.account-nav .account-name{display:inline-flex;align-items:baseline}
+.account-nav .account-name-value{font-weight:600}
+.account-nav .account-name-suffix{font-weight:400}
+.account-nav .account-menu-toggle:focus-visible{outline:none}
+.account-nav .account-menu-toggle:focus-visible::after{content:"";position:absolute;inset:-1px -8px;border:2px solid #ff385c;border-radius:8px;pointer-events:none}
+.account-nav .account-chevron{width:9px;height:9px;flex:0 0 9px;background:currentColor;-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none'%3E%3Cpath d='M5 7.5L10 12.5L15 7.5' stroke='black' stroke-width='1.2' stroke-linecap='round'/%3E%3C/svg%3E") center/175% 175% no-repeat;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none'%3E%3Cpath d='M5 7.5L10 12.5L15 7.5' stroke='black' stroke-width='1.2' stroke-linecap='round'/%3E%3C/svg%3E") center/175% 175% no-repeat;transition:transform 160ms ease}
+.account-nav .account-menu-toggle[aria-expanded=true] .account-chevron{transform:rotate(180deg)}
+.account-nav .account-menu{position:absolute;right:0;top:calc(100% + 8px);width:160px;padding:6px 0;border:.6px solid rgba(0,0,0,.18);border-radius:16px;background:#fff;color:#333;box-shadow:0 1px 4px rgba(0,0,0,.2);overflow:hidden;z-index:40;opacity:0;visibility:hidden;pointer-events:none;transform:translateY(-6px);transition:opacity .2s ease,transform .2s ease,visibility 0s linear .2s}
+.account-nav .account-menu.is-open{opacity:1;visibility:visible;pointer-events:auto;transform:translateY(0);transition-delay:0s}
+.account-nav .account-menu :is(a,button){display:flex;box-sizing:border-box;width:100%;height:41px;padding:0 16px;border:0;border-radius:0;background:#fff;color:#333;align-items:center;text-align:left;font:inherit;font-size:14px;line-height:normal;font-weight:400;white-space:nowrap;text-decoration:none;cursor:pointer;transition:background-color .16s ease}
+.account-nav .account-menu [data-account-action="logout"]{color:#ff385c;font-weight:500}
+.account-nav .account-menu :is(a,button):is(:hover,:focus-visible){background:#eee;outline:none}
+.account-nav .account-menu :is(a,button):active{background:#e4e4e4}
+.account-nav .account-menu-label{display:inline-block;transform-origin:center;transition:transform .22s cubic-bezier(.22,.8,.24,1)}
+.account-nav .account-menu :is(a,button):active .account-menu-label{transform:scale(.92)}
+/* 599px 이하: 위시리스트는 아이콘만(36×36), 메뉴 위아래 여백 10px. */
+@media(max-width:599px){
+  .account-nav .wishlist-link{width:36px;padding:8px}
+  .account-nav .wishlist-link-content>span{display:none}
+  .account-nav .account-menu{padding:10px 0}
+}
+@media(prefers-reduced-motion:reduce){
+  .account-nav .wishlist-link,.account-nav .account-toggle-content,.account-nav .account-chevron,.account-nav .account-menu-label{transition:none}
+  .account-nav .wishlist-link:active,.account-nav .account-menu-toggle:active .account-toggle-content,.account-nav .account-menu :is(a,button):active .account-menu-label{transform:none}
+}

@@ -43,3 +43,8 @@ export function safeNext(value: string | null | undefined) {
     return null;
   }
 }
+
+/** 로그아웃(토큰 쿠키 삭제). 내 계정 화면과 헤더 계정 메뉴가 같이 쓴다. */
+export async function logout() {
+  await fetch("/api/auth/logout", { method: "POST" });
+}

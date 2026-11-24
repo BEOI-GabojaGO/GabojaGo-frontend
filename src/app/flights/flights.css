@@ -39,10 +39,7 @@
   .back-button img { transform: rotate(180deg); }
   .brand { font-size: 18px; font-weight: 700; color: #101828; white-space: nowrap; line-height: 22px; }
   .brand span { color: #ff385c; }
-  .account-nav { display: flex; align-items: center; gap: 8px; }
-  .wishlist-button { display: flex; align-items: center; gap: 6px; padding: 8px 10px; color: #555; font-size: 14px; font-weight: 500; }
-  /* 로그인 후: 둘러보기 시안의 "닉네임님 ▾" */
-  .user-button { display: flex; align-items: center; gap: 8px; padding: 8px 0 8px 14px; color: #333; font-size: 14px; line-height: 20px; font-weight: 500; white-space: nowrap; }
+  /* 로그인 후 계정 메뉴는 account-menu.css(11/23 시안, 공용). */
   /* 로그아웃: 메인·항공권 목록 시안의 분홍 "로그인". 아이콘은 모바일에서만 */
   .login-button { height: 36px; display: flex; align-items: center; gap: 4px; border-radius: 12px; background: #ff385c; color: #fff; font-weight: 500; padding: 8px 14px; line-height: 17px; white-space: nowrap; }
   .site-header .login-icon { display: none; filter: none; }
@@ -552,10 +549,9 @@
   @media (max-width: 599px) {
     padding-top: 56px;
     .site-header { height: 56px; }
-    .page-container { width: calc(100% - 30px); }
+    /* 11/23 시안: 모바일 헤더 좌우 20px(메인과 같게). */
+    .page-container { width: calc(100% - 40px); }
     .brand { font-size: 16px; line-height: 19px; }
-    .user-button { padding: 8px 0 8px 4px; gap: 6px; }
-    @media (max-width: 360px) { .wishlist-button span { display: none; } }
     .login-button { background: transparent; color: #ff385c; font-size: 14px; padding: 8px 14px 8px 10px; }
     .site-header .login-icon { display: block; width: 20px; height: 20px; }
     .logo-fallback { font-size: 11px; }

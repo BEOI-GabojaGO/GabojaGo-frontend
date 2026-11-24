@@ -2,11 +2,12 @@
 
 import { useEffect, useRef, useState } from "react";
 import { AuthForms } from "@/components/auth/auth-forms";
-import { AccountLinks } from "@/components/explore/explore-header";
+import { AccountMenu } from "@/components/explore/explore-header";
 import { closeDialogAnimated, Img, isBackdropClick } from "@/components/main/main-ui";
+import { logout } from "@/lib/auth-client";
 import { requestJson } from "@/lib/flight-client";
 
-/** 헤더 로그인 버튼 + 로그인·회원가입 다이얼로그(AuthForms). 로그인 상태면 시안의 "♡ 위시리스트 · 닉네임님 ▾"(AccountLinks)를 보여 준다. */
+/** 헤더 로그인 버튼 + 로그인·회원가입 다이얼로그(AuthForms). 로그인 상태면 계정 메뉴(AccountMenu: 위시리스트·닉네임님 ▾)를 보여 준다. */
 export function LoginDialog() {
   const ref = useRef<HTMLDialogElement>(null);
   const trigger = useRef<HTMLButtonElement>(null);
@@ -37,7 +38,13 @@ export function LoginDialog() {
   return (
     <>
       {nickname ? (
-        <AccountLinks nickname={nickname} />
+        <AccountMenu
+          nickname={nickname}
+          onLogout={async () => {
+            await logout();
+            setNickname(null);
+          }}
+        />
       ) : (
         <button ref={trigger} className="login" type="button" aria-haspopup="dialog" aria-controls="login-dialog" onClick={open}>
           <Img name="imgIconLogin.svg" className="mobile-only" />

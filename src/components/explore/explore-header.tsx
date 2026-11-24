@@ -6,24 +6,82 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState, type RefObject } from "react";
 import { prefersReducedMotion } from "@/components/main/main-ui";
 import { useHideOnScroll } from "@/components/main/main-scroll";
-import { loginHref } from "@/lib/auth-client";
+import { loginHref, logout } from "@/lib/auth-client";
+import "@/app/account-menu.css";
 import { requestJson } from "@/lib/flight-client";
 
 /**
- * 로그인 후 헤더 계정 메뉴(둘러보기 시안): "♡ 위시리스트" + "닉네임님 ▾"(→ 내 계정).
- * 로그아웃이면 시안(메인·항공권 목록·예약하기)대로 "로그인"만 보이므로 각 헤더가 따로 그린다. 메인 헤더도 이걸 쓴다.
+ * 로그인 후 헤더 계정 메뉴(11/23 시안): "♡ 위시리스트" + "닉네임님 ▾" → 드롭다운("내 정보"·"로그아웃").
+ * 시안 드롭다운은 로그아웃만 있지만, 내 계정 화면으로 가는 길을 남기려고 "내 정보"를 둔다(사용자 결정 2026-11-24).
+ * 로그아웃이면 각 헤더가 "로그인"을 따로 그린다. 메인·목록·예약하기·둘러보기 헤더가 모두 이걸 쓴다. 스타일은 account-menu.css.
  */
-export function AccountLinks({ nickname }: { nickname: string }) {
+export function AccountMenu({ nickname, onLogout }: { nickname: string; onLogout: () => void }) {
+  const [open, setOpen] = useState(false);
+  const wrap = useRef<HTMLDivElement>(null);
+  const toggle = useRef<HTMLButtonElement>(null);
+
+  // 열려 있을 때 바깥을 누르거나 ESC를 누르면 닫는다.
+  useEffect(() => {
+    if (!open) return;
+    const onClick = (event: MouseEvent) => {
+      if (!wrap.current?.contains(event.target as Node)) setOpen(false);
+    };
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key !== "Escape") return;
+      setOpen(false);
+      toggle.current?.focus();
+    };
+    document.addEventListener("click", onClick);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("click", onClick);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [open]);
+
   return (
     <nav className="account-nav" aria-label="내 계정">
-      <Link className="wishlist-button" href="/wishlist">
-        <img src="/explore/account.svg" width={14} height={13} alt="" />
-        <span>위시리스트</span>
+      <Link className="wishlist-link" href="/wishlist">
+        <span className="wishlist-link-content">
+          <img className="wishlist-icon" src="/main/heart-stroke.svg" width={20} height={20} alt="" />
+          <span>위시리스트</span>
+        </span>
       </Link>
-      <Link className="user-button" href="/account">
-        {nickname}님
-        <img src="/explore/chevron-down.svg" width={14} height={14} alt="" />
-      </Link>
+      <div ref={wrap} className="account-menu-wrap">
+        <button
+          ref={toggle}
+          className="account-menu-toggle"
+          type="button"
+          aria-haspopup="menu"
+          aria-expanded={open}
+          onClick={() => setOpen((value) => !value)}
+        >
+          <span className="account-toggle-content">
+            <span className="account-name">
+              <span className="account-name-value">{nickname}</span>
+              <span className="account-name-suffix">님</span>
+            </span>
+            <span className="account-chevron" aria-hidden="true" />
+          </span>
+        </button>
+        {/* 닫힌 메뉴도 그려 두고 is-open으로 펼친다(시안의 0.2초 펼침·접힘). 닫혀 있으면 visibility:hidden이라 포커스되지 않는다. */}
+        <div className={`account-menu${open ? " is-open" : ""}`} role="menu">
+          <Link role="menuitem" href="/account" onClick={() => setOpen(false)}>
+            <span className="account-menu-label">내 정보</span>
+          </Link>
+          <button
+            type="button"
+            role="menuitem"
+            data-account-action="logout"
+            onClick={() => {
+              setOpen(false);
+              onLogout();
+            }}
+          >
+            <span className="account-menu-label">로그아웃</span>
+          </button>
+        </div>
+      </div>
     </nav>
   );
 }
@@ -64,7 +122,7 @@ function useHeroHeader(ref: RefObject<HTMLElement | null>, enabled: boolean) {
 }
 
 /**
- * 둘러보기·항공권 화면 헤더. 로그인 상태면 AccountLinks, 아니면 새 디자인 로그인 페이지로 가는 "로그인"이다.
+ * 둘러보기·항공권 화면 헤더. 로그인 상태면 계정 메뉴(AccountMenu), 아니면 새 디자인 로그인 페이지로 가는 "로그인"이다.
  * 토큰은 HttpOnly 쿠키라 /api/users/me 응답으로 로그인 여부를 판단한다(login-dialog와 같은 방식).
  */
 /**
@@ -100,7 +158,13 @@ export function ExploreHeader({ hideOnScroll = false, overHero = false }: { hide
           </Link>
         </div>
         {nickname ? (
-          <AccountLinks nickname={nickname} />
+          <AccountMenu
+            nickname={nickname}
+            onLogout={async () => {
+              await logout();
+              setNickname(null);
+            }}
+          />
         ) : (
           <Link className="login-button" href={loginHref(pathname)}>
             <img className="login-icon" src="/main/imgIconLogin.svg" width={20} height={20} alt="" />

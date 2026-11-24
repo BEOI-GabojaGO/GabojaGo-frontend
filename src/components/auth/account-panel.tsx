@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import type { CommonResponse } from "@/lib/api-types";
-import { readErrorMessage } from "@/lib/auth-client";
+import { logout, readErrorMessage } from "@/lib/auth-client";
 
 type User = {
   id: number;
@@ -52,11 +52,11 @@ export function AccountPanel() {
     return () => controller.abort();
   }, [router]);
 
-  async function logout() {
+  async function handleLogout() {
     setPendingLogout(true);
 
     try {
-      await fetch("/api/auth/logout", { method: "POST" });
+      await logout();
     } finally {
       router.replace("/login");
       router.refresh();
@@ -127,7 +127,7 @@ export function AccountPanel() {
 
             <button
               type="button"
-              onClick={logout}
+              onClick={handleLogout}
               disabled={pendingLogout}
               className="mt-7 h-12 w-full rounded-xl border border-slate-200 bg-white text-sm font-bold text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-4 focus:ring-slate-200 disabled:cursor-not-allowed disabled:text-slate-400"
             >
