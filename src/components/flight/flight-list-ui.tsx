@@ -1,6 +1,7 @@
 "use client";
 
 /* eslint-disable @next/next/no-img-element -- 디자인 원본 아이콘과 SerpApi 항공사 로고를 그대로 쓴다. */
+import { FLAGS } from "@/lib/flags";
 import { usePathname, useRouter } from "next/navigation";
 import { Fragment, useEffect, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
 import { SearchEditDrawer } from "@/components/flight/search-edit-drawer";
@@ -36,16 +37,7 @@ const TIME_SLOTS = [0, 4, 8, 12, 16, 20].map((start) => ({
 /** 데스크톱 사이드바에서 숨기는 칸(1111 시안 departTimeOptions·returnTimeOptions): 가는편 20–24시, 오는편 00–04시. 시트는 6칸 모두. */
 const SIDEBAR_HIDDEN: Record<Leg, number> = { outbound: 20, inbound: 0 };
 
-export const FLAGS: Record<string, string> = {
-  대한민국: "flag-korea.png",
-  일본: "flag-japan.png",
-  중국: "flag-china.png",
-  싱가포르: "flag-singapore.webp",
-  홍콩: "flag-hong-kong.webp",
-  인도: "flag-india.webp",
-  말레이시아: "flag-malaysia.webp",
-  태국: "flag-thailand.webp",
-};
+export { FLAGS };
 /** 국기 파일 이름 → CSS 클래스(flag-korea 등). */
 export const flagClass = (file: string) => file.replace(/\.\w+$/, "");
 

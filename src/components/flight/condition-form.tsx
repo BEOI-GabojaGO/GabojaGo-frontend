@@ -316,7 +316,7 @@ export function useConditionForm(
     onClick: () => (picker === type ? closePicker() : openPicker(type)),
   });
 
-  const field = (type: PickerType, label: string, value: string) => (
+  const field = (type: PickerType, label: string, value: ReactNode) => (
     <button className="condition-field" {...triggerProps(type)}>
       <span>{label}</span>
       <strong>{value}</strong>
