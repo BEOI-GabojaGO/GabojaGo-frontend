@@ -42,3 +42,6 @@ input {
 /* 모바일은 로고·비행 경로를 80%로 줄인다(1111 시안). */
 @media (max-width:599px){.site-loader{gap:12px}.site-loader-route{transform:scale(.8);margin-block:-3px}.site-loader-brand{transform:scale(.8);margin-block:-4px}}
 @media (prefers-reduced-motion:reduce){.site-loader.is-busy{animation:none}.site-loader{animation-duration:160ms;animation-delay:180ms}.site-loader-plane{animation:none;offset-distance:100%}}
+
+/* 글자를 끌어 선택하면 브랜드 분홍 배경(11/23 시안, 모든 화면). */
+::selection{background:#ff385c;color:#fff}

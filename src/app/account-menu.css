@@ -42,3 +42,22 @@
   .account-nav .wishlist-link,.account-nav .account-toggle-content,.account-nav .account-chevron,.account-nav .account-menu-label{transition:none}
   .account-nav .wishlist-link:active,.account-nav .account-menu-toggle:active .account-toggle-content,.account-nav .account-menu :is(a,button):active .account-menu-label{transform:none}
 }
+
+/* 로그인·회원가입·로그아웃 전환 로더와 완료 토스트(11/23 시안 .auth-loader). body로 portal 해서 화면 범위 밖에 둔다. */
+.auth-loader{position:fixed;inset:0;z-index:20000;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:15px;padding-bottom:56px;background:#fff;color:#333;font-family:"Noto Sans KR",sans-serif;opacity:0;visibility:hidden;pointer-events:none;transition:opacity 360ms ease,visibility 360ms step-end}
+.auth-loader.is-visible{opacity:1;visibility:visible;pointer-events:auto;transition:opacity 0s,visibility 0s}
+.auth-loader.is-leaving{opacity:0;visibility:hidden;pointer-events:none;transition:opacity 360ms ease,visibility 0s linear 360ms}
+.auth-loader-route{position:relative;width:150px;height:30px;display:flex;align-items:center}
+.auth-loader-line{position:absolute;inset:0;width:150px;height:30px;overflow:visible}
+.auth-loader-line path{fill:none;stroke:#ff385c66;stroke-width:1;stroke-dasharray:3 3;vector-effect:non-scaling-stroke}
+.auth-loader-start,.auth-loader-end{position:absolute;top:11.5px;box-sizing:border-box;width:7px;height:7px;border:2px solid #ff385c;border-radius:50%;background:#fff}
+.auth-loader-start{left:12.5px}.auth-loader-end{right:12.5px}
+.auth-loader-plane{position:absolute;left:0;top:0;width:22px;height:22px;z-index:1;offset-path:path("M 16 15 C 45 -3 105 -3 134 15");offset-anchor:center;offset-rotate:auto 42deg}
+.auth-loader.is-animating .auth-loader-plane{animation:site-loader-flight 900ms linear both}
+.auth-loader-brand{font-size:33.6px;line-height:40.6px;font-weight:700;letter-spacing:-.5px}
+.auth-loader-brand span{color:#ff385c}
+.auth-toast{position:fixed;bottom:24px;left:50%;z-index:20001;transform:translate(-50%,20px);padding:12px 20px;background:#333;color:#fff;border-radius:12px;opacity:0;pointer-events:none;transition:.2s;max-width:calc(100% - 32px);width:max-content;font-size:14px}
+.auth-toast.visible{opacity:1;transform:translate(-50%,0)}
+/* 모바일은 페이지 로더처럼 80%로(시안). */
+@media(max-width:599px){.auth-loader{gap:12px}.auth-loader-route,.auth-loader-brand{transform:scale(.8);transform-origin:center;margin-block:-3px}}
+@media(prefers-reduced-motion:reduce){.auth-loader.is-animating .auth-loader-plane{animation:none;offset-distance:100%}.auth-loader,.auth-loader.is-leaving{transition-duration:160ms}.auth-toast{transition:none}}
