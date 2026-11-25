@@ -1510,3 +1510,50 @@ body.search-edit-open { overflow: hidden; }
 @keyframes desktop-filter-fade-in{from{opacity:0}to{opacity:1}}
 @keyframes desktop-filter-item-in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 @keyframes filter-apply-rise{0%{visibility:hidden;transform:translate3d(0,calc(100% + 120px),0)}1%{visibility:visible}100%{visibility:visible;transform:translate3d(0,0,0)}}
+
+/* ---------- 11/23 시안(항공권 목록 4-2): 899px 이하 필터 시트 모양·끌기 ---------- */
+/* 휴대폰·태블릿 같은 시트: 최대 520px 폭·520px 높이, 위 모서리 34px. 목록은 시트 전체를 덮고(위 88px 흐림 띠 아래로 지나감), 적용 버튼은 아래 고정. */
+@media(max-width:899px){
+  .flight-page .modal-backdrop.is-closing{opacity:0}
+  /* 전체 높이로 올렸을 때 고정 헤더(z-index 32)에 손잡이가 가리지 않게 헤더 위로 올린다. */
+  .flight-page .modal-backdrop{z-index:50}
+  .flight-page .filter-panel{z-index:51!important}
+  .flight-page .filter-panel{position:fixed!important;top:auto!important;right:0!important;bottom:0!important;left:0!important;display:block!important;width:100%!important;max-width:520px!important;height:min(520px,calc(100dvh - 24px))!important;max-height:calc(100dvh - 24px)!important;margin:0 auto!important;padding:12px 30px calc(18px + env(safe-area-inset-bottom))!important;border-radius:34px 34px 0 0!important;background:#fff;box-shadow:0 20px 55px rgba(0,0,0,.16);overflow:hidden!important;isolation:isolate;overscroll-behavior:contain;transform:translateY(0)}
+  .flight-page .filter-panel::before{content:"";position:absolute;z-index:3;top:0;right:0;left:0;height:88px;pointer-events:none;background:linear-gradient(to bottom,#fff 0%,rgba(255,255,255,.98) 50%,rgba(255,255,255,.55) 78%,rgba(255,255,255,0) 100%)}
+  .flight-page .filter-panel .filter-drag-handle{position:relative;z-index:4;display:block!important;width:40px!important;height:6px!important;margin:0 auto 16px!important;border-radius:999px;background:#d9d9d9!important;opacity:1;touch-action:none;user-select:none;cursor:grab}
+  .flight-page .filter-panel .filter-head{position:relative;z-index:4;display:flex;align-items:center;justify-content:space-between;height:24px;min-height:24px;margin:0;padding:0;touch-action:none;user-select:none}
+  .flight-page .filter-panel .filter-head h2{font-size:20px;line-height:24px;font-weight:700}
+  .flight-page .filter-panel .filter-head .mobile-filter-reset{display:block;font-size:14px;line-height:20px;font-weight:500;color:#ff385c}
+  .flight-page .filter-panel .close-filter{display:grid!important;place-items:center;width:32px!important;height:32px!important;margin:0!important;border-radius:50%!important;color:#666}
+  .flight-page .filter-panel .close-filter::before,.flight-page .filter-panel .close-filter::after{content:none!important}
+  .flight-page .filter-panel .close-filter svg{display:block;width:12px;height:12px;fill:none;stroke:currentColor;stroke-width:1.2;stroke-linecap:round;stroke-linejoin:round}
+  .flight-page .filter-panel .filter-groups{position:absolute!important;inset:0;z-index:2;box-sizing:border-box;height:auto!important;max-height:none!important;margin:0!important;padding:88px 30px 120px!important;overflow-y:auto!important}
+  .flight-page .filter-panel .filter-actions{position:absolute!important;right:0!important;bottom:0!important;left:0!important;z-index:5;display:block!important;box-sizing:border-box;width:auto!important;margin:0!important;padding:20px calc(20px + env(safe-area-inset-bottom)) 20px!important;padding-bottom:calc(20px + env(safe-area-inset-bottom))!important;background:linear-gradient(180deg,rgba(255,255,255,0) 0%,rgba(255,255,255,.82) 34%,rgba(255,255,255,.98) 72%,#fff 100%)}
+  .flight-page .filter-panel .filter-actions{padding-inline:20px!important}
+  .flight-page .filter-panel .filter-actions .reset-button{display:none!important}
+  .flight-page .filter-panel .filter-actions .apply-button{display:block;width:100%!important;height:56px!important;border-radius:20px!important;font-size:14px!important;font-weight:700}
+  /* 끌기 상태: 높이·아래 밀림·위 모서리를 CSS 변수로. 놓으면 0.28초 동안 맞춘다. */
+  .flight-page .filter-panel.is-dragging .filter-drag-handle{cursor:grabbing}
+  .flight-page .filter-panel:is(.is-dragging,.is-drag-snap,.is-drag-expanded,.is-drag-middle){height:var(--filter-drag-height)!important;max-height:none!important;transform:translateY(var(--filter-drag-offset,0px))!important;border-radius:var(--filter-drag-radius,34px) var(--filter-drag-radius,34px) 0 0!important}
+  .flight-page .filter-panel.is-dragging{transition:none!important;will-change:height,transform}
+  .flight-page .filter-panel.is-drag-snap{transition:height .28s cubic-bezier(.22,1,.36,1),transform .28s cubic-bezier(.22,1,.36,1)!important}
+  /* 닫힘: 지금 높이·위치에서 아래로 내려간다. */
+  .flight-page .filter-panel.is-closing{height:var(--filter-drag-height)!important;max-height:none!important;transform:translateY(var(--filter-drag-offset,0px))!important;pointer-events:none;transition:transform .32s cubic-bezier(.22,1,.36,1)!important}
+  .flight-page .filter-panel.is-closing.is-closing-out{transform:translateY(100%)!important}
+}
+/* 시트 안 항목: 휴대폰·태블릿 같은 값(11/23 시안 402px 최종 계산값). "모두 선택/해제"도 시트에 보인다. */
+@media(max-width:899px){
+  .flight-page .filter-panel .filter-group{padding:0 0 30px!important;margin:0 0 30px!important;border-bottom:1px solid #d9d9d9}
+  .flight-page .filter-panel .filter-group:last-child{padding-bottom:16px!important;margin-bottom:0!important;border-bottom:0}
+  .flight-page .filter-panel .filter-group-title{display:flex;justify-content:space-between;align-items:center;height:24px;margin-bottom:26px!important}
+  .flight-page .filter-panel .filter-group-title h3{font-size:18px!important;line-height:24px!important;font-weight:600!important;letter-spacing:normal}
+  .flight-page .filter-panel .filter-select-all{display:block;font-size:14px;line-height:20px;font-weight:400;color:#ff385c}
+  .flight-page .filter-panel .check-list{gap:24px!important}
+  .flight-page .filter-panel .check-row{min-height:20px;font-size:12px;line-height:16px;font-weight:400;color:#333;column-gap:0}
+  .flight-page .filter-panel .filter-group:not(:first-child) .check-row{font-size:16px;line-height:20px}
+  .flight-page .filter-panel .check-row input{width:20px;height:20px;border-width:1px;border-radius:6px}
+  .flight-page .filter-panel .filter-airline-content{gap:8px}
+  .flight-page .filter-panel .filter-airline-name{font-size:16px;line-height:22px;font-weight:400}
+  .flight-page .filter-panel .filter-airline-logo{width:22px;height:22px;flex-basis:22px;border-radius:7px}
+  .flight-page .filter-panel .filter-airline-content em{margin-left:2px;font-size:12px;line-height:16px}
+}
