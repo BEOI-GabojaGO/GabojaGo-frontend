@@ -618,14 +618,6 @@
 .page-layout.stage-revealing.stage-return .compact-toolbar{animation-delay:120ms}
 .page-layout.stage-revealing.stage-return .results-heading{animation-delay:180ms}
 .page-layout.stage-revealing.stage-return .flight-list .flight-card{animation:site-content-in 420ms cubic-bezier(.22,1,.36,1) both;will-change:opacity,transform}
-.page-layout.stage-revealing.stage-return .flight-list .flight-card:nth-child(1){animation-delay:280ms}
-.page-layout.stage-revealing.stage-return .flight-list .flight-card:nth-child(2){animation-delay:340ms}
-.page-layout.stage-revealing.stage-return .flight-list .flight-card:nth-child(3){animation-delay:400ms}
-.page-layout.stage-revealing.stage-return .flight-list .flight-card:nth-child(4){animation-delay:460ms}
-.page-layout.stage-revealing.stage-return .flight-list .flight-card:nth-child(5){animation-delay:520ms}
-.page-layout.stage-revealing.stage-return .flight-list .flight-card:nth-child(6){animation-delay:580ms}
-.page-layout.stage-revealing.stage-return .flight-list .flight-card:nth-child(7){animation-delay:640ms}
-.page-layout.stage-revealing.stage-return .flight-list .flight-card:nth-child(8){animation-delay:700ms}
 .page-layout.stage-revealing.stage-complete .final-selection .final-leg, .page-layout.stage-revealing.stage-complete .final-trip-summary{animation:site-content-in 420ms cubic-bezier(.22,1,.36,1) both;will-change:opacity,transform}
 .page-layout.stage-revealing.stage-complete .final-selection .final-leg:nth-child(1){animation-delay:0ms}
 .page-layout.stage-revealing.stage-complete .final-selection .final-leg:nth-child(2){animation-delay:120ms}
@@ -650,10 +642,6 @@
 @media(max-width:599px){.heart-icon{width:20px;height:20px}}
 @media(prefers-reduced-motion:reduce){.heart-button.is-activating,.heart-button.is-deactivating, .heart-button.is-activating .heart-icon-stroke,.heart-button.is-activating .heart-icon-fill, .heart-button.is-deactivating .heart-icon-stroke,.heart-button.is-deactivating .heart-icon-fill, .heart-button.is-activating .heart-burst{animation:none!important}}
 @media(prefers-reduced-motion:reduce){.heart-burst{display:none}}
-html.content-revealing .flight-list .flight-card:nth-child(9){animation-delay:800ms!important}
-html.content-revealing .flight-list .flight-card:nth-child(10){animation-delay:860ms!important}
-.page-layout.stage-revealing.stage-return .flight-list .flight-card:nth-child(9){animation-delay:760ms}
-.page-layout.stage-revealing.stage-return .flight-list .flight-card:nth-child(10){animation-delay:820ms}
 @media(min-width:900px){.desktop-filter{position:sticky;top:84px;align-self:start}}
 @media(min-width:1200px){.desktop-filter{top:84px}}
 .heart-burst::before{content:"";position:absolute;top:50%;left:50%;width:4px;height:4px;border-radius:50%;background:var(--brand);opacity:0;transform:translate(-50%,-50%) scale(.6);box-shadow:0 -13px 0 var(--brand),11px -6px 0 var(--brand),11px 7px 0 var(--brand),-11px 7px 0 var(--brand),-11px -6px 0 var(--brand)}
@@ -690,16 +678,6 @@ html.content-revealing .flight-list .flight-card:nth-child(10){animation-delay:8
 .check-list .check-row:nth-child(6) input.filter-batch{--filter-batch-delay:180ms;animation-delay:180ms}
 .check-row input.filter-batch.filter-unchecking::after{animation-delay:var(--filter-batch-delay,0ms)}
 .flight-list.filter-revealing .flight-card{animation:site-content-in 420ms cubic-bezier(.22,1,.36,1) both;will-change:opacity,transform}
-.flight-list.filter-revealing .flight-card:nth-child(1){animation-delay:0ms!important}
-.flight-list.filter-revealing .flight-card:nth-child(2){animation-delay:60ms!important}
-.flight-list.filter-revealing .flight-card:nth-child(3){animation-delay:120ms!important}
-.flight-list.filter-revealing .flight-card:nth-child(4){animation-delay:180ms!important}
-.flight-list.filter-revealing .flight-card:nth-child(5){animation-delay:240ms!important}
-.flight-list.filter-revealing .flight-card:nth-child(6){animation-delay:300ms!important}
-.flight-list.filter-revealing .flight-card:nth-child(7){animation-delay:360ms!important}
-.flight-list.filter-revealing .flight-card:nth-child(8){animation-delay:420ms!important}
-.flight-list.filter-revealing .flight-card:nth-child(9){animation-delay:480ms!important}
-.flight-list.filter-revealing .flight-card:nth-child(10){animation-delay:540ms!important}
 @media(prefers-reduced-motion:reduce){.flight-list.filter-revealing .flight-card{animation:none!important;will-change:auto}}
 .results-column{position:relative;z-index:0}
 .results-heading,.compact-toolbar{position:relative;z-index:20}
@@ -1408,11 +1386,12 @@ html.content-revealing .flight-list .flight-card:nth-child(10){animation-delay:8
     .summary-date, .summary-passengers { min-width: 0 !important; overflow: hidden !important; text-overflow: ellipsis !important; white-space: nowrap !important; }
   }
 
-  /* 모바일 조건 수정 서랍 칸: 3줄 78px, 열 4.5 : 5.5, 바꾸기 45%, 칸 여백 17/20/14(시안 5056-5081). */
+  /* 모바일 조건 수정 서랍 칸: 3줄 74px, 열 4.5 : 5.5, 바꾸기 45%, 칸 여백 15/20/12(11/23 시안 5190-5207, 1111은 78px·17/20/14). */
   @media (max-width: 599px) {
-    .edit-field-label { margin-bottom: 2px !important; }
-    .search-edit-field, .search-edit-field[data-edit-field="from"], .search-edit-field[data-edit-field="to"], .search-edit-field[data-edit-field="date"], .search-edit-field[data-edit-field="passengers"] { padding: 17px 20px 14px !important; }
-    .search-edit-fields { grid-template-rows: repeat(3, 78px) !important; grid-template-columns: minmax(0, 4.5fr) minmax(0, 5.5fr) !important; }
+    .edit-field-label { margin-bottom: 6px !important; }
+    .search-edit-field strong { font-size: 14px; line-height: 22px; }
+    .search-edit-field, .search-edit-field[data-edit-field="from"], .search-edit-field[data-edit-field="to"], .search-edit-field[data-edit-field="date"], .search-edit-field[data-edit-field="passengers"] { padding: 15px 20px 12px !important; }
+    .search-edit-fields { grid-template-rows: repeat(3, 74px) !important; grid-template-columns: minmax(0, 4.5fr) minmax(0, 5.5fr) !important; }
     .search-edit-swap { left: 45% !important; }
   }
 
@@ -1495,3 +1474,39 @@ body.search-edit-open { overflow: hidden; }
 @keyframes date-arrow-button-pop{0%{transform:scale(.94)}45%{transform:scale(1.04)}100%{transform:scale(1)}}
 @keyframes date-arrow-nudge-next{0%{transform:translateX(0)}38%{transform:translateX(3px)}100%{transform:translateX(0)}}
 @keyframes date-arrow-nudge-previous{0%{transform:translateX(0)}38%{transform:translateX(-3px)}100%{transform:translateX(0)}}
+
+/* ---------- 11/23 시안(항공권 목록 4-1) ---------- */
+/* 넓은 화면 맨 위에서는 헤더 배경·그림자 없음(ExploreHeader clearAtTop → is-at-top). */
+@media(min-width:900px){.flight-page .site-header.is-at-top{background:rgba(255,255,255,0);box-shadow:none}}
+/* 카드 차례 등장: 60ms 간격을 카드 순서로(--flight-card-stagger, 10장 넘어도 이어짐). 처음 결과(is-intro)는 0.32초 뒤부터. */
+.flight-page .page-layout.is-intro .flight-list .flight-card{animation:site-content-in 420ms cubic-bezier(.22,1,.36,1) both;animation-delay:calc(320ms + var(--flight-card-stagger,0ms));will-change:opacity,transform}
+.flight-page .page-layout.stage-revealing.stage-return .flight-list .flight-card{animation-delay:calc(280ms + var(--flight-card-stagger,0ms))}
+.flight-page .flight-list.filter-revealing .flight-card{animation-delay:var(--flight-card-stagger,0ms)!important}
+/* 처음 결과와 필터 다시 띄우기가 겹치면 처음 결과 지연(0.32초)을 쓴다. */
+.flight-page .page-layout.is-intro .flight-list.filter-revealing .flight-card{animation-delay:calc(320ms + var(--flight-card-stagger,0ms))!important}
+/* 데스크톱 필터: 처음 결과가 나올 때 흐려졌다 나타나고, 1200px 이상은 제목·줄이 차례로(--desktop-filter-item-delay). */
+@media(min-width:900px){.flight-page .page-layout.is-intro .desktop-filter{animation:desktop-filter-fade-in 420ms cubic-bezier(.22,1,.36,1) 180ms both}}
+@media(min-width:1200px){.flight-page .page-layout.is-intro .desktop-filter :is(.filter-group-title,.check-row){animation:desktop-filter-item-in 380ms cubic-bezier(.22,1,.36,1) var(--desktop-filter-item-delay,0ms) both;will-change:opacity,transform}}
+/* 모바일 필터 시트: 목록 아래 여유 120px, 줄 누르는 범위 넓힘, "적용하기"는 열 때 올라오고 스크롤하는 동안 내려간다. */
+@media(max-width:899px){
+  .flight-page .filter-panel .filter-groups{padding-bottom:120px}
+  .flight-page .filter-panel .check-row{padding:12px 0;margin:-12px 0}
+  .flight-page .filter-panel .filter-actions{overflow:hidden;transition:transform .68s cubic-bezier(.16,1,.3,1)}
+  .flight-page .filter-panel .filter-actions.is-scroll-hidden{transform:translate3d(0,calc(100% + 40px),0);transition:transform .42s cubic-bezier(.22,1,.36,1)}
+}
+@media(max-width:899px) and (prefers-reduced-motion:no-preference){
+  .flight-page .filter-panel.is-open .filter-actions .apply-button{animation:filter-apply-rise 420ms cubic-bezier(.22,1,.36,1) 240ms both}
+}
+/* 조건 수정 서랍(모바일): 공항 코드·"(n박 m일)" 작게(시안). 칸 높이·여백·라벨 간격은 위 모바일 서랍 칸 블록. */
+@media(max-width:699px){.flight-page .search-edit-field:is([data-edit-field="from"],[data-edit-field="to"]) .edit-field-code{font-size:14px;font-weight:400}}
+@media(max-width:599px){
+  .flight-page .search-edit-field[data-edit-field="date"] .edit-date-duration{font-size:12px;font-weight:400}
+  .flight-page .search-edit-field:is([data-edit-field="from"],[data-edit-field="to"]) .edit-field-code{font-size:12px}
+}
+@media(prefers-reduced-motion:reduce){
+  .flight-page .page-layout.is-intro .flight-list .flight-card,.flight-page .page-layout.is-intro .desktop-filter,.flight-page .page-layout.is-intro .desktop-filter :is(.filter-group-title,.check-row){animation:none}
+  .flight-page .filter-panel .filter-actions{transition:none}
+}
+@keyframes desktop-filter-fade-in{from{opacity:0}to{opacity:1}}
+@keyframes desktop-filter-item-in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+@keyframes filter-apply-rise{0%{visibility:hidden;transform:translate3d(0,calc(100% + 120px),0)}1%{visibility:visible}100%{visibility:visible;transform:translate3d(0,0,0)}}

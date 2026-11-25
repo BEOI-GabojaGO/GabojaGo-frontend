@@ -43,6 +43,23 @@ function useHeroHeader(ref: RefObject<HTMLElement | null>, enabled: boolean) {
   }, [ref, enabled]);
 }
 
+/** 항공권 목록(11/23 시안 syncListGnbSurface): 900px 이상에서 맨 위에 있으면 헤더 배경·그림자를 없앤다(is-at-top). */
+function useClearAtTop(ref: RefObject<HTMLElement | null>, enabled: boolean) {
+  useEffect(() => {
+    const header = ref.current;
+    if (!enabled || !header) return;
+    const wide = matchMedia("(min-width: 900px)");
+    const sync = () => header.classList.toggle("is-at-top", wide.matches && window.scrollY < 1);
+    sync();
+    window.addEventListener("scroll", sync, { passive: true });
+    window.addEventListener("resize", sync, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", sync);
+      window.removeEventListener("resize", sync);
+    };
+  }, [ref, enabled]);
+}
+
 /**
  * 둘러보기·항공권 화면 헤더. 오른쪽은 메인과 같은 LoginDialog(로그인 상태면 계정 메뉴, 아니면 "로그인" → 로그인 창)다(11/23 시안).
  */
@@ -51,9 +68,19 @@ function useHeroHeader(ref: RefObject<HTMLElement | null>, enabled: boolean) {
  * overHero: 둘러보기 상세(1111 시안). 사진 위 어두운 헤더가 첫 목록이 헤더 밑으로 오면 밝은 헤더(is-light)로 바뀌고,
  * 699px 이하에서는 스크롤하는 동안 숨는다. 뒤로 아이콘도 시안의 왼쪽 화살표(20px)다.
  */
-export function ExploreHeader({ hideOnScroll = false, overHero = false }: { hideOnScroll?: boolean; overHero?: boolean }) {
+export function ExploreHeader({
+  hideOnScroll = false,
+  overHero = false,
+  clearAtTop = false,
+}: {
+  hideOnScroll?: boolean;
+  overHero?: boolean;
+  /** 항공권 목록: 넓은 화면 맨 위에서 헤더를 투명하게(11/23 시안). */
+  clearAtTop?: boolean;
+}) {
   const ref = useRef<HTMLElement>(null);
   useHideOnScroll(ref, hideOnScroll);
+  useClearAtTop(ref, clearAtTop);
   useHeroHeader(ref, overHero);
   const router = useRouter();
 

@@ -154,7 +154,11 @@ export function SearchEditDrawer({ open, request, locations, onClose }: InitialC
               </button>
               <button className={`search-edit-field${picker === "dates" ? " is-focused" : ""}`} data-edit-field="date" {...triggerProps("dates")}>
                 <span className="edit-field-label">일정</span>
-                <strong>{datesText}</strong>
+                {/* "(n박 m일)"은 모바일에서 작게(11/23 시안 edit-date-duration). */}
+                <strong>
+                  {datesText.replace(/\s*\([^()]+\)$/, "")}
+                  {/\([^()]+\)$/.test(datesText) && <span className="edit-date-duration"> {datesText.match(/\([^()]+\)$/)![0]}</span>}
+                </strong>
               </button>
               <button className={`search-edit-field${picker === "passengers" ? " is-focused" : ""}`} data-edit-field="passengers" {...triggerProps("passengers")}>
                 <span className="edit-field-label">탑승객 및 좌석</span>

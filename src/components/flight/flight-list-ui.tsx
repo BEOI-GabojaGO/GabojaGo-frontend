@@ -3,7 +3,7 @@
 /* eslint-disable @next/next/no-img-element -- 디자인 원본 아이콘과 SerpApi 항공사 로고를 그대로 쓴다. */
 import { FLAGS } from "@/lib/flags";
 import { usePathname, useRouter } from "next/navigation";
-import { Fragment, useEffect, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
+import { Fragment, useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type KeyboardEvent, type ReactNode } from "react";
 import { SearchEditDrawer } from "@/components/flight/search-edit-drawer";
 import { cityName, TRAVEL_CLASS_OPTIONS } from "@/components/flight/search-condition-fields";
 import { loginHref } from "@/lib/auth-client";
@@ -114,6 +114,11 @@ function playCheck(inputs: Iterable<HTMLInputElement>, checked: boolean, batch =
 /** 이 편의 로고(편 전체 → 첫 구간). */
 const logoOf = (option: FlightOption) => option.airlineLogo ?? option.segments[0]?.airlineLogo ?? null;
 
+/** 카드마다 차례 지연(60ms 간격)을 CSS 변수로 단다. 10장을 넘어도 이어진다(11/23 시안 --flight-card-stagger). */
+function staggerCards(root: Element) {
+  root.querySelectorAll<HTMLElement>(".flight-list > .flight-card").forEach((card, index) => card.style.setProperty("--flight-card-stagger", `${index * 60}ms`));
+}
+
 function FilterGroups({
   value,
   onChange,
@@ -121,8 +126,7 @@ function FilterGroups({
   legs,
   idPrefix,
   options = [],
-  panel = false,
-}: {
+  panel = false, onScroll }: {
   value: FilterState;
   onChange: (next: FilterState) => void;
   airlines: string[];
@@ -132,6 +136,8 @@ function FilterGroups({
   options?: FlightOption[];
   /** 태블릿·모바일 필터 시트. 항공사 줄에 로고와 편 수를 붙인다(시안 filter-airline-row). */
   panel?: boolean;
+  /** 시트 목록 스크롤(적용 버튼 숨김). */
+  onScroll?: () => void;
 }) {
   const toggleAirline = (name: string) =>
     onChange({
@@ -156,8 +162,10 @@ function FilterGroups({
     else onChange({ ...value, times: { ...value.times, [group]: on ? slotsOf(group).map(({ start }) => start) : [] } });
     if (section) playCheck(section.querySelectorAll("input"), on, true);
   };
-  const title = (heading: ReactNode, group: "airline" | Leg, all: boolean) => (
-    <div className="filter-group-title">
+  // 데스크톱 사이드바는 처음 열 때 항목이 차례로 나타난다(11/23 시안 --desktop-filter-item-delay). 시트는 쓰지 않는다.
+  const delay = (ms: number) => (panel ? undefined : ({ "--desktop-filter-item-delay": `${ms}ms` } as CSSProperties));
+  const title = (heading: ReactNode, group: "airline" | Leg, all: boolean, ms: number) => (
+    <div className="filter-group-title" style={delay(ms)}>
       <h3>{heading}</h3>
       <button
         className="filter-select-all"
@@ -183,16 +191,16 @@ function FilterGroups({
   };
 
   return (
-    <div className="filter-groups">
+    <div className="filter-groups" onScroll={onScroll}>
       <section className="filter-group">
-        {title("항공사", "airline", allAirlines)}
+        {title("항공사", "airline", allAirlines, 300)}
         <div className="check-list">
           {airlines.length === 0 && <p className="filter-empty">항공사 정보가 없습니다.</p>}
-          {airlines.map((name) => {
+          {airlines.map((name, index) => {
             const count = panel ? countOf(name) : 0;
             const logo = panel ? logoFor(name) : null;
             return (
-              <label className={`check-row${panel ? " filter-airline-row" : ""}`} key={name} htmlFor={`${idPrefix}-airline-${name}`}>
+              <label className={`check-row${panel ? " filter-airline-row" : ""}`} key={name} htmlFor={`${idPrefix}-airline-${name}`} style={delay(360 + index * 40)}>
                 <input
                   id={`${idPrefix}-airline-${name}`}
                   type="checkbox"
@@ -229,10 +237,11 @@ function FilterGroups({
             </>,
             leg,
             allTimes(leg),
+            760,
           )}
           <div className="check-list">
-            {slotsOf(leg).map(({ start, label }) => (
-              <label className="check-row" key={start} htmlFor={`${idPrefix}-${leg}-${start}`}>
+            {slotsOf(leg).map(({ start, label }, index) => (
+              <label className="check-row" key={start} htmlFor={`${idPrefix}-${leg}-${start}`} style={delay(820 + index * 40)}>
                 <input
                   id={`${idPrefix}-${leg}-${start}`}
                   type="checkbox"
@@ -329,6 +338,14 @@ function FilterDrawer({
   onClose: () => void;
 }) {
   const [draft, setDraft] = useState(filter.filter);
+  // 목록을 스크롤하는 동안 아래 "적용하기"를 내렸다가 멈추고 0.4초 뒤 다시 올린다(11/23 시안 handleFilterGroupsScroll).
+  const [scrolling, setScrolling] = useState(false);
+  const scrollTimer = useRef<number>(undefined);
+  const onGroupsScroll = () => {
+    setScrolling(true);
+    window.clearTimeout(scrollTimer.current);
+    scrollTimer.current = window.setTimeout(() => setScrolling(false), 400);
+  };
 
   useEffect(() => {
     const onKey = (event: globalThis.KeyboardEvent) => event.key === "Escape" && onClose();
@@ -353,8 +370,8 @@ function FilterDrawer({
             </svg>
           </button>
         </div>
-        <FilterGroups value={draft} onChange={setDraft} airlines={airlines} legs={legs} idPrefix="panel" options={options} panel />
-        <div className="filter-actions">
+        <FilterGroups value={draft} onChange={setDraft} airlines={airlines} legs={legs} idPrefix="panel" options={options} panel onScroll={onGroupsScroll} />
+        <div className={`filter-actions${scrolling ? " is-scroll-hidden" : ""}`}>
           <button className="reset-button" type="button" onClick={() => setDraft(EMPTY_FILTER)}>
             초기화
           </button>
@@ -451,6 +468,7 @@ export function FlightListLayout({
     previousStage.current = stage;
     element.classList.remove("stage-revealing", "stage-return", "stage-complete");
     if (stage === "outbound") return;
+    staggerCards(element);
     void element.offsetWidth;
     element.classList.add("stage-revealing", stage === "complete" ? "stage-complete" : "stage-return");
     const timer = setTimeout(() => element.classList.remove("stage-revealing", "stage-return", "stage-complete"), 1800);
@@ -467,11 +485,24 @@ export function FlightListLayout({
     const list = layout.current?.querySelector(".flight-list");
     if (!list) return;
     list.classList.remove("filter-revealing");
+    staggerCards(list);
     void (list as HTMLElement).offsetWidth;
     list.classList.add("filter-revealing");
     const timer = setTimeout(() => list.classList.remove("filter-revealing"), 1500);
     return () => clearTimeout(timer);
   }, [filter.filter, filter.sort]);
+  // 결과가 처음 나오면 한 번만 카드·데스크톱 필터를 차례로 띄운다(11/23 시안 content-revealing, 1.6초).
+  const introDone = useRef(false);
+  const hasOptions = (options?.length ?? 0) > 0;
+  useLayoutEffect(() => {
+    const element = layout.current;
+    if (introDone.current || !hasOptions || !element) return;
+    introDone.current = true;
+    staggerCards(element);
+    element.classList.add("is-intro");
+    const timer = setTimeout(() => element.classList.remove("is-intro"), 1600);
+    return () => clearTimeout(timer);
+  }, [hasOptions]);
   const route = `${placeLabel(locations.origin)} → ${placeLabel(locations.destination)}`;
   const divider = (
     <span className="query-divider" aria-hidden="true">
