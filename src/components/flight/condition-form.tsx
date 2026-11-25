@@ -155,8 +155,8 @@ export function useConditionForm(
   const [panelPosition, setPanelPosition] = useState<{ left: number; top: number }>();
   const narrow = useMediaQuery(FULL_SCREEN_QUERY);
   const fullScreen = narrow && !!picker && (picker !== "passengers" || chain);
-  // 전체 화면 장소 선택기는 안쪽 내용이 차례로 사라진 뒤(340ms) 닫는다(시안).
-  const closeDelay = fullScreen && isLocation(picker) ? 340 : 180;
+  // 전체 화면 장소 선택기는 안쪽 내용이 차례로 사라진 뒤(340ms), 일정·탑승객은 버튼까지 내려간 뒤(260ms) 닫는다(시안).
+  const closeDelay = fullScreen ? (isLocation(picker) ? 340 : 260) : 180;
 
   /** 닫힘 애니메이션 뒤에 피커를 내리고 누른 칸으로 포커스를 돌려준다. */
   function closePicker() {
@@ -531,6 +531,10 @@ const ROW_GAP = 10;
 /** Figma Calendar(362 × 471). 왕복이면 출발~귀국을 주 단위 띠로 칠한다(시안 calendarMonthMarkup). */
 function DatePicker({ state, update, onDone }: PickerProps) {
   const scroll = useRef<HTMLDivElement>(null);
+  // 방금 고른 날짜는 0.4초 동안 튄다(11/23 시안 is-just-selected). 한 번 고르면 처음 등장 움직임은 다시 돌지 않는다(is-settled).
+  const [justPicked, setJustPicked] = useState<string | null>(null);
+  const [settled, setSettled] = useState(false);
+  const justPickedTimer = useRef<number>(undefined);
   const [month, setMonth] = useState(() => {
     const base = state.depart ? new Date(`${state.depart}T00:00:00`) : new Date();
     return new Date(base.getFullYear(), base.getMonth(), 1);
@@ -555,6 +559,10 @@ function DatePicker({ state, update, onDone }: PickerProps) {
   function pick(key: string) {
     if (oneway || !state.depart || state.return || key <= state.depart) update({ depart: key, return: null });
     else update({ return: key });
+    setSettled(true);
+    setJustPicked(key);
+    window.clearTimeout(justPickedTimer.current);
+    justPickedTimer.current = window.setTimeout(() => setJustPicked(null), 400);
   }
 
   const cells: ReactNode[] = Array.from({ length: firstDay }, (_, i) => <span key={`lead-${i}`} className="calendar-empty" aria-hidden="true" />);
@@ -574,12 +582,15 @@ function DatePicker({ state, update, onDone }: PickerProps) {
       fill && (start || date.getDay() === 0 || day === 1) && "range-row-start",
       fill && (end || date.getDay() === 6 || day === days) && "range-row-end",
       adjacent && (start || end) && "adjacent-range",
+      key === justPicked && "is-just-selected",
     ].filter(Boolean);
     cells.push(
       <button
         key={key}
         type="button"
         className={classes.join(" ")}
+        // 전체 화면에서 날짜가 18ms 간격으로 차례로 나타난다(시안 --calendar-day-delay).
+        style={{ "--calendar-day-delay": `${150 + (firstDay + day - 1) * 18}ms` } as CSSProperties}
         // 백엔드가 @Future라 오늘은 고를 수 없다.
         disabled={date <= today}
         aria-label={`${year}년 ${monthIndex + 1}월 ${day}일`}
@@ -598,7 +609,7 @@ function DatePicker({ state, update, onDone }: PickerProps) {
     <div className="calendar-scroll-wrap">
       <div ref={scroll} className="calendar-scroll-content">
       {/* 패널 높이(--calendar-grid-height)가 이 달의 주 수를 따른다. */}
-      <div className="calendar" ref={(element) => element?.closest<HTMLElement>(".picker-panel")?.style.setProperty("--calendar-grid-height", `${gridHeight}px`)}>
+      <div className={`calendar${settled ? " is-settled" : ""}`} ref={(element) => element?.closest<HTMLElement>(".picker-panel")?.style.setProperty("--calendar-grid-height", `${gridHeight}px`)}>
         <div className="calendar-top">
           <button type="button" aria-label="이전 달" disabled={prevDisabled} onClick={() => setMonth(new Date(year, monthIndex - 1, 1))}>
             <Img name="imgChevronLeftIcon.svg" />
@@ -637,6 +648,14 @@ function DatePicker({ state, update, onDone }: PickerProps) {
   );
 }
 
+/** 인원 +/- 버튼이 눌렸다 튄다(11/23 시안 passenger-counter-bounce, 0.3초). 숫자만 바뀌고 버튼은 그대로라 포커스가 남는다. */
+function pressBounce(button: HTMLElement) {
+  button.classList.remove("is-pressed");
+  void button.offsetWidth;
+  button.classList.add("is-pressed");
+  window.setTimeout(() => button.classList.remove("is-pressed"), 300);
+}
+
 function PassengerPicker({ state, update, onDone }: PickerProps) {
   const total = state.adults + state.children + state.infants;
   const scroll = useRef<HTMLDivElement>(null);
@@ -665,9 +684,26 @@ function PassengerPicker({ state, update, onDone }: PickerProps) {
               </span>
               {/* +/- 기호는 CSS(data-step)로 그린다. */}
               <div className="counter">
-                <button type="button" data-step="-1" aria-label={`${label} 줄이기`} disabled={state[key] === min} onClick={() => step(key, -1)} />
+                <button
+                  type="button"
+                  data-step="-1"
+                  aria-label={`${label} 줄이기`}
+                  disabled={state[key] === min}
+                  onClick={(event) => {
+                    pressBounce(event.currentTarget);
+                    step(key, -1);
+                  }}
+                />
                 <output aria-label={`${label} ${state[key]}명`}>{state[key]}</output>
-                <button type="button" data-step="1" aria-label={`${label} 늘리기`} onClick={() => step(key, 1)} />
+                <button
+                  type="button"
+                  data-step="1"
+                  aria-label={`${label} 늘리기`}
+                  onClick={(event) => {
+                    pressBounce(event.currentTarget);
+                    step(key, 1);
+                  }}
+                />
               </div>
             </div>
           ))}

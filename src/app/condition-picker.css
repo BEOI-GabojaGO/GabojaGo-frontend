@@ -270,6 +270,47 @@
   &.flight-page #picker-panel.passenger-picker .passenger-scroll-content>*{flex:0 0 auto}
   &.flight-page #picker-panel.passenger-picker .go-scrollbar{display:block;position:absolute;top:0;right:-14px;bottom:0;width:4px}
 }
+/* 11/23 시안: 인원 +/- 눌림·튐, 고른 날짜 튐(모든 폭, 메인·서랍). */
+.passenger-picker .counter button{will-change:transform}
+.passenger-picker .counter button:active{transform:scale(.93)}
+.passenger-picker .counter button.is-pressed{animation:passenger-counter-bounce 300ms cubic-bezier(.22,.8,.24,1) both}
+#picker-panel.date-picker .calendar-day.is-just-selected{overflow:visible}
+#picker-panel.date-picker .calendar-day.is-just-selected>span{animation:calendar-day-selected-bounce-content 380ms cubic-bezier(.2,.75,.25,1) both;transform-origin:center}
+#picker-panel.date-picker .calendar-day.is-just-selected::after{animation:calendar-day-selected-bounce-circle 380ms cubic-bezier(.2,.75,.25,1) both;transform-origin:center}
+/* 11/23 시안: 899px 이하 전체 화면 일정·탑승객이 열릴 때 차례로 나타나고, 닫힐 때 차례로 사라진다. */
+@media(max-width:899px) and (prefers-reduced-motion:no-preference){
+  #picker-panel.date-picker.is-full-screen:not(.is-closing) :is(.picker-header,.calendar-top,.calendar-weekdays>b){animation:picker-content-in 360ms cubic-bezier(.22,1,.36,1) var(--calendar-picker-delay,0ms) both}
+  #picker-panel.date-picker.is-full-screen .calendar-top{--calendar-picker-delay:42ms}
+  #picker-panel.date-picker.is-full-screen .calendar-weekdays>b:nth-child(1){--calendar-picker-delay:96ms}
+  #picker-panel.date-picker.is-full-screen .calendar-weekdays>b:nth-child(2){--calendar-picker-delay:120ms}
+  #picker-panel.date-picker.is-full-screen .calendar-weekdays>b:nth-child(3){--calendar-picker-delay:144ms}
+  #picker-panel.date-picker.is-full-screen .calendar-weekdays>b:nth-child(4){--calendar-picker-delay:168ms}
+  #picker-panel.date-picker.is-full-screen .calendar-weekdays>b:nth-child(5){--calendar-picker-delay:192ms}
+  #picker-panel.date-picker.is-full-screen .calendar-weekdays>b:nth-child(6){--calendar-picker-delay:216ms}
+  #picker-panel.date-picker.is-full-screen .calendar-weekdays>b:nth-child(7){--calendar-picker-delay:240ms}
+  #picker-panel.date-picker.is-full-screen:not(.is-closing) .calendar:not(.is-settled) .calendar-day{animation:picker-content-in 300ms cubic-bezier(.22,1,.36,1) var(--calendar-day-delay,150ms) both}
+  #picker-panel.date-picker.is-full-screen:not(.is-closing) .calendar-done{animation:date-picker-action-in 560ms cubic-bezier(.16,1,.3,1) 540ms both}
+  #picker-panel.date-picker.is-full-screen.is-closing :is(.picker-header,.calendar-top,.calendar-weekdays>b,.calendar-day){animation:picker-content-out 180ms ease-in var(--calendar-picker-out-delay,0ms) both}
+  #picker-panel.date-picker.is-full-screen.is-closing .calendar-top{--calendar-picker-out-delay:20ms}
+  #picker-panel.date-picker.is-full-screen.is-closing .calendar-weekdays>b{--calendar-picker-out-delay:40ms}
+  #picker-panel.date-picker.is-full-screen.is-closing .calendar-day{--calendar-picker-out-delay:60ms}
+  #picker-panel.date-picker.is-full-screen.is-closing .calendar-done{animation:date-picker-action-out 180ms ease-in 80ms both}
+  #picker-panel.passenger-picker.is-full-screen:not(.is-closing) :is(.picker-header,.passenger-row,.cabin-options,.cabin-options label,.passenger-action){animation:picker-content-in 360ms cubic-bezier(.22,1,.36,1) var(--passenger-delay,0ms) both}
+  #picker-panel.passenger-picker.is-full-screen .passenger-row:nth-child(1){--passenger-delay:84ms;--passenger-out-delay:0ms}
+  #picker-panel.passenger-picker.is-full-screen .passenger-row:nth-child(2){--passenger-delay:126ms;--passenger-out-delay:20ms}
+  #picker-panel.passenger-picker.is-full-screen .passenger-row:nth-child(3){--passenger-delay:168ms;--passenger-out-delay:40ms}
+  #picker-panel.passenger-picker.is-full-screen .cabin-options{--passenger-delay:220ms;--passenger-out-delay:60ms}
+  #picker-panel.passenger-picker.is-full-screen .cabin-options label:nth-of-type(1){--passenger-delay:260ms}
+  #picker-panel.passenger-picker.is-full-screen .cabin-options label:nth-of-type(2){--passenger-delay:296ms}
+  #picker-panel.passenger-picker.is-full-screen .cabin-options label:nth-of-type(3){--passenger-delay:332ms}
+  #picker-panel.passenger-picker.is-full-screen .cabin-options label:nth-of-type(4){--passenger-delay:368ms}
+  #picker-panel.passenger-picker.is-full-screen .passenger-action{--passenger-delay:420ms;--passenger-out-delay:80ms}
+  #picker-panel.passenger-picker.is-full-screen.is-closing :is(.picker-header,.passenger-row,.cabin-options,.passenger-action){animation:picker-content-out 180ms ease-in var(--passenger-out-delay,0ms) both}
+}
+@media(prefers-reduced-motion:reduce){
+  .passenger-picker .counter button:active{transform:none}
+  .passenger-picker .counter button.is-pressed,#picker-panel.date-picker .calendar-day.is-just-selected>span,#picker-panel.date-picker .calendar-day.is-just-selected::after{animation:none}
+}
 }
 @keyframes calendar-pop-in{from{opacity:0;transform:translateY(-8px) scale(.985)}to{opacity:1;transform:translateY(0) scale(1)}}
 @keyframes calendar-pop-out{from{opacity:1;transform:translateY(0) scale(1)}to{opacity:0;transform:translateY(-8px) scale(.985)}}
@@ -287,3 +328,9 @@ body.picker-open{overflow:hidden}
 :is(.main-page,.flight-page) .infant-types input:checked+span{color:#333;background:#fff;box-shadow:0 1px 3px #00000040}
 :is(.main-page,.flight-page) .infant-types input:focus-visible+span{outline:2px solid var(--pink);outline-offset:2px}
 :is(.main-page,.flight-page) .passenger-picker:has(.infant-types),:is(.main-page,.flight-page) .passenger-picker:has(.infant-types) :is(.picker-body,.passenger-controls){height:auto}
+
+@keyframes passenger-counter-bounce{0%{transform:scale(.93)}22%{transform:scale(.93)}54%{transform:scale(1.05)}78%{transform:scale(.985)}100%{transform:scale(1)}}
+@keyframes calendar-day-selected-bounce-content{0%{transform:scale(1)}24%{transform:scale(.95)}52%{transform:scale(1.02)}76%{transform:scale(.99)}100%{transform:scale(1)}}
+@keyframes calendar-day-selected-bounce-circle{0%{transform:translate(-50%,-50%) scale(1)}24%{transform:translate(-50%,-50%) scale(.95)}52%{transform:translate(-50%,-50%) scale(1)}76%{transform:translate(-50%,-50%) scale(.99)}100%{transform:translate(-50%,-50%) scale(1)}}
+@keyframes date-picker-action-in{from{opacity:1;transform:translate(-50%,calc(100% + 40px))}to{opacity:1;transform:translate(-50%,0)}}
+@keyframes date-picker-action-out{from{opacity:1;transform:translate(-50%,0)}to{opacity:1;transform:translate(-50%,calc(100% + 40px))}}
