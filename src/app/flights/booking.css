@@ -348,3 +348,251 @@
   }
 }
 @keyframes booking-sort-card-in{from{opacity:0;transform:translate3d(0,10px,0)}to{opacity:1;transform:translate3d(0,0,0)}}
+
+/* ---------- 11/23 시안: 판매처를 처음 불러오면 화면이 차례로 나타난다(시안 html.content-revealing → .booking-page.is-intro). ----------
+   시안 styles.css의 content-revealing 규칙을 미디어 조건 그대로 옮겼다(html·body 스크롤 규칙만 뺌). 판매처 카드 간격은 --offer-card-stagger(60ms). */
+
+.booking-page.is-intro .site-header,.booking-page.is-intro .booking-layout{animation:site-content-in 440ms cubic-bezier(.22,1,.36,1) both;will-change:opacity,transform}
+.booking-page.is-intro .site-header{animation-delay:60ms}
+.booking-page.is-intro .booking-layout{animation-delay:220ms}
+.booking-page.is-intro .section-toolbar{animation:site-content-in 360ms cubic-bezier(.22,1,.36,1) 300ms both}
+.booking-page.is-intro .offer-card{animation:site-content-in 360ms cubic-bezier(.22,1,.36,1) both}
+.booking-page.is-intro .offer-card:nth-child(1){animation-delay:360ms}
+.booking-page.is-intro .offer-card:nth-child(2){animation-delay:410ms}
+.booking-page.is-intro .offer-card:nth-child(3){animation-delay:460ms}
+.booking-page.is-intro .offer-card:nth-child(4){animation-delay:510ms}
+.booking-page.is-intro .offer-card:nth-child(5){animation-delay:560ms}
+.booking-page.is-intro .offer-card:nth-child(6){animation-delay:610ms}
+.booking-page.is-intro .offer-card:nth-child(7){animation-delay:660ms}
+.booking-page.is-intro .offer-card:nth-child(8){animation-delay:710ms}
+.booking-page.is-intro .offer-card:nth-child(9){animation-delay:760ms}
+.booking-page.is-intro .price-availability-notice{animation:site-content-in 360ms cubic-bezier(.22,1,.36,1) 730ms both}
+.booking-page.is-intro .trip-sidebar{animation:site-content-in 400ms cubic-bezier(.22,1,.36,1) 360ms both}
+.booking-page.is-intro .trip-sidebar .trip-summary{animation:site-content-in 360ms cubic-bezier(.22,1,.36,1) 430ms both}
+.booking-page.is-intro .trip-sidebar .flight-card{animation:site-content-in 360ms cubic-bezier(.22,1,.36,1) both}
+.booking-page.is-intro .trip-sidebar .flight-card:nth-child(1){animation-delay:500ms}
+.booking-page.is-intro .trip-sidebar .flight-card:nth-child(2){animation-delay:570ms}
+.booking-page.is-intro .trip-sidebar .ad-section{animation:site-content-in 360ms cubic-bezier(.22,1,.36,1) 660ms both}
+@media (prefers-reduced-motion:reduce){.booking-page.is-intro .site-header,.booking-page.is-intro .booking-layout,.booking-page.is-intro .section-toolbar,.booking-page.is-intro .offer-card,.booking-page.is-intro .price-availability-notice,.booking-page.is-intro .trip-sidebar,.booking-page.is-intro .trip-sidebar .trip-summary,.booking-page.is-intro .trip-sidebar .flight-card,.booking-page.is-intro .trip-sidebar .ad-section{animation:site-content-fade 180ms ease both!important;animation-delay:0!important}}
+@media (max-width: 599px){
+  .booking-page.is-intro .site-header {
+    /* 화면 최상단부터 40ms 리듬으로 시작 */
+    animation: site-content-in 320ms cubic-bezier(.22,1,.36,1) 40ms both;
+  }}
+@media (max-width: 599px){
+
+  .booking-page.is-intro .booking-layout {
+    animation: site-content-fade 260ms ease-out 80ms both;
+  }}
+@media (max-width: 599px){
+
+  .booking-page.is-intro .trip-sidebar {
+    animation: none;
+  }}
+@media (max-width: 599px){
+
+  .booking-page.is-intro .trip-sidebar .trip-summary {
+    animation: site-content-in 420ms cubic-bezier(.22,1,.36,1) 120ms both;
+    will-change: opacity,transform;
+  }}
+@media (max-width: 599px){
+
+  .booking-page.is-intro .trip-sidebar .booking-condition-meta {
+    animation: site-content-in 280ms cubic-bezier(.22,1,.36,1) 180ms both;
+  }}
+@media (max-width: 599px){
+
+  .booking-page.is-intro .trip-sidebar .flight-card {
+    /* 카드 자체도 숨긴 뒤, 기준 페이지와 같은 60ms 간격으로 순차 노출 */
+    opacity: 0;
+    animation: site-content-in 420ms cubic-bezier(.22,1,.36,1) both;
+    animation-delay: var(--flight-delay, 0ms);
+  }}
+@media (max-width: 599px){
+
+  .booking-page.is-intro .trip-sidebar .flight-card:nth-child(1) {
+    --flight-delay: 240ms;
+    animation-delay: 240ms;
+  }}
+@media (max-width: 599px){
+
+  .booking-page.is-intro .trip-sidebar .flight-card:nth-child(2) {
+    --flight-delay: 300ms;
+    animation-delay: 300ms;
+  }}
+@media (max-width: 599px){
+
+  .booking-page.is-intro .trip-sidebar .ad-section {
+    animation: none;
+  }}
+@media (max-width: 599px){
+
+  .booking-page.is-intro .trip-sidebar .ad-section h2,
+  .booking-page.is-intro .trip-sidebar .ad-section .ad-list a {
+    opacity: 0;
+    animation: site-content-in 260ms cubic-bezier(.22,1,.36,1) 360ms both;
+  }}
+@media (max-width: 599px){
+
+  .booking-page.is-intro .trip-sidebar .ad-section .ad-list a:nth-child(1) {
+    animation-delay: 420ms;
+  }}
+@media (max-width: 599px){
+
+  .booking-page.is-intro .trip-sidebar .ad-section .ad-list a:nth-child(2) {
+    animation-delay: 480ms;
+  }}
+@media (max-width: 599px){
+
+  .booking-page.is-intro .offers-section {
+    animation: none;
+  }}
+@media (max-width: 599px){
+
+  .booking-page.is-intro .offers-section .section-toolbar {
+    animation: none;
+  }}
+@media (max-width: 599px){
+
+  .booking-page.is-intro .offers-section .section-toolbar h1,
+  .booking-page.is-intro .offers-section .section-toolbar .sort-control {
+    opacity: 0;
+    animation: site-content-in 260ms cubic-bezier(.22,1,.36,1) 540ms both;
+  }}
+@media (max-width: 599px){
+
+  .booking-page.is-intro .offers-section .section-toolbar .sort-control {
+    animation-delay: 600ms;
+  }}
+@media (max-width: 599px){
+
+  .booking-page.is-intro .offers-section .offer-card {
+    animation: site-content-in 420ms cubic-bezier(.22,1,.36,1) calc(660ms + var(--offer-card-stagger,0ms)) both;
+  }}
+@media (max-width: 599px){
+
+  .booking-page.is-intro .offers-section .offer-card .provider-title,
+  .booking-page.is-intro .offers-section .offer-card .provider-benefits,
+  .booking-page.is-intro .offers-section .offer-card .offer-action,
+  .booking-page.is-intro .offers-section .offer-card .price,
+  .booking-page.is-intro .offers-section .offer-card .book-button {
+    opacity: 0;
+    animation: site-content-in 260ms cubic-bezier(.22,1,.36,1) both;
+  }}
+@media (max-width: 599px){
+
+  .booking-page.is-intro .offers-section .offer-card .provider-title {
+    animation-delay: calc(660ms + var(--offer-card-stagger,0ms) + 30ms);
+  }}
+@media (max-width: 599px){
+
+  .booking-page.is-intro .offers-section .offer-card .provider-benefits {
+    animation-delay: calc(660ms + var(--offer-card-stagger,0ms) + 60ms);
+  }}
+@media (max-width: 599px){
+
+  .booking-page.is-intro .offers-section .offer-card .offer-action {
+    animation-delay: calc(660ms + var(--offer-card-stagger,0ms) + 90ms);
+  }}
+@media (max-width: 599px){
+
+  .booking-page.is-intro .offers-section .offer-card .price {
+    animation-delay: calc(660ms + var(--offer-card-stagger,0ms) + 120ms);
+  }}
+@media (max-width: 599px){
+
+  .booking-page.is-intro .offers-section .offer-card .book-button {
+    animation-delay: calc(660ms + var(--offer-card-stagger,0ms) + 150ms);
+  }}
+@media (max-width: 599px){
+
+  .booking-page.is-intro .offers-section .price-availability-notice {
+    animation: site-content-in 280ms cubic-bezier(.22,1,.36,1) 1500ms both;
+  }}
+@media (max-width: 599px) and (prefers-reduced-motion: reduce){
+  .booking-page.is-intro .site-header,
+  .booking-page.is-intro .booking-layout,
+  .booking-page.is-intro .trip-sidebar,
+  .booking-page.is-intro .trip-sidebar .trip-summary,
+  .booking-page.is-intro .trip-sidebar .booking-condition-meta,
+  .booking-page.is-intro .trip-sidebar .flight-card,
+  .booking-page.is-intro .trip-sidebar .ad-section,
+  .booking-page.is-intro .trip-sidebar .ad-section h2,
+  .booking-page.is-intro .trip-sidebar .ad-section .ad-list a,
+  .booking-page.is-intro .offers-section,
+  .booking-page.is-intro .offers-section .section-toolbar,
+  .booking-page.is-intro .offers-section .section-toolbar h1,
+  .booking-page.is-intro .offers-section .section-toolbar .sort-control,
+  .booking-page.is-intro .offers-section .offer-card,
+  .booking-page.is-intro .offers-section .offer-card .provider-title,
+  .booking-page.is-intro .offers-section .offer-card .provider-benefits,
+  .booking-page.is-intro .offers-section .offer-card .offer-action,
+  .booking-page.is-intro .offers-section .offer-card .price,
+  .booking-page.is-intro .offers-section .offer-card .book-button,
+  .booking-page.is-intro .offers-section .price-availability-notice {
+    animation: site-content-fade 180ms ease both !important;
+    animation-delay: 0 !important;
+  }}
+@media (max-width:599px) and (prefers-reduced-motion:no-preference){
+  .booking-page.is-intro .booking-layout,
+  .booking-page.is-intro .trip-sidebar,
+  .booking-page.is-intro .offers-section{
+    opacity:1;
+    transform:none;
+    animation:none;
+    will-change:auto;
+  }}
+@media (max-width:599px) and (prefers-reduced-motion:no-preference){
+
+  .booking-page.is-intro .site-header{
+    animation:site-content-in 420ms cubic-bezier(.22,1,.36,1) 40ms both;
+    will-change:opacity,transform;
+  }}
+@media (max-width:599px) and (prefers-reduced-motion:no-preference){
+  .booking-page.is-intro .trip-sidebar .trip-summary{
+    animation:site-content-in 420ms cubic-bezier(.22,1,.36,1) 120ms both;
+    will-change:opacity,transform;
+  }}
+@media (max-width:599px) and (prefers-reduced-motion:no-preference){
+  .booking-page.is-intro .trip-sidebar .booking-condition-meta{
+    animation:site-content-in 360ms cubic-bezier(.22,1,.36,1) 180ms both;
+    will-change:opacity,transform;
+  }}
+@media (max-width:599px) and (prefers-reduced-motion:no-preference){
+  .booking-page.is-intro .trip-sidebar .flight-card{
+    animation:site-content-in 420ms cubic-bezier(.22,1,.36,1) var(--flight-delay,240ms) both;
+    will-change:opacity,transform;
+  }}
+@media (max-width:599px) and (prefers-reduced-motion:no-preference){
+  .booking-page.is-intro .trip-sidebar .ad-section h2,
+  .booking-page.is-intro .trip-sidebar .ad-section .ad-list a{
+    animation:site-content-in 360ms cubic-bezier(.22,1,.36,1) var(--ad-delay,360ms) both;
+    will-change:opacity,transform;
+  }}
+@media (max-width:599px) and (prefers-reduced-motion:no-preference){
+  .booking-page.is-intro .trip-sidebar .ad-section .ad-list a:nth-child(1){--ad-delay:420ms}}
+@media (max-width:599px) and (prefers-reduced-motion:no-preference){
+  .booking-page.is-intro .trip-sidebar .ad-section .ad-list a:nth-child(2){--ad-delay:480ms}}
+@media (max-width:599px) and (prefers-reduced-motion:no-preference){
+
+  .booking-page.is-intro .offers-section .section-toolbar h1,
+  .booking-page.is-intro .offers-section .section-toolbar .sort-control{
+    animation:site-content-in 360ms cubic-bezier(.22,1,.36,1) var(--toolbar-delay,540ms) both;
+    will-change:opacity,transform;
+  }}
+@media (max-width:599px) and (prefers-reduced-motion:no-preference){
+  .booking-page.is-intro .offers-section .section-toolbar .sort-control{--toolbar-delay:600ms}}
+@media (max-width:599px) and (prefers-reduced-motion:no-preference){
+
+  .booking-page.is-intro .offers-section .offer-card{
+    animation:site-content-in 420ms cubic-bezier(.22,1,.36,1) calc(660ms + var(--offer-card-stagger,0ms)) both;
+    will-change:opacity,transform;
+  }}
+@media (max-width:599px) and (prefers-reduced-motion:no-preference){
+
+  .booking-page.is-intro .offers-section .price-availability-notice{
+    animation:site-content-in 360ms cubic-bezier(.22,1,.36,1) 1500ms both;
+    will-change:opacity,transform;
+  }}
+@keyframes site-content-in{from{opacity:0;transform:translate3d(0,10px,0)}to{opacity:1;transform:none}}
+@keyframes site-content-fade{from{opacity:0}to{opacity:1}}
