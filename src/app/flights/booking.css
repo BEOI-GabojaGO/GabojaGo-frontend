@@ -39,10 +39,12 @@
   .site-header .login-icon { display: none; filter: none; }
 
   /* ---------- 시안 ---------- */
-  button, select { font:inherit; color:inherit; }
-  button { border:0; padding:0; background:none; cursor:pointer; }
+  /* 시안은 이 초기화를 태그 선택자(낮은 우선순위)로 둔다. 여기서는 .booking-page 아래라 우선순위가 높아져
+     피드백 설문 창(booking-feedback.css, 시안 그대로)의 버튼 배경·여백을 덮으므로 설문 창 안은 뺀다. */
+  :is(button, select):not(.booking-feedback-dialog *) { font:inherit; color:inherit; }
+  button:not(.booking-feedback-dialog *) { border:0; padding:0; background:none; cursor:pointer; }
   img { display:block; }
-  h1, h2, p { margin:0; }
+  :is(h1, h2, p):not(.booking-feedback-dialog *) { margin:0; }
   a { color:inherit; text-decoration:none; }
   .sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
   button:focus-visible, a:focus-visible, select:focus-visible { outline:2px solid var(--brand); outline-offset:3px; }

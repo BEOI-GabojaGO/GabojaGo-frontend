@@ -4,6 +4,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Fragment, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import { BookingFeedback, feedbackDone } from "@/components/flight/booking-feedback";
 import { airlinesOf, FLAGS, querySummary, SortMenu } from "@/components/flight/flight-list-ui";
 import { cityName } from "@/components/flight/search-condition-fields";
 import { prefersReducedMotion, useToast } from "@/components/main/main-ui";
@@ -328,6 +329,12 @@ function Booking({ selection }: { selection: BookingSelection }) {
     box.classList.add("is-sort-refreshing");
     setTimeout(() => box.classList.remove("is-sort-refreshing"), 1100);
   };
+  // 11/23 시안: 판매처 "예약하기"를 누르면 먼저 피드백 설문. 이 탭에서 이미 답했으면 바로 이동한다(사용자 결정 2026-11-25).
+  const [feedback, setFeedback] = useState<{ option: BookingOption; session: number } | null>(null);
+  const requestBook = (option: BookingOption) => {
+    if (feedbackDone()) return void book(option);
+    setFeedback((current) => ({ option, session: (current?.session ?? 0) + 1 }));
+  };
   const research = () =>
     router.push(`${request.returnDate ? "/flights/round-trip/step" : "/flights/one-way"}?${toSearchQuery(request, locations)}`);
 
@@ -363,7 +370,7 @@ function Booking({ selection }: { selection: BookingSelection }) {
 
           <div ref={offerList} className="offer-list" aria-live="polite">
             {options.map((option) => (
-              <OfferCard key={optionKey(option)} option={option} logo={sellerLogo(option.sellerName ?? "", logos)} oneWay={!returnId} pending={pendingKey} onBook={() => void book(option)} />
+              <OfferCard key={optionKey(option)} option={option} logo={sellerLogo(option.sellerName ?? "", logos)} oneWay={!returnId} pending={pendingKey} onBook={() => requestBook(option)} />
             ))}
           </div>
           {options.length > 0 && (
@@ -405,6 +412,14 @@ function Booking({ selection }: { selection: BookingSelection }) {
         </aside>
       </main>
       {!itinerary && !error && <SiteLoader busy label="판매처를 찾는 중" />}
+      {feedback && (
+        <BookingFeedback
+          key={feedback.session}
+          provider={feedback.option.sellerName ?? "예약처"}
+          onComplete={() => void book(feedback.option)}
+          onClose={() => setFeedback(null)}
+        />
+      )}
       {toast}
     </>
   );

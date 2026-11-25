@@ -1,0 +1,422 @@
+/*
+ * 예약하기 피드백 설문(11/23 시안 booking styles.css 1107-1515 그대로, ::selection 두 줄만 뺌 — globals.css에 있음).
+ * 컴포넌트: src/components/flight/booking-feedback.tsx. 색 변수 --brand는 .booking-page에서 물려받는다(dialog는 그 안에 그린다).
+ * 시안이 같은 규칙을 여러 번 덮어쓰므로 순서를 바꾸지 않는다.
+ */
+/* 시안 맨 앞의 태그 초기화를 설문 창 안에만 우선순위 0으로(booking.css의 화면 초기화는 설문 창을 뺀다). */
+:where(.booking-feedback-dialog) :where(button,input){font:inherit;color:inherit}
+:where(.booking-feedback-dialog) :where(button){border:0;padding:0;background:none;cursor:pointer}
+:where(.booking-feedback-dialog) :where(h1,h2,p){margin:0}
+:where(.booking-feedback-dialog) :where(img){display:block}
+.booking-feedback-dialog{position:fixed;inset:0;width:440px;max-width:calc(100vw - 32px);max-height:calc(100dvh - 32px);margin:auto;padding:30px;border:0;border-radius:30px;background:#fff;color:#333;box-shadow:0 20px 80px #0003;overflow-x:hidden;overflow-y:auto;scrollbar-width:none}
+.booking-feedback-dialog::backdrop{background:#0009;backdrop-filter:blur(8px)}
+.booking-feedback-dialog::-webkit-scrollbar{display:none;width:0;height:0}
+.booking-feedback-header{display:flex;align-items:center;justify-content:space-between;height:24px}.booking-feedback-brand-group{display:flex;align-items:center;gap:6px;min-width:0}.booking-feedback-back{flex:none}.booking-feedback-back[hidden]{display:none!important}.booking-feedback-header .brand{font-size:18px;line-height:24px;font-weight:700;letter-spacing:-.4px}.booking-feedback-header .brand span{color:var(--brand)}
+.booking-feedback-close{position:relative;width:22px;height:22px;flex:none;color:#777}.booking-feedback-close::before,.booking-feedback-close::after{content:'';position:absolute;top:10px;left:3px;width:16px;height:1px;background:currentColor;transform:rotate(45deg)}.booking-feedback-close::after{transform:rotate(-45deg)}
+.booking-feedback-eyebrow{margin:31px 0 0;color:var(--brand);font-size:12px;line-height:17px;font-weight:600;text-align:center}.booking-feedback-dialog h2{margin:5px 0 0;color:#333;font-size:28px;line-height:38px;font-weight:700;letter-spacing:-.7px;text-align:center}
+.booking-feedback-form{display:flex;flex-direction:column;margin-top:43px}.feedback-step[hidden]{display:none}.feedback-step-viewport{position:relative;overflow:hidden;transition:height 520ms cubic-bezier(.4,0,.2,1)}.feedback-step-viewport>.feedback-step{position:relative;width:100%;transform:translateX(0);transition:transform 480ms cubic-bezier(.4,0,.2,1)}.feedback-step-viewport.is-transitioning>.feedback-step{position:absolute;top:0;left:0}.feedback-step-viewport>.feedback-step.is-entering{transform:translateX(100%)}.feedback-step-viewport.is-forward>.feedback-step.is-leaving{transform:translateX(-100%)}.feedback-step-viewport.is-backward>.feedback-step.is-leaving{transform:translateX(100%)}.feedback-step-viewport.is-backward>.feedback-step.is-entering{transform:translateX(-100%)}.booking-feedback-form fieldset{min-width:0;margin:0;padding:0;border:0}.booking-feedback-form legend{margin:0;color:#333;font-size:16px;line-height:24px;font-weight:400;letter-spacing:-.2px}.feedback-rating-options{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:0;margin-top:26px}.feedback-rating-options label{position:relative;display:flex;min-width:0;flex-direction:column;align-items:center;gap:10px;cursor:pointer}.feedback-rating-options input,.feedback-reason-options input{position:absolute;opacity:0;pointer-events:none}.feedback-rating-dot{display:block;width:20px;height:20px;border:1.5px solid #cfcfcf;border-radius:50%;background:#fff;transition:border-color .18s ease,background-color .18s ease,box-shadow .18s ease}.feedback-rating-label{display:block;min-height:20px;color:#aaa;font-size:14px;line-height:20px;font-weight:400;text-align:center;white-space:nowrap}.feedback-rating-options input:checked+.feedback-rating-dot{border-color:var(--brand);background:var(--brand);box-shadow:inset 0 0 0 4px #fff}.feedback-rating-options label:hover .feedback-rating-dot{border-color:#aaa}
+/* The footer wrapper keeps the original desktop flex-item layout. */
+.booking-feedback-footer{display:contents}
+
+/* Match the flight-list passenger picker radio exactly: 20px circle,
+   1px neutral border, subtle edge shadow, and a 12px brand center dot. */
+.feedback-rating-dot{position:relative;border-width:1px;border-color:#ccc;box-shadow:0 0 0 .2px #ccc}
+.feedback-rating-dot::after{content:"";position:absolute;top:50%;left:50%;width:12px;height:12px;border-radius:50%;background:#ff385c;transform:translate(-50%,-50%) scale(0);transform-origin:center;transition:transform .18s ease}
+.feedback-rating-options input:checked+.feedback-rating-dot{border-color:#ff385c;background:#fff;box-shadow:0 0 0 .2px #ff385c}
+.feedback-rating-options input:checked+.feedback-rating-dot::after{transform:translate(-50%,-50%) scale(1)}
+.feedback-rating-options input:focus-visible+.feedback-rating-dot{outline:2px solid #ff385c;outline-offset:2px}
+/* Final cascade: keep second-step options borderless in default and hover states. */
+.feedback-reason-options span{border:0!important;box-shadow:none!important}
+.feedback-reason-options label:hover span{border:0!important;box-shadow:none!important}
+.feedback-reason-options input:checked+span{border:.6px solid #ff385c!important;box-shadow:none!important}
+
+/* Mobile survey: keep the header and bottom response controls in place while
+   the survey content grows and scrolls within the full-screen dialog. */
+@media(max-width:599px){
+  .booking-feedback-dialog:not([open]){display:none!important}
+  .booking-feedback-dialog{
+    inset:0;
+    width:100vw;
+    height:100dvh;
+    min-height:100dvh;
+    max-width:none;
+    max-height:none;
+    margin:0;
+    padding:30px 20px 0;
+    border-radius:0;
+    box-shadow:none;
+    overflow:hidden;
+    display:flex;
+    flex-direction:column;
+  }
+  .booking-feedback-dialog .booking-feedback-back{display:none!important}
+  .booking-feedback-form{
+    flex:1 1 auto;
+    min-height:0;
+    margin-top:43px;
+    overflow:hidden;
+    display:flex;
+    flex-direction:column;
+    padding-bottom:20px;
+  }
+  .feedback-step-viewport{
+    flex:1 1 auto;
+    min-height:0;
+    height:auto!important;
+    overflow-y:auto;
+    overflow-x:hidden;
+    scrollbar-width:none;
+    transition:none!important;
+  }
+  .feedback-step-viewport::-webkit-scrollbar{display:none;width:0;height:0}
+  .feedback-step-viewport>.feedback-step{position:relative;transform:none!important}
+  .booking-feedback-form[data-step="mobile-inline"] .feedback-step-viewport{overflow-y:auto}
+  .feedback-step[data-feedback-step="2"].is-inline-entering{animation:booking-feedback-inline-reason-in 520ms cubic-bezier(.22,1,.36,1) both}
+  .booking-feedback-privacy{flex:0 0 auto;margin-top:31px}
+  .booking-feedback-submit{flex:0 0 auto;margin-top:13px}
+}
+@keyframes booking-feedback-inline-reason-in{from{opacity:0;transform:translate3d(0,16px,0)!important}to{opacity:1;transform:translate3d(0,0,0)!important}}
+@media(max-width:599px) and (prefers-reduced-motion:reduce){.feedback-step[data-feedback-step="2"].is-inline-entering{animation:none;opacity:1;transform:none!important}}
+
+/* The custom reason is an interactive search-style input instead of a text-only option. */
+.feedback-custom-option{min-width:0}
+.feedback-custom-option .feedback-custom-input{
+  position:relative;
+  display:block;
+  width:100%;
+  height:46px;
+  min-height:46px;
+  opacity:1;
+  pointer-events:auto;
+  margin:0;
+  padding:0 14px;
+  border:0;
+  border-radius:12px;
+  background:#f7f7f7;
+  color:#888;
+  outline:0;
+  font-family:inherit;
+  font-size:14px;
+  line-height:20px;
+  font-weight:400;
+  cursor:text;
+  appearance:none;
+  -webkit-appearance:none;
+  transition:background-color .18s ease,color .18s ease,box-shadow .18s ease;
+}
+.feedback-custom-option .feedback-custom-input::placeholder{color:#888;opacity:1;font-weight:400}
+.feedback-custom-option:hover .feedback-custom-input{background:#f3f3f3}
+.feedback-custom-option .feedback-custom-input:focus{background:#fff}
+.feedback-custom-option input[name="booking-reason"]:checked + .feedback-custom-input{color:var(--brand);font-weight:500;border:.6px solid var(--brand)}
+.feedback-custom-option input[name="booking-reason"]:checked + .feedback-custom-input::placeholder{color:#888;opacity:1;font-weight:400}
+.feedback-custom-option .feedback-custom-input:focus-visible{outline:none}
+.feedback-custom-option{position:relative;height:46px;min-height:46px}
+.feedback-custom-option .feedback-custom-input{padding-right:44px}
+.feedback-custom-option .feedback-custom-input::-webkit-search-decoration,
+.feedback-custom-option .feedback-custom-input::-webkit-search-cancel-button,
+.feedback-custom-option .feedback-custom-input::-webkit-search-results-button,
+.feedback-custom-option .feedback-custom-input::-webkit-search-results-decoration{appearance:none;-webkit-appearance:none;width:0;height:0;margin:0;padding:0;display:none}
+.feedback-custom-option .feedback-custom-input::-ms-clear{display:none}
+.feedback-custom-clear[hidden]{display:none!important}
+.feedback-custom-clear{position:absolute!important;top:50%!important;right:14px!important;display:grid!important;box-sizing:border-box!important;width:20px!important;min-width:20px!important;max-width:20px!important;height:20px!important;min-height:20px!important;max-height:20px!important;aspect-ratio:1/1!important;margin:0!important;padding:0!important;border:0!important;border-radius:50%!important;background:#c9c9c9!important;background-image:none!important;box-shadow:none!important;color:#fff!important;font-size:0!important;line-height:normal!important;place-items:center;overflow:hidden!important;cursor:pointer;transform:translateY(-50%)!important;z-index:2}
+.feedback-custom-clear:hover,.feedback-custom-clear:active{background:#aaa}
+.feedback-custom-clear:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+.feedback-custom-clear::before,.feedback-custom-clear::after{content:"";position:absolute;top:50%;left:50%;width:11px;height:1.5px;border-radius:2px;background:#fff}
+.feedback-custom-clear::before{transform:translate(-50%,-50%) rotate(45deg)}
+.feedback-custom-clear::after{transform:translate(-50%,-50%) rotate(-45deg)}
+
+/* Use the GabojaGO brand color for browser text selection. */
+/* Match the dropdown's pressed feedback without shifting the option layout. */
+.feedback-reason-options label span{transform-origin:center;will-change:transform;transition:transform .18s cubic-bezier(.22,.8,.24,1),border-color .18s ease,background-color .18s ease,color .18s ease,box-shadow .18s ease}
+.feedback-reason-options label:active span,
+.feedback-reason-options label.is-pressed span{transform:scale(.975)}
+
+/* The feedback header follows the two-step survey transition. The back
+   control is revealed before the animation so the logo can move into its
+   final position without a layout jump. */
+.booking-feedback-header .brand{display:inline-flex;align-items:center}
+@keyframes booking-feedback-brand-forward{from{transform:translate3d(-26px,0,0)}to{transform:translate3d(0,0,0)}}
+@keyframes booking-feedback-brand-backward{from{transform:translate3d(0,0,0)}to{transform:translate3d(-26px,0,0)}}
+@keyframes booking-feedback-back-forward{from{opacity:0;transform:translate3d(-8px,0,0)}to{opacity:1;transform:translate3d(0,0,0)}}
+@keyframes booking-feedback-back-backward{from{opacity:1;transform:translate3d(0,0,0)}to{opacity:0;transform:translate3d(-8px,0,0)}}
+@keyframes booking-feedback-close-forward{from{transform:translate3d(0,8px,0)}to{transform:translate3d(0,0,0)}}
+@media(prefers-reduced-motion:no-preference){
+  .booking-feedback-header.is-feedback-forward .brand{animation:booking-feedback-brand-forward 480ms cubic-bezier(.22,1,.36,1) both}
+  .booking-feedback-header.is-feedback-forward .booking-feedback-back{animation:booking-feedback-back-forward 480ms cubic-bezier(.22,1,.36,1) both}
+  .booking-feedback-header.is-feedback-forward .booking-feedback-close{animation:booking-feedback-close-forward 480ms cubic-bezier(.22,1,.36,1) both;will-change:transform}
+  .booking-feedback-header.is-feedback-backward .brand{animation:booking-feedback-brand-backward 480ms cubic-bezier(.22,1,.36,1) both}
+  .booking-feedback-header.is-feedback-backward .booking-feedback-back{animation:booking-feedback-back-backward 480ms cubic-bezier(.22,1,.36,1) both}
+}
+@media(prefers-reduced-motion:reduce){
+  .booking-feedback-header .brand,
+  .booking-feedback-header .booking-feedback-back,
+  .booking-feedback-header .booking-feedback-close{animation:none!important}
+}
+@media(prefers-reduced-motion:reduce){.feedback-step-viewport,.feedback-step-viewport>.feedback-step{transition:none!important}}
+/* Keep the first survey's privacy note 50px below the rating options. */
+.booking-feedback-form[data-step="1"] .booking-feedback-privacy{margin-top:50px}
+/* Remove borders from every second-step reason option state. */
+.feedback-reason-options span{border:0;box-shadow:none}
+.feedback-reason-options label:hover span{border:0;box-shadow:none}
+.feedback-reason-options input:checked+span{border:0;box-shadow:none}
+/* Emphasize the first survey question by one weight step. */
+.feedback-step[data-feedback-step="1"] legend{font-weight:500}
+.feedback-step[data-feedback-step="2"] legend{color:#333;font-weight:500}
+.feedback-reason-options{display:grid;grid-template-columns:1fr;gap:10px;margin-top:26px}.feedback-reason-options label{position:relative;display:flex;cursor:pointer}.feedback-reason-options span{display:flex;width:100%;min-height:46px;align-items:center;padding:0 14px;border:1px solid #e0e0e0;border-radius:12px;background:#f7f7f7;color:#888;font-size:14px;line-height:20px;font-weight:400;transition:border-color .18s ease,background-color .18s ease,color .18s ease,box-shadow .18s ease}.feedback-reason-options label:hover span{background:#f3f3f3}.feedback-reason-options input:checked+span{border-color:var(--brand);background:#fff;color:var(--brand);font-weight:500;box-shadow:0 0 0 1px var(--brand)}.feedback-rating-options input:focus-visible+.feedback-rating-dot,.feedback-reason-options input:focus-visible+span,.booking-feedback-close:focus-visible,.booking-feedback-submit:focus-visible{outline:2px solid var(--brand);outline-offset:3px}
+.booking-feedback-submit{width:100%;height:53px;margin-top:13px;border:0;border-radius:20px;background:var(--brand);color:#fff;font-size:14px;font-weight:600;transition:background-color .18s ease,transform .18s ease}.booking-feedback-submit:hover:not(:disabled){background:var(--brand-hover)}.booking-feedback-submit:active:not(:disabled){background:var(--brand-pressed);transform:translateY(1px)}.booking-feedback-submit:disabled{background:#ccc;color:#fff;cursor:not-allowed}.booking-feedback-privacy{margin:31px 0 0;color:#aaa;font-size:12px;line-height:18px;text-align:center;word-break:keep-all}
+@media(min-width:600px) and (prefers-reduced-motion:no-preference){.booking-feedback-dialog[open]{animation:login-fade-in 240ms cubic-bezier(.22,1,.36,1) both}.booking-feedback-dialog[open]::backdrop{animation:login-backdrop-in 240ms ease-out both}.booking-feedback-dialog[open].is-closing{animation:login-fade-out 180ms ease-in both}.booking-feedback-dialog[open].is-closing::backdrop{animation:login-backdrop-out 180ms ease-in both}.booking-feedback-dialog.is-closing{pointer-events:none}}
+@media(max-width:599px){.booking-feedback-dialog{inset:0;width:100vw;height:auto;max-width:440px;max-height:calc(100dvh - 32px);margin:auto;padding:30px;border-radius:30px;box-shadow:0 20px 80px #0003}.booking-feedback-dialog::backdrop{background:#fff;backdrop-filter:none}.booking-feedback-eyebrow{margin-top:31px}.booking-feedback-form{margin-top:43px}.booking-feedback-dialog h2{font-size:28px;line-height:38px}.feedback-rating-options{margin-top:26px}.feedback-reason-options{margin-top:26px;gap:10px}.feedback-reason-options span{min-height:46px;font-size:14px}.booking-feedback-submit{height:52px}.booking-feedback-privacy{margin-top:31px}}
+@media(max-width:599px) and (prefers-reduced-motion:no-preference){.booking-feedback-dialog[open]{animation:login-fade-in 240ms cubic-bezier(.22,1,.36,1) both}.booking-feedback-dialog[open]::backdrop{animation:login-backdrop-in 240ms ease-out both}.booking-feedback-dialog[open].is-closing{animation:login-fade-out 180ms ease-in both}.booking-feedback-dialog[open].is-closing::backdrop{animation:login-backdrop-out 180ms ease-in both}.booking-feedback-dialog.is-closing{pointer-events:none}}
+
+/* Keep survey focus rings aligned with the passenger picker radio control. */
+.feedback-rating-options input:focus-visible+.feedback-rating-dot{outline:2px solid #ff385c;outline-offset:2px}
+
+/* Final cascade: second-step reason options stay borderless in default and hover states. */
+.feedback-reason-options span{border:0!important;box-shadow:none!important}
+.feedback-reason-options label:hover span{border:0!important;box-shadow:none!important}
+.feedback-reason-options input:checked+span{border:.6px solid #ff385c!important;box-shadow:none!important}
+
+/* Final mobile survey override: this must remain after the legacy compact-modal rules. */
+@media(max-width:599px){
+  .booking-feedback-dialog:not([open]){display:none!important}
+  .booking-feedback-dialog{
+    inset:0!important;
+    width:100vw!important;
+    height:100dvh!important;
+    min-height:100dvh!important;
+    max-width:none!important;
+    max-height:none!important;
+    margin:0!important;
+    padding:30px 20px 0!important;
+    border-radius:0!important;
+    box-shadow:none!important;
+    overflow:hidden!important;
+    display:flex!important;
+    flex-direction:column!important;
+  }
+  .booking-feedback-dialog[open]{display:flex!important}
+  .booking-feedback-dialog .booking-feedback-back{display:none!important}
+  .booking-feedback-form{
+    flex:1 1 auto!important;
+    min-height:0!important;
+    margin-top:43px!important;
+    overflow:hidden!important;
+    display:flex!important;
+    flex-direction:column!important;
+    padding-bottom:0!important;
+  }
+  .feedback-step-viewport{
+    flex:1 1 auto!important;
+    min-height:0!important;
+    height:auto!important;
+    overflow-y:auto!important;
+    overflow-x:hidden!important;
+    scrollbar-width:none;
+    transition:none!important;
+  }
+  .feedback-step-viewport::-webkit-scrollbar{display:none;width:0;height:0}
+  .feedback-step-viewport>.feedback-step{position:relative;transform:none!important}
+  .booking-feedback-form[data-step="mobile-inline"] .feedback-step-viewport{overflow-y:auto!important}
+  .booking-feedback-form[data-step="mobile-inline"] .feedback-step[data-feedback-step="2"]{margin-top:60px!important}
+  .booking-feedback-form[data-step="mobile-inline"] .feedback-custom-option{margin-bottom:50px!important}
+  .feedback-step[data-feedback-step="2"].is-inline-entering{animation:booking-feedback-inline-reason-in 520ms cubic-bezier(.22,1,.36,1) both}
+  .booking-feedback-privacy{flex:0 0 auto!important;margin-top:31px!important}
+  .booking-feedback-submit{flex:0 0 auto!important;margin-top:13px!important;height:52px!important}
+}
+
+/* Mobile survey entrance: reveal the fixed shell and its contents in a short,
+   readable sequence instead of presenting every element at once. */
+@keyframes booking-feedback-content-in{from{opacity:0;transform:translate3d(0,12px,0)}to{opacity:1;transform:translate3d(0,0,0)}}
+@media(max-width:599px) and (prefers-reduced-motion:no-preference){
+  .booking-feedback-dialog[open] .booking-feedback-header,
+  .booking-feedback-dialog[open] .booking-feedback-eyebrow,
+  .booking-feedback-dialog[open] h2,
+  .booking-feedback-dialog[open] .feedback-step[data-feedback-step="1"] legend,
+  .booking-feedback-dialog[open] .booking-feedback-footer{
+    opacity:0;
+    animation:booking-feedback-content-in 420ms cubic-bezier(.22,1,.36,1) var(--feedback-content-delay,0ms) both;
+    will-change:opacity,transform;
+  }
+  .booking-feedback-dialog[open] .booking-feedback-header{--feedback-content-delay:0ms}
+  .booking-feedback-dialog[open] .booking-feedback-eyebrow{--feedback-content-delay:60ms}
+  .booking-feedback-dialog[open] h2{--feedback-content-delay:110ms}
+  .booking-feedback-dialog[open] .feedback-step[data-feedback-step="1"] legend{--feedback-content-delay:190ms}
+  .booking-feedback-dialog[open] .feedback-step[data-feedback-step="1"] .feedback-rating-options label{
+    opacity:0;
+    animation:booking-feedback-content-in 420ms cubic-bezier(.22,1,.36,1) var(--feedback-rating-delay,240ms) both;
+    will-change:opacity,transform;
+  }
+  .booking-feedback-dialog[open] .feedback-step[data-feedback-step="1"] .feedback-rating-options label:nth-child(1){--feedback-rating-delay:240ms}
+  .booking-feedback-dialog[open] .feedback-step[data-feedback-step="1"] .feedback-rating-options label:nth-child(2){--feedback-rating-delay:285ms}
+  .booking-feedback-dialog[open] .feedback-step[data-feedback-step="1"] .feedback-rating-options label:nth-child(3){--feedback-rating-delay:330ms}
+  .booking-feedback-dialog[open] .feedback-step[data-feedback-step="1"] .feedback-rating-options label:nth-child(4){--feedback-rating-delay:375ms}
+  .booking-feedback-dialog[open] .feedback-step[data-feedback-step="1"] .feedback-rating-options label:nth-child(5){--feedback-rating-delay:420ms}
+  .booking-feedback-dialog[open] .booking-feedback-footer{--feedback-content-delay:540ms}
+}
+@media(max-width:599px) and (prefers-reduced-motion:reduce){
+  .booking-feedback-dialog[open] .booking-feedback-header,
+  .booking-feedback-dialog[open] .booking-feedback-eyebrow,
+  .booking-feedback-dialog[open] h2,
+  .booking-feedback-dialog[open] .feedback-step[data-feedback-step="1"] legend,
+  .booking-feedback-dialog[open] .feedback-step[data-feedback-step="1"] .feedback-rating-options label,
+  .booking-feedback-dialog[open] .booking-feedback-footer{opacity:1;animation:none;transform:none}
+}
+
+/* Keep the privacy note and CTA together, matching the passenger picker footer:
+   they start below the viewport and rise into place without an opacity fade. */
+@keyframes booking-feedback-footer-slide-in{0%{visibility:hidden;opacity:1;transform:translate3d(0,calc(100% + 24px),0)}1%{visibility:visible}to{visibility:visible;opacity:1;transform:translate3d(0,0,0)}}
+@media(max-width:599px){
+  .booking-feedback-footer{
+    position:relative!important;
+    isolation:isolate;
+    display:flex!important;
+    flex:0 0 auto!important;
+    flex-direction:column!important;
+    gap:13px!important;
+    width:100%!important;
+    margin-top:-93px!important;
+    padding:93px 0 20px!important;
+    box-sizing:border-box;
+    background:linear-gradient(180deg,rgba(255,255,255,0) 0%,rgba(255,255,255,.82) 34%,rgba(255,255,255,.98) 72%,#fff 100%);
+  }
+  .booking-feedback-footer::before{
+    content:"";
+    position:absolute;
+    z-index:0;
+    top:-31px;
+    right:-20px;
+    bottom:-20px;
+    left:-20px;
+    pointer-events:none;
+    display:none;
+  }
+  .booking-feedback-footer > *{position:relative;z-index:1}
+  .booking-feedback-footer .booking-feedback-privacy{margin:0!important}
+  .booking-feedback-footer .booking-feedback-submit{margin:0!important}
+}
+@media(max-width:599px) and (prefers-reduced-motion:no-preference){
+  .booking-feedback-dialog[open] .booking-feedback-footer{
+    visibility:hidden;
+    opacity:1!important;
+    animation:booking-feedback-footer-slide-in 560ms cubic-bezier(.16,1,.3,1) 540ms both!important;
+    will-change:transform;
+  }
+}
+@media(max-width:599px) and (prefers-reduced-motion:reduce){
+  .booking-feedback-dialog[open] .booking-feedback-footer{opacity:1!important;animation:none!important;transform:none!important}
+}
+
+/* Stagger the second-step reason choices as they enter below the rating. */
+@media(max-width:599px) and (prefers-reduced-motion:no-preference){
+  .feedback-step[data-feedback-step="2"].is-inline-entering .feedback-reason-options > label,
+  .feedback-step[data-feedback-step="2"].is-inline-entering .feedback-custom-option{
+    opacity:0;
+    animation:booking-feedback-content-in 320ms cubic-bezier(.22,1,.36,1) var(--feedback-reason-delay,70ms) both;
+    will-change:opacity,transform;
+  }
+  .feedback-step[data-feedback-step="2"].is-inline-entering .feedback-reason-options > label:nth-child(1){--feedback-reason-delay:70ms}
+  .feedback-step[data-feedback-step="2"].is-inline-entering .feedback-reason-options > label:nth-child(2){--feedback-reason-delay:130ms}
+  .feedback-step[data-feedback-step="2"].is-inline-entering .feedback-reason-options > label:nth-child(3){--feedback-reason-delay:190ms}
+  .feedback-step[data-feedback-step="2"].is-inline-entering .feedback-reason-options > label:nth-child(4){--feedback-reason-delay:250ms}
+  .feedback-step[data-feedback-step="2"].is-inline-entering .feedback-reason-options > label:nth-child(5){--feedback-reason-delay:310ms}
+  .feedback-step[data-feedback-step="2"].is-inline-entering .feedback-custom-option{--feedback-reason-delay:370ms}
+}
+@media(max-width:599px) and (prefers-reduced-motion:reduce){
+  .feedback-step[data-feedback-step="2"] .feedback-reason-options > label,
+  .feedback-step[data-feedback-step="2"] .feedback-custom-option{opacity:1;animation:none;transform:none}
+}
+
+/* Fade content at the actual scroll boundary instead of clipping it abruptly. */
+@media(max-width:599px){
+  .booking-feedback-dialog::before{display:none!important}
+  .booking-feedback-dialog > .booking-feedback-form{margin-top:43px!important}
+  .feedback-step[data-feedback-step="1"]{top:20px!important}
+  .feedback-step[data-feedback-step="1"] fieldset{padding-top:0!important}
+  .feedback-step[data-feedback-step="1"] legend{margin-top:0!important}
+  .feedback-step-viewport::before{
+    display:none;
+  }
+  .feedback-step-viewport{
+    margin-top:0!important;
+    padding-top:0!important;
+    -webkit-mask-image:none!important;
+    mask-image:none!important;
+  }
+}
+
+/* Let the survey content scroll behind the transparent title area.  The
+   header/title remain readable above it, while the viewport starts at the
+   dialog's top and uses padding to preserve the original first-item offset. */
+@media(max-width:599px){
+  .booking-feedback-dialog > .booking-feedback-header,
+  .booking-feedback-dialog > .booking-feedback-eyebrow,
+  .booking-feedback-dialog > h2{
+    position:relative!important;
+    z-index:3!important;
+    background:transparent!important;
+  }
+  .booking-feedback-dialog > .booking-feedback-form{
+    position:relative!important;
+    z-index:1!important;
+    margin-top:43px!important;
+    overflow:visible!important;
+  }
+  .booking-feedback-dialog > .booking-feedback-form > .feedback-step-viewport{
+    position:absolute!important;
+    z-index:1!important;
+    top:-188px!important;
+    right:0!important;
+    bottom:0!important;
+    left:0!important;
+    width:100%!important;
+    height:auto!important;
+    min-height:0!important;
+    margin:0!important;
+    padding:188px 0 220px!important;
+    box-sizing:border-box!important;
+    overflow-y:auto!important;
+    overflow-x:hidden!important;
+    background:transparent!important;
+    -webkit-mask-image:none!important;
+    mask-image:none!important;
+  }
+  .booking-feedback-dialog > .booking-feedback-form > .booking-feedback-footer{
+    position:absolute!important;
+    z-index:4!important;
+    right:0!important;
+    bottom:0!important;
+    left:0!important;
+    width:100%!important;
+    margin:0!important;
+    /* Let a drag that starts above the privacy note reach the viewport
+       underneath; only the CTA itself remains an interactive surface. */
+    pointer-events:none!important;
+  }
+  .booking-feedback-dialog > .booking-feedback-form > .booking-feedback-footer .booking-feedback-submit{
+    pointer-events:auto!important;
+  }
+}
+
+/* Fade the white header/title surface from opaque at the top to fully
+   transparent at the bottom of the referenced top region. */
+@media(max-width:599px){
+  .booking-feedback-dialog::before{
+    content:"";
+    display:block!important;
+    position:absolute!important;
+    z-index:2!important;
+    top:0!important;
+    right:0!important;
+    left:0!important;
+    height:190px!important;
+    pointer-events:none!important;
+    background:linear-gradient(180deg,rgba(255,255,255,1) 0%,rgba(255,255,255,1) 76%,rgba(255,255,255,0) 100%)!important;
+  }
+  .booking-feedback-dialog > .booking-feedback-header,
+  .booking-feedback-dialog > .booking-feedback-eyebrow,
+  .booking-feedback-dialog > h2{
+
+    position:relative!important;
+    z-index:3!important;
+  }
+}
