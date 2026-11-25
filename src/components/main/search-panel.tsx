@@ -331,7 +331,7 @@ export function SearchPanel({ initialCondition, conditionTab }: { initialConditi
 }
 
 function ConditionSearch({ notify, initial }: { notify: (text: string) => void; initial?: InitialCondition | null }) {
-  const { state, update, error, field, pickerPanel, submit, datesText, passengersText } = useConditionForm(initial, { notify, portal: ".main-page" });
+  const { state, update, error, field, pickerPanel, submit, datesText, passengersText } = useConditionForm(initial, { notify, portal: ".main-page", chain: true });
   const { origin, destination } = state;
 
   return (

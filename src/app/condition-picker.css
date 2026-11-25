@@ -234,6 +234,42 @@
   #picker-panel.location-picker .origin-chip:nth-child(1){--origin-chip-delay:45ms}#picker-panel.location-picker .origin-chip:nth-child(2){--origin-chip-delay:75ms}#picker-panel.location-picker .origin-chip:nth-child(3){--origin-chip-delay:105ms}#picker-panel.location-picker .origin-chip:nth-child(4){--origin-chip-delay:135ms}#picker-panel.location-picker .origin-chip:nth-child(5){--origin-chip-delay:165ms}#picker-panel.location-picker .origin-chip:nth-child(6){--origin-chip-delay:195ms}#picker-panel.location-picker .origin-chip:nth-child(7){--origin-chip-delay:225ms}#picker-panel.location-picker .origin-chip:nth-child(8){--origin-chip-delay:255ms}#picker-panel.location-picker .origin-chip:nth-child(9){--origin-chip-delay:285ms}#picker-panel.location-picker .origin-chip:nth-child(10){--origin-chip-delay:315ms}#picker-panel.location-picker .origin-chip:nth-child(11){--origin-chip-delay:345ms}#picker-panel.location-picker .origin-chip:nth-child(12){--origin-chip-delay:375ms}#picker-panel.location-picker .origin-chip:nth-child(13){--origin-chip-delay:405ms}#picker-panel.location-picker .origin-chip:nth-child(14){--origin-chip-delay:435ms}
   #picker-panel.location-picker.is-closing :is(.picker-header,.origin-search-wrap,.origin-scroll-wrap){animation:picker-content-out 260ms cubic-bezier(.22,1,.36,1) var(--origin-picker-out-delay,0ms) both}
 }
+/*
+ * 11/23 시안: 메인은 899px 이하에서 탑승객 선택기도 화면 전체(.is-full-screen). 내용은 스크롤 영역 + 분홍 막대, "선택 완료"는 아래 고정.
+ * 넓은 화면과 목록 서랍(창 그대로)에서는 감싼 칸이 display:contents라 배치가 그대로고 막대도 숨긴다.
+ */
+:is(.passenger-scroll-wrap,.passenger-scroll-content){display:contents}
+#picker-panel.passenger-picker:not(.is-full-screen) .go-scrollbar{display:none}
+@media(max-width:899px){
+  #picker-panel.passenger-picker.is-full-screen{position:fixed;inset:0;z-index:1005;display:flex;flex-direction:column;width:100%;max-width:none;height:100dvh;max-height:none;margin:0;padding:40px 6px 6px;gap:36px;transform:none;border-radius:0;box-shadow:none;overflow:hidden;background:#fff;animation:picker-fade-in 220ms cubic-bezier(.22,1,.36,1) both}
+  #picker-panel.passenger-picker.is-full-screen.is-closing{animation:picker-fade-out 180ms ease-in both}
+  #picker-panel.passenger-picker.is-full-screen>:is(.picker-header,.picker-body){box-sizing:border-box;width:100%;max-width:520px;margin-inline:auto}
+  #picker-panel.passenger-picker.is-full-screen .picker-header{position:relative;flex:0 0 19px;height:19px;min-height:19px;padding:0 20px;border:0;overflow:visible}
+  #picker-panel.passenger-picker.is-full-screen .picker-header h2{font-size:18px;line-height:22px;font-weight:700}
+  #picker-panel.passenger-picker.is-full-screen .picker-close{position:absolute;top:-6px;right:14px;width:32px;height:32px;display:grid;place-items:center;padding:0;border-radius:50%;overflow:visible;clip-path:none;background:transparent;color:#666}
+  #picker-panel.passenger-picker.is-full-screen .picker-close:hover{background:#f2f2f2}
+  #picker-panel.passenger-picker.is-full-screen .picker-body{display:flex;min-height:0;height:auto;flex:1 1 auto;padding:0;overflow:hidden}
+  #picker-panel.passenger-picker.is-full-screen .passenger-scroll-wrap{position:relative;display:flex;min-height:0;height:100%;flex:1 1 auto;overflow:hidden}
+  #picker-panel.passenger-picker.is-full-screen .passenger-scroll-content{box-sizing:border-box;display:flex;flex-direction:column;min-height:100%;height:100%;flex:1 1 auto;padding:0 20px 113px;overflow-x:hidden;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:none}
+  #picker-panel.passenger-picker.is-full-screen .passenger-scroll-content::-webkit-scrollbar{display:none;width:0;height:0}
+  #picker-panel.passenger-picker.is-full-screen .passenger-controls{flex:0 0 auto;height:auto;min-height:0}
+  #picker-panel.passenger-picker.is-full-screen .passenger-row{height:42px}
+  #picker-panel.passenger-picker.is-full-screen .cabin-options{height:auto;min-height:173px;padding:24px 0 0;gap:20px}
+  #picker-panel.passenger-picker.is-full-screen .cabin-options::before{content:"좌석";display:block;margin-bottom:0;color:#101828;font-size:18px;line-height:22px;font-weight:700}
+  #picker-panel.passenger-picker.is-full-screen .passenger-action{position:fixed;left:0;right:0;bottom:0;z-index:2;box-sizing:border-box;width:100%;height:89px;padding:20px;align-items:flex-start;justify-content:center;background:linear-gradient(180deg,rgba(255,255,255,0) 0%,rgba(255,255,255,.82) 34%,rgba(255,255,255,.98) 72%,#fff 100%)}
+  #picker-panel.passenger-picker.is-full-screen .picker-done{width:100%;max-width:520px;height:56px;min-height:56px;margin:0;padding:0 20px;border-radius:20px;font-size:14px;font-weight:700;line-height:20px}
+  #picker-panel.passenger-picker.is-full-screen .go-scrollbar{display:block;position:absolute;top:0;right:0;bottom:0;width:4px}
+}
+/* 목록 서랍(창 그대로): 화면보다 길면 높이를 화면에 맞추고 안쪽만 스크롤 + 분홍 막대(시안 is-height-constrained). */
+@media(max-width:899px){
+  &.flight-page #picker-panel.passenger-picker{max-height:calc(100dvh - 24px)}
+  &.flight-page #picker-panel.passenger-picker .picker-body{min-height:0;flex:1 1 auto;height:auto;overflow:visible}
+  &.flight-page #picker-panel.passenger-picker .passenger-scroll-wrap{position:relative;display:flex;min-height:0;height:100%;flex:1 1 auto}
+  &.flight-page #picker-panel.passenger-picker .passenger-scroll-content{display:flex;flex-direction:column;gap:20px;min-height:0;height:100%;flex:1 1 auto;overflow-x:hidden;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:none}
+  &.flight-page #picker-panel.passenger-picker .passenger-scroll-content::-webkit-scrollbar{display:none;width:0;height:0}
+  &.flight-page #picker-panel.passenger-picker .passenger-scroll-content>*{flex:0 0 auto}
+  &.flight-page #picker-panel.passenger-picker .go-scrollbar{display:block;position:absolute;top:0;right:-14px;bottom:0;width:4px}
+}
 }
 @keyframes calendar-pop-in{from{opacity:0;transform:translateY(-8px) scale(.985)}to{opacity:1;transform:translateY(0) scale(1)}}
 @keyframes calendar-pop-out{from{opacity:1;transform:translateY(0) scale(1)}to{opacity:0;transform:translateY(-8px) scale(.985)}}

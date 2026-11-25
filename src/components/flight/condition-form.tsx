@@ -21,7 +21,8 @@ const PASSENGER_ROWS = [
   { key: "infants", label: "유아", description: "만 2세 미만", min: 0 },
 ] as const;
 
-const PICKER_TITLES = { origin: "출발지", destination: "도착지", dates: "일정 선택", passengers: "탑승객 및 좌석" };
+// 11/23 시안: 선택기 제목 "일정"·"탑승객"(칸 이름 "탑승객 및 좌석"과 따로. 전체 화면 탑승객은 아래에 "좌석" 소제목이 붙는다).
+const PICKER_TITLES = { origin: "출발지", destination: "도착지", dates: "일정", passengers: "탑승객" };
 // 피커는 모두 누른 칸 아래에 붙는 드롭다운이다(시안 positionAnchoredPicker). 폭은 Figma 기준.
 const PICKER_WIDTHS = { origin: 362, destination: 362, dates: 374, passengers: 352 };
 const PICKER_CLASSES = { origin: "location-picker", destination: "location-picker", dates: "date-picker", passengers: "passenger-picker" };
@@ -46,7 +47,10 @@ const LOCATION_REGIONS = [
   // 1105 시안에서 추가된 지역. 시드에 없는 뭄바이·벵갈루루·고아·페낭·랑카위·파타야는 뺐다.
   { label: "싱가포르", flag: "flag-singapore.webp", chips: [["싱가포르", "AIRPORT", "SIN"]] },
   { label: "홍콩", flag: "flag-hong-kong.webp", chips: [["홍콩", "AIRPORT", "HKG"]] },
+  // 11/23 시안에서 추가된 지역. 시드에 없는 롬복(LOP)·몰디브(MLE)는 뺐다.
+  { label: "베트남", flag: "flag-vietnam.webp", chips: [["다낭", "AIRPORT", "DAD"], ["하노이", "AIRPORT", "HAN"], ["호찌민", "AIRPORT", "SGN"], ["푸꾸옥", "AIRPORT", "PQC"]] },
   { label: "인도", flag: "flag-india.webp", chips: [["뉴델리", "AIRPORT", "DEL"]] },
+  { label: "인도네시아", flag: "flag-indonesia.webp", chips: [["발리", "AIRPORT", "DPS"], ["자카르타", "AIRPORT", "CGK"]] },
   { label: "말레이시아", flag: "flag-malaysia.webp", chips: [["쿠알라룸푸르", "AIRPORT", "KUL"], ["코타키나발루", "AIRPORT", "BKI"]] },
   { label: "태국", flag: "flag-thailand.webp", chips: [["방콕", "CITY", "BKK"], ["푸껫", "AIRPORT", "HKT"], ["치앙마이", "AIRPORT", "CNX"]] },
 ].map(({ chips, ...region }) => ({
@@ -109,11 +113,20 @@ export function useConditionForm(
     notify,
     portal,
     dateAnchor = "origin",
+    chain = false,
+    fit = false,
   }: {
     notify: (text: string) => void;
     portal: string;
     /** 일정 선택기를 맞출 칸. 메인은 출발지 칸 왼쪽(시안), 목록 서랍은 일정 칸 자신. */
     dateAnchor?: "origin" | "dates";
+    /**
+     * 메인(11/23 시안): 고르면 다음 선택기를 이어서 연다(출발지→도착지, 넓은 화면은 도착지→일정→탑승객).
+     * 899px 이하에서 탑승객도 화면 전체로 연다. 목록 서랍은 899px 이하 출발지→도착지만 이어 연다.
+     */
+    chain?: boolean;
+    /** 목록 서랍: 칸 아래 창이 화면 아래로 넘치면 위로 올려 화면 안에 맞춘다(시안 positionDrawerPicker). 너무 길면 CSS가 안쪽을 스크롤한다. */
+    fit?: boolean;
   },
 ) {
   const router = useRouter();
@@ -141,7 +154,7 @@ export function useConditionForm(
   const closeTimer = useRef<number>(undefined);
   const [panelPosition, setPanelPosition] = useState<{ left: number; top: number }>();
   const narrow = useMediaQuery(FULL_SCREEN_QUERY);
-  const fullScreen = narrow && !!picker && picker !== "passengers";
+  const fullScreen = narrow && !!picker && (picker !== "passengers" || chain);
   // 전체 화면 장소 선택기는 안쪽 내용이 차례로 사라진 뒤(340ms) 닫는다(시안).
   const closeDelay = fullScreen && isLocation(picker) ? 340 : 180;
 
@@ -187,12 +200,14 @@ export function useConditionForm(
       if (!trigger || !anchor || !parent) return;
       const width = Math.min(PICKER_WIDTHS[picker!], window.innerWidth - 24);
       const left = Math.max(12, Math.min(anchor.left - 40, window.innerWidth - width - 12));
-      setPanelPosition({ left: left - parent.left, top: trigger.bottom - 12 - parent.top });
+      let top = trigger.bottom - 12;
+      if (fit && panel.current) top = Math.max(12, Math.min(top, window.innerHeight - panel.current.offsetHeight - 12));
+      setPanelPosition({ left: left - parent.left, top: top - parent.top });
     }
     place();
     window.addEventListener("resize", place);
     return () => window.removeEventListener("resize", place);
-  }, [picker, dateAnchor, fullScreen]);
+  }, [picker, dateAnchor, fullScreen, fit]);
 
   // 전체 화면 선택기 뒤 페이지는 스크롤하지 않는다.
   useEffect(() => {
@@ -331,7 +346,7 @@ export function useConditionForm(
         // 종류가 바뀌면 새로 그려 등장 애니메이션을 다시 돌린다.
         key={picker}
         ref={panel}
-        className={`picker-panel ${PICKER_CLASSES[picker]}${isLocation(picker) ? ` ${picker}-picker` : ""}${closing ? " is-closing" : ""}`}
+        className={`picker-panel ${PICKER_CLASSES[picker]}${isLocation(picker) ? ` ${picker}-picker` : ""}${fullScreen ? " is-full-screen" : ""}${closing ? " is-closing" : ""}`}
         style={fullScreen ? undefined : panelPosition}
         id="picker-panel"
         role="dialog"
@@ -370,11 +385,14 @@ export function useConditionForm(
                   return;
                 }
                 update(picker === "origin" ? { origin: option } : { destination: option });
+                // 이어 열기(11/23 시안). 전체 화면은 지금 것을 닫고 다음 것을 연다(switchPicker).
+                if (picker === "origin" && (chain || narrow)) return fullScreen ? switchPicker("destination") : openPicker("destination");
+                if (picker === "destination" && chain && !narrow) return openPicker("dates");
                 closePicker();
               }}
             />
           )}
-          {picker === "dates" && <DatePicker state={state} update={update} onDone={closePicker} />}
+          {picker === "dates" && <DatePicker state={state} update={update} onDone={() => (chain && !narrow ? openPicker("passengers") : closePicker())} />}
           {picker === "passengers" && <PassengerPicker state={state} update={update} onDone={closePicker} />}
         </div>
       </section>,
@@ -621,6 +639,7 @@ function DatePicker({ state, update, onDone }: PickerProps) {
 
 function PassengerPicker({ state, update, onDone }: PickerProps) {
   const total = state.adults + state.children + state.infants;
+  const scroll = useRef<HTMLDivElement>(null);
 
   function step(key: PassengerKey, delta: 1 | -1) {
     const next = state[key] + delta;
@@ -632,8 +651,10 @@ function PassengerPicker({ state, update, onDone }: PickerProps) {
     update({ [key]: next } as Partial<Condition>);
   }
 
+  // 전체 화면(메인 899px 이하)에서는 내용이 스크롤 영역에 들어가고 분홍 막대가 붙는다. 넓은 화면에서는 감싼 칸이 display:contents.
   return (
-    <>
+    <div className="passenger-scroll-wrap">
+      <div ref={scroll} className="passenger-scroll-content">
       <div className="passenger-controls">
         <div className="passenger-list">
           {PASSENGER_ROWS.map(({ key, label, description, min }) => (
@@ -685,9 +706,11 @@ function PassengerPicker({ state, update, onDone }: PickerProps) {
       </div>
       <div className="passenger-action">
         <button className="picker-done" type="button" onClick={onDone}>
-          선택하기
+          선택 완료
         </button>
       </div>
-    </>
+      </div>
+      <GoScrollbar target={scroll} />
+    </div>
   );
 }
