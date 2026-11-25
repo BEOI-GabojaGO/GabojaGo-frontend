@@ -1,11 +1,15 @@
 "use client";
 
+/* eslint-disable @next/next/no-img-element -- 조건 칸 국기·자리 아이콘은 작은 정적 파일이라 그대로 쓴다. */
+
 import { useLayoutEffect, useRef, useState, type FormEvent, type KeyboardEvent, type ReactNode } from "react";
 import { useConditionForm, type InitialCondition } from "@/components/flight/condition-form";
 import { useAiSearch } from "@/components/main/ai-search";
 import { prefersReducedMotion, useInfoDialog, useIsMobile, useToast } from "@/components/main/main-ui";
 import { PromptForm } from "@/components/main/prompt-form";
 import { formatLocation } from "@/lib/flight-client";
+import { FLAGS } from "@/lib/flags";
+import type { LocationOption } from "@/lib/flight-types";
 
 type Mode = "AI" | "조건" | "사주" | "MBTI";
 
@@ -327,7 +331,7 @@ export function SearchPanel({ initialCondition, conditionTab }: { initialConditi
 }
 
 function ConditionSearch({ notify, initial }: { notify: (text: string) => void; initial?: InitialCondition | null }) {
-  const { state, update, error, field, pickerPanel, submit, datesText, passengersText } = useConditionForm(initial, { notify, portal: ".main-page" });
+  const { state, update, error, field, pickerPanel, submit, datesText, passengersText } = useConditionForm(initial, { notify, portal: ".main-page", chain: true });
   const { origin, destination } = state;
 
   return (
@@ -353,8 +357,8 @@ function ConditionSearch({ notify, initial }: { notify: (text: string) => void; 
           ))}
         </div>
         <div className="condition-fields">
-          {field("origin", "출발지", origin ? formatLocation(origin) : "출발지를 선택해 주세요")}
-          {field("destination", "목적지", destination ? formatLocation(destination) : "목적지를 선택해 주세요")}
+          {field("origin", "출발지", <LocationValue option={origin} empty="출발지를 선택해 주세요" />)}
+          {field("destination", "목적지", <LocationValue option={destination} empty="목적지를 선택해 주세요" destination />)}
           {field("dates", "일정", datesText)}
           {field("passengers", "탑승객 및 좌석", passengersText)}
         </div>
@@ -370,5 +374,27 @@ function ConditionSearch({ notify, initial }: { notify: (text: string) => void; 
 
       {pickerPanel}
     </>
+  );
+}
+
+/**
+ * 조건 칸의 장소 값(11/23 시안 condition-location-value): 국기 + "도시 (코드)". 비어 있으면 자리 아이콘(출발지 지구본, 도착지 비행기).
+ * 국기 표(FLAGS)에 없는 나라는 틀린 국기 대신 자리 아이콘을 둔다(시안은 한국 국기로 대신함).
+ */
+function LocationValue({ option, empty, destination = false }: { option: LocationOption | null; empty: string; destination?: boolean }) {
+  const flag = option && FLAGS[option.countryNameKo];
+  return (
+    <span className={`condition-location-value${option ? "" : " is-placeholder"}`}>
+      {flag ? (
+        <span className="condition-country-icon">
+          <img src={`/main/${flag}`} alt={option.countryNameKo} />
+        </span>
+      ) : (
+        <span className={`condition-country-icon condition-country-icon-placeholder${destination ? " condition-destination-icon-placeholder" : ""}`} aria-hidden="true">
+          {destination && <img src="/flight/airplane.svg" alt="" />}
+        </span>
+      )}
+      <span className="condition-location-text">{option ? formatLocation(option) : empty}</span>
+    </span>
   );
 }

@@ -22,9 +22,10 @@ const BENEFITS = [
   { icon: "imgIconHear.svg", text: "사용자 고민을 경청해요" },
 ];
 
+// 11/23 시안: 8장. 장수를 바꾸면 main.css의 hero-slide(길이·구간 %)도 함께 바꾼다.
 const HERO_IMAGES = [
   "/main/imgFrame179.webp",
-  ...[1, 2, 3, 4].map((n) => `/main/hero/hero-banner-${n}.webp`),
+  ...[1, 2, 3, 4, 5, 6, 7].map((n) => `/main/hero/hero-banner-${n}.webp`),
 ];
 
 export default async function Home({ searchParams }: PageProps<"/">) {

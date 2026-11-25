@@ -18,7 +18,7 @@ export default async function OneWayPage({ searchParams }: PageProps<"/flights/o
 
   return (
     <div className={`flight-page ${notoSansKr.variable}`}>
-      <ExploreHeader hideOnScroll />
+      <ExploreHeader hideOnScroll clearAtTop />
       {/* 서랍에서 같은 화면으로 새 조건을 넘기면 흐름을 새로 만들어 다시 검색한다(자동 검색은 한 번만 돈다). */}
       <OneWayFlow key={JSON.stringify(initial)} initial={initial} />
     </div>

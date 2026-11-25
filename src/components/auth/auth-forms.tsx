@@ -25,7 +25,8 @@ function emailError(input: HTMLInputElement) {
 type AuthFormsProps = {
   initialView?: AuthView;
   /** 로그인(가입 후 자동 로그인 포함)에 성공했을 때. */
-  onSuccess: () => void | Promise<void>;
+  /** 로그인 성공. 회원가입 직후 자동 로그인이면 view가 "signup"이다(헤더 로더의 완료 토스트 문구). */
+  onSuccess: (view: AuthView) => void | Promise<void>;
   onClose: () => void;
 };
 
@@ -62,7 +63,7 @@ export function AuthForms({ initialView = "login", onSuccess, onClose }: AuthFor
   async function login(email: string, password: string) {
     const response = await postAuth("/api/auth/login", { email, password });
     if (!response.ok) return readErrorMessage(response);
-    await onSuccess();
+    await onSuccess(view);
     return "";
   }
 
@@ -207,7 +208,7 @@ export function AuthForms({ initialView = "login", onSuccess, onClose }: AuthFor
       ) : (
         <>
           <p className="login-signup">
-            계정이 없으신가요?{" "}
+            아직 계정이 없으신가요?{" "}
             <button className="login-signup-link" type="button" onClick={() => showView("signup")}>
               회원가입
             </button>

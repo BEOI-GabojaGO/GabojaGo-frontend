@@ -3,7 +3,8 @@
 /* eslint-disable @next/next/no-img-element -- 시안 아이콘·광고 이미지와 SerpApi 항공사 로고를 그대로 쓴다. */
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Fragment, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import { Fragment, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore, type CSSProperties } from "react";
+import { BookingFeedback, feedbackDone } from "@/components/flight/booking-feedback";
 import { airlinesOf, FLAGS, querySummary, SortMenu } from "@/components/flight/flight-list-ui";
 import { cityName } from "@/components/flight/search-condition-fields";
 import { prefersReducedMotion, useToast } from "@/components/main/main-ui";
@@ -328,6 +329,25 @@ function Booking({ selection }: { selection: BookingSelection }) {
     box.classList.add("is-sort-refreshing");
     setTimeout(() => box.classList.remove("is-sort-refreshing"), 1100);
   };
+  // 11/23 시안: 판매처 "예약하기"를 누르면 먼저 피드백 설문. 이 탭에서 이미 답했으면 바로 이동한다(사용자 결정 2026-11-25).
+  const [feedback, setFeedback] = useState<{ option: BookingOption; session: number } | null>(null);
+  const requestBook = (option: BookingOption) => {
+    if (feedbackDone()) return void book(option);
+    setFeedback((current) => ({ option, session: (current?.session ?? 0) + 1 }));
+  };
+  // 판매처를 처음 불러오면 한 번만 화면을 차례로 띄운다(11/23 시안 content-revealing → .booking-page.is-intro).
+  // 마지막 카드(0.66초 + 60ms 간격)까지 끝난 뒤 지운다(최소 2.2초).
+  const introDone = useRef(false);
+  const hasOptions = options.length > 0;
+  useLayoutEffect(() => {
+    const page = offerList.current?.closest<HTMLElement>(".booking-page");
+    if (introDone.current || !hasOptions || !page) return;
+    introDone.current = true;
+    page.classList.add("is-intro");
+    const introMs = Math.max(2200, 1100 + page.querySelectorAll(".offer-card").length * 60);
+    const timer = setTimeout(() => page.classList.remove("is-intro"), introMs);
+    return () => clearTimeout(timer);
+  }, [hasOptions]);
   const research = () =>
     router.push(`${request.returnDate ? "/flights/round-trip/step" : "/flights/one-way"}?${toSearchQuery(request, locations)}`);
 
@@ -362,8 +382,8 @@ function Booking({ selection }: { selection: BookingSelection }) {
           {itinerary && options.length === 0 && <p className="booking-notice">예약 가능한 판매처가 없어요.</p>}
 
           <div ref={offerList} className="offer-list" aria-live="polite">
-            {options.map((option) => (
-              <OfferCard key={optionKey(option)} option={option} logo={sellerLogo(option.sellerName ?? "", logos)} oneWay={!returnId} pending={pendingKey} onBook={() => void book(option)} />
+            {options.map((option, index) => (
+              <OfferCard key={optionKey(option)} index={index} option={option} logo={sellerLogo(option.sellerName ?? "", logos)} oneWay={!returnId} pending={pendingKey} onBook={() => requestBook(option)} />
             ))}
           </div>
           {options.length > 0 && (
@@ -405,13 +425,21 @@ function Booking({ selection }: { selection: BookingSelection }) {
         </aside>
       </main>
       {!itinerary && !error && <SiteLoader busy label="판매처를 찾는 중" />}
+      {feedback && (
+        <BookingFeedback
+          key={feedback.session}
+          provider={feedback.option.sellerName ?? "예약처"}
+          onComplete={() => void book(feedback.option)}
+          onClose={() => setFeedback(null)}
+        />
+      )}
       {toast}
     </>
   );
 }
 
 /** 판매처 카드. 로고는 sellerLogo(시안 로고 → 항공사 로고), 없으면 이름 첫 글자. 혜택은 시안 순서대로 수하물(baggagePrices) → 서비스(extensions). */
-function OfferCard({ option, logo, oneWay, pending, onBook }: { option: BookingOption; logo: string | null; oneWay: boolean; pending: string; onBook: () => void }) {
+function OfferCard({ option, index, logo, oneWay, pending, onBook }: { option: BookingOption; index: number; logo: string | null; oneWay: boolean; pending: string; onBook: () => void }) {
   const name = option.sellerName ?? "판매처 정보 없음";
   const benefits = [
     ...option.baggagePrices.map((text) => ({ text, icon: "/booking/baggage.svg" })),
@@ -419,7 +447,7 @@ function OfferCard({ option, logo, oneWay, pending, onBook }: { option: BookingO
   ].slice(0, 2);
   const key = optionKey(option);
   return (
-    <article className="offer-card">
+    <article className="offer-card" style={{ "--offer-card-stagger": `${index * 60}ms` } as CSSProperties}>
       <div className="provider-info">
         <div className="provider-title">
           {logo ? (

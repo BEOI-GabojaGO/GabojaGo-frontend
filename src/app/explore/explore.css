@@ -35,19 +35,20 @@
   .site-header { position: fixed; top: 0; left: 0; width: 100%; height: 54px; z-index: 32; background: rgb(0 0 0 / 10%); -webkit-backdrop-filter: blur(15px); backdrop-filter: blur(15px); box-shadow: 0 2px 2px rgb(0 0 0 / 6%); color: white; transition: background-color 280ms ease, color 280ms ease, box-shadow 280ms ease; }
   .site-header.is-light { background: rgba(255,255,255,.1); color: #101828; box-shadow: 0 2px 2px #0000000f; }
   .site-header .brand, .site-header .brand span { transition: color 90ms ease; }
-  .site-header .back-button img, .site-header .account-nav img { transition: filter 180ms ease, opacity 180ms ease; }
-  .site-header.is-light .back-button img, .site-header.is-light .account-nav img { filter: brightness(0) saturate(100%); opacity: .78; }
-  .site-header.is-light .wishlist-button { border-color: rgb(0 0 0 / 10%); }
+  .site-header .back-button img { transition: filter 180ms ease, opacity 180ms ease; }
+  .site-header.is-light .back-button img { filter: brightness(0) saturate(100%); opacity: .78; }
+  /* 로그인 후 계정 메뉴(account-menu.css)를 사진 위에서는 흰색, 밝은 헤더에서는 진하게(11/23 시안). */
+  .site-header .account-nav :is(.wishlist-link, .account-menu-toggle) { color: inherit; }
+  .site-header:not(.is-light) .account-nav .wishlist-link { border-color: rgba(255,255,255,.2); }
+  .site-header:not(.is-light) .account-nav .wishlist-icon { filter: brightness(0) invert(1); }
+  .site-header .account-nav .wishlist-link:hover { color: var(--pink); }
+  .site-header.is-light .account-nav :is(.wishlist-link, .account-menu-toggle) { color: #333; }
   .header-inner { height: 100%; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
   .brand-group { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
   .back-button { width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; flex: none; }
   .back-button img { display: block; width: 20px; height: 20px; }
   .brand { font-size: 18px; line-height: 22px; font-weight: 700; white-space: nowrap; }
   .brand span { color: var(--pink); }
-  .account-nav { display: flex; align-items: center; }
-  .wishlist-button { display: flex; align-items: center; gap: 4px; border-radius: 12px; padding: 8px 14px 8px 10px; border: 1px solid rgb(255 255 255 / 20%); font-size: 14px; line-height: 20px; font-weight: 500; }
-  .wishlist-button img { margin: 0 6px 0 0; }
-  .user-button { padding: 8px 24px; font-size: 14px; line-height: 20px; font-weight: 500; white-space: nowrap; display: flex; align-items: center; gap: 8px; }
   /* 로그아웃: 분홍 "로그인"(1111 시안). 모바일은 분홍 글자 + 아이콘. */
   .login-button { display: flex; align-items: center; justify-content: center; height: 36px; border-radius: 12px; padding: 8px 14px; background: var(--pink); color: #fff; font-size: 14px; line-height: 20px; font-weight: 500; white-space: nowrap; }
   .login-icon { display: none; flex: none; }
@@ -63,8 +64,10 @@
   .hero-photo.is-active { opacity: 1; }
   .hero-shade { position: fixed; z-index: 1; top: 0; left: 0; width: 100%; height: 520px; background: linear-gradient(90deg, rgb(0 0 0 / 60%) 0%, rgb(0 0 0 / 40%) 40%, transparent 80%); pointer-events: none; }
   .hero-content { position: absolute; z-index: 2; top: 260px; left: 0; right: 0; display: flex; flex-direction: column; align-items: flex-start; gap: 30px; }
-  .hero-title-group { display: flex; flex-direction: column; gap: 4px; }
-  .hero h1 { font-size: 52px; line-height: 75px; font-weight: 700; }
+  .hero-title-group { display: flex; flex-direction: column; gap: 8px; }
+  /* 11/23 시안: 나라 이름 앞 국기(52px, 모서리 18px). */
+  .hero h1 { display: flex; align-items: center; gap: 12px; font-size: 52px; line-height: 75px; font-weight: 700; }
+  .page-country-flag { width: 52px; height: 52px; flex: 0 0 52px; border-radius: 18px; object-fit: cover; transform: translateY(4px); }
   .hero-title-group > p { margin-left: 4px; font-size: 20px; line-height: 29px; }
   .primary-button { display: inline-flex; align-items: center; justify-content: center; height: 56px; padding: 18px 60px; background: var(--pink); border-radius: 20px; font-size: 14px; line-height: 20px; font-weight: 500; transition: background .18s; }
   .primary-button:hover { background: #e31c5a; }
@@ -126,11 +129,13 @@
     .login-icon { display: block; width: 20px; height: 20px; }
     .site-header { transition: background-color 280ms ease, color 280ms ease, box-shadow 280ms ease, transform 420ms cubic-bezier(.22,1,.36,1); will-change: transform; }
     .site-header.is-scroll-hidden { transform: translateY(-100%); }
-    .wishlist-button { border: 0; padding: 8px 14px 8px 10px; }
-    .user-button { padding: 8px 0 8px 4px; gap: 6px; }
+    /* 둘러보기는 699px 이하부터 위시리스트를 아이콘만(시안). */
+    .account-nav .wishlist-link { width: 36px; padding: 8px; }
+    .account-nav .wishlist-link-content > span { display: none; }
     .hero-content { top: 312px; gap: 20px; }
     .hero-title-group { gap: 6px; }
-    .hero h1 { font-size: 32px; line-height: 46px; }
+    .hero h1 { gap: 8px; font-size: 32px; line-height: 46px; }
+    .page-country-flag { width: 32px; height: 32px; flex-basis: 32px; border-radius: 10px; transform: translateY(2px); }
     .hero-title-group > p { font-size: 16px; line-height: 24px; font-weight: 500; }
     .primary-button { height: 48px; padding: 14px 26px; border-radius: 16px; font-weight: 700; line-height: normal; }
     .collections { gap: 40px; padding-bottom: 70px; }
@@ -147,8 +152,6 @@
     .tags li { padding: 3px 6px; }
   }
   @media (max-width: 360px) {
-    .wishlist-button { padding-inline: 8px; }
-    .wishlist-button span { display: none; }
     .hero-title-group > p { max-width: calc(100vw - 44px); font-size: 14px; }
     .section-heading h2 { font-size: 18px; }
   }
@@ -222,7 +225,13 @@
     .footer-inner { margin-inline: 30px; }
     .footer-inner > .brand, .footer-inner nav { width: auto; }
   }
-  @media (min-width: 1440px) and (max-width: 1499px) { .footer-inner { max-width: calc(100% - 120px); } }
+  /* 11/23 시안: 1200–1499 푸터·히어로 글자 영역 좌우 60px(로고·링크 칸 342px), 1500 이상 히어로 최대 1440px. */
+  @media (min-width: 1200px) and (max-width: 1499px) {
+    .footer-inner { max-width: calc(100% - 120px); margin-inline: auto; }
+    .footer-inner > .brand, .footer-inner nav { width: 342px; }
+    .hero-content.page-container { width: calc(100% - 120px); margin-inline: auto; }
+  }
+  @media (min-width: 1500px) { .hero-content.page-container { max-width: 1440px; margin-inline: auto; } }
   /* 600–699: 카드는 342px·사진 220, 줄 양끝 20px 여유(거터 20px보다 넓으면 페이지가 넘친다). */
   @media (min-width: 700px) and (max-width: 1199px) { .card-track { margin-left: -30px; margin-right: -30px; padding-left: 30px; padding-right: 30px; scroll-padding-left: 30px; } }
   @media (min-width: 600px) and (max-width: 699px) {
@@ -238,6 +247,14 @@
     .footer-inner > .brand, .footer-inner > p, .footer-inner nav { width: auto; }
     .footer-inner > p { text-align: left; }
   }
+  /* 11/23 시안: 600–699는 푸터 한 줄(좌우 30px), 599 이하는 푸터 위아래 40px. */
+  @media (min-width: 600px) and (max-width: 699px) {
+    .footer-inner { margin-inline: 30px; flex-direction: row; align-items: center; gap: 0; }
+    .footer-inner > .brand, .footer-inner nav { width: auto; }
+    .footer-inner > p { width: 220px; text-align: center; }
+    .footer-inner nav { gap: 20px; }
+  }
+  @media (max-width: 599px) { footer { padding: 40px 0; } }
   @media (max-width: 599px) { .card { flex-basis: var(--card-width); } }
   /* 모바일(699 이하, 600–699 제외)은 올려도 모양이 그대로. */
   @media (max-width: 599px) {

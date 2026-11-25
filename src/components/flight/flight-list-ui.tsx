@@ -1,10 +1,12 @@
 "use client";
 
 /* eslint-disable @next/next/no-img-element -- 디자인 원본 아이콘과 SerpApi 항공사 로고를 그대로 쓴다. */
+import { FLAGS } from "@/lib/flags";
 import { usePathname, useRouter } from "next/navigation";
-import { Fragment, useEffect, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
+import { Fragment, useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type KeyboardEvent, type ReactNode, type RefObject } from "react";
 import { SearchEditDrawer } from "@/components/flight/search-edit-drawer";
 import { cityName, TRAVEL_CLASS_OPTIONS } from "@/components/flight/search-condition-fields";
+import { prefersReducedMotion } from "@/components/main/main-ui";
 import { loginHref } from "@/lib/auth-client";
 import { formatMinutes, postJson, requestJson } from "@/lib/flight-client";
 import type {
@@ -36,16 +38,7 @@ const TIME_SLOTS = [0, 4, 8, 12, 16, 20].map((start) => ({
 /** 데스크톱 사이드바에서 숨기는 칸(1111 시안 departTimeOptions·returnTimeOptions): 가는편 20–24시, 오는편 00–04시. 시트는 6칸 모두. */
 const SIDEBAR_HIDDEN: Record<Leg, number> = { outbound: 20, inbound: 0 };
 
-export const FLAGS: Record<string, string> = {
-  대한민국: "flag-korea.png",
-  일본: "flag-japan.png",
-  중국: "flag-china.png",
-  싱가포르: "flag-singapore.webp",
-  홍콩: "flag-hong-kong.webp",
-  인도: "flag-india.webp",
-  말레이시아: "flag-malaysia.webp",
-  태국: "flag-thailand.webp",
-};
+export { FLAGS };
 /** 국기 파일 이름 → CSS 클래스(flag-korea 등). */
 export const flagClass = (file: string) => file.replace(/\.\w+$/, "");
 
@@ -122,6 +115,11 @@ function playCheck(inputs: Iterable<HTMLInputElement>, checked: boolean, batch =
 /** 이 편의 로고(편 전체 → 첫 구간). */
 const logoOf = (option: FlightOption) => option.airlineLogo ?? option.segments[0]?.airlineLogo ?? null;
 
+/** 카드마다 차례 지연(60ms 간격)을 CSS 변수로 단다. 10장을 넘어도 이어진다(11/23 시안 --flight-card-stagger). */
+function staggerCards(root: Element) {
+  root.querySelectorAll<HTMLElement>(".flight-list > .flight-card").forEach((card, index) => card.style.setProperty("--flight-card-stagger", `${index * 60}ms`));
+}
+
 function FilterGroups({
   value,
   onChange,
@@ -129,8 +127,7 @@ function FilterGroups({
   legs,
   idPrefix,
   options = [],
-  panel = false,
-}: {
+  panel = false, onScroll }: {
   value: FilterState;
   onChange: (next: FilterState) => void;
   airlines: string[];
@@ -140,6 +137,8 @@ function FilterGroups({
   options?: FlightOption[];
   /** 태블릿·모바일 필터 시트. 항공사 줄에 로고와 편 수를 붙인다(시안 filter-airline-row). */
   panel?: boolean;
+  /** 시트 목록 스크롤(적용 버튼 숨김). */
+  onScroll?: () => void;
 }) {
   const toggleAirline = (name: string) =>
     onChange({
@@ -164,8 +163,10 @@ function FilterGroups({
     else onChange({ ...value, times: { ...value.times, [group]: on ? slotsOf(group).map(({ start }) => start) : [] } });
     if (section) playCheck(section.querySelectorAll("input"), on, true);
   };
-  const title = (heading: ReactNode, group: "airline" | Leg, all: boolean) => (
-    <div className="filter-group-title">
+  // 데스크톱 사이드바는 처음 열 때 항목이 차례로 나타난다(11/23 시안 --desktop-filter-item-delay). 시트는 쓰지 않는다.
+  const delay = (ms: number) => (panel ? undefined : ({ "--desktop-filter-item-delay": `${ms}ms` } as CSSProperties));
+  const title = (heading: ReactNode, group: "airline" | Leg, all: boolean, ms: number) => (
+    <div className="filter-group-title" style={delay(ms)}>
       <h3>{heading}</h3>
       <button
         className="filter-select-all"
@@ -191,16 +192,16 @@ function FilterGroups({
   };
 
   return (
-    <div className="filter-groups">
+    <div className="filter-groups" onScroll={onScroll}>
       <section className="filter-group">
-        {title("항공사", "airline", allAirlines)}
+        {title("항공사", "airline", allAirlines, 300)}
         <div className="check-list">
           {airlines.length === 0 && <p className="filter-empty">항공사 정보가 없습니다.</p>}
-          {airlines.map((name) => {
+          {airlines.map((name, index) => {
             const count = panel ? countOf(name) : 0;
             const logo = panel ? logoFor(name) : null;
             return (
-              <label className={`check-row${panel ? " filter-airline-row" : ""}`} key={name} htmlFor={`${idPrefix}-airline-${name}`}>
+              <label className={`check-row${panel ? " filter-airline-row" : ""}`} key={name} htmlFor={`${idPrefix}-airline-${name}`} style={delay(360 + index * 40)}>
                 <input
                   id={`${idPrefix}-airline-${name}`}
                   type="checkbox"
@@ -237,10 +238,11 @@ function FilterGroups({
             </>,
             leg,
             allTimes(leg),
+            760,
           )}
           <div className="check-list">
-            {slotsOf(leg).map(({ start, label }) => (
-              <label className="check-row" key={start} htmlFor={`${idPrefix}-${leg}-${start}`}>
+            {slotsOf(leg).map(({ start, label }, index) => (
+              <label className="check-row" key={start} htmlFor={`${idPrefix}-${leg}-${start}`} style={delay(820 + index * 40)}>
                 <input
                   id={`${idPrefix}-${leg}-${start}`}
                   type="checkbox"
@@ -322,6 +324,216 @@ export function SortMenu<T extends string>({
   );
 }
 
+type SheetDrag = {
+  pointerId: number;
+  startY: number;
+  startHeight: number;
+  startExpanded: boolean;
+  startMiddle: boolean;
+  fromHeaderControl: boolean;
+  moved: boolean;
+  latestY: number;
+  lastY: number;
+  lastTime: number;
+  velocityY: number;
+};
+
+/**
+ * 899px 이하 필터 시트 끌기(11/23 시안 startFilterDrag~finishFilterDrag 값 그대로).
+ * 손잡이·제목 줄을 끌면 높이가 바뀌고, 놓으면 전체 높이(모서리 0)·처음 높이·중간 높이(화면 40%) 중 하나로 맞추거나 닫는다.
+ * 높이·아래 밀림·모서리는 CSS 변수(--filter-drag-height·offset·radius)로 넘기고 상태는 클래스(is-dragging·is-drag-snap·is-drag-expanded·is-drag-middle)다.
+ */
+function useSheetDrag(panelRef: RefObject<HTMLDivElement | null>, closeRef: RefObject<() => void>) {
+  useEffect(() => {
+    const panel = panelRef.current;
+    const handle = panel?.querySelector<HTMLElement>(".filter-drag-handle");
+    if (!panel || !handle) return;
+    let collapsed = panel.getBoundingClientRect().height;
+    let drag: SheetDrag | null = null;
+    let frame = 0;
+    let snapTimer = 0;
+    const MIN = 220;
+    const enabled = () => matchMedia("(max-width: 899px)").matches;
+    const viewport = () => Math.max(MIN, Math.round(window.innerHeight));
+    const maxHeight = () => Math.max(collapsed, window.innerHeight);
+    const middleHeight = () => {
+      const base = collapsed || window.innerHeight;
+      return Math.max(MIN, Math.min(base, Math.round(window.innerHeight * 0.4), Math.round(base * 0.6)) - 20);
+    };
+    // 전체 높이로 72% 넘게 올라간 뒤부터 위 모서리를 34px → 0으로 줄인다.
+    const radiusFor = (height: number) => {
+      const progress = Math.min(1, Math.max(0, (height - collapsed) / Math.max(1, maxHeight() - collapsed)));
+      const radiusProgress = Math.min(1, Math.max(0, (progress - 0.72) / 0.28));
+      return Math.max(0, Math.round(34 * (1 - radiusProgress) * 10) / 10);
+    };
+    const setHeight = (height: number) => {
+      const next = Math.min(maxHeight(), Math.max(MIN, height));
+      panel.style.setProperty("--filter-drag-height", `${next}px`);
+      panel.style.setProperty("--filter-drag-radius", `${radiusFor(next)}px`);
+    };
+    const setOffset = (offset: number) => panel.style.setProperty("--filter-drag-offset", `${Math.max(0, offset)}px`);
+
+    function snap(height: number, expanded = false, middle = false) {
+      window.clearTimeout(snapTimer);
+      panel!.classList.remove("is-dragging");
+      panel!.classList.add("is-drag-snap");
+      panel!.classList.toggle("is-drag-expanded", expanded);
+      panel!.classList.toggle("is-drag-middle", middle);
+      setOffset(0);
+      if (expanded) {
+        panel!.style.setProperty("--filter-drag-height", `${viewport()}px`);
+        panel!.style.setProperty("--filter-drag-radius", "0px");
+      } else setHeight(height);
+      snapTimer = window.setTimeout(() => {
+        panel!.classList.remove("is-drag-snap");
+        if (!expanded && !middle) {
+          panel!.classList.remove("is-drag-expanded", "is-drag-middle");
+          panel!.style.removeProperty("--filter-drag-height");
+        }
+        panel!.style.removeProperty("--filter-drag-offset");
+      }, 320);
+    }
+
+    function apply(y: number) {
+      if (!drag) return;
+      const deltaY = y - drag.startY;
+      if (Math.abs(deltaY) > 3) drag.moved = true;
+      if (deltaY < 0) {
+        setHeight(drag.startHeight - deltaY);
+        setOffset(0);
+        return;
+      }
+      // 아래로 끌면 먼저 높이를 줄이고(최소 220px), 더 끌면 시트를 아래로 민다.
+      const reduction = Math.min(deltaY, Math.max(0, drag.startHeight - MIN));
+      setHeight(drag.startHeight - reduction);
+      setOffset(deltaY - reduction);
+    }
+
+    function start(event: PointerEvent) {
+      if (!enabled() || (event.pointerType === "mouse" && event.button !== 0)) return;
+      const target = event.target as Element;
+      // 끌 수 있는 곳: 시트 위쪽(손잡이·제목 줄, 최소 96px). 목록 안 버튼·체크는 그대로 누른다.
+      const panelRect = panel!.getBoundingClientRect();
+      const headRect = panel!.querySelector(".filter-head")?.getBoundingClientRect();
+      const zoneBottom = Math.min(panelRect.bottom, Math.max(panelRect.top + 96, headRect?.bottom ?? handle!.getBoundingClientRect().bottom + 40));
+      if (event.clientY > zoneBottom) return;
+      const interactive = target.closest("button,input,select,textarea,a,label");
+      if (interactive && !interactive.closest(".filter-head")) return;
+      window.clearTimeout(snapTimer);
+      cancelAnimationFrame(frame);
+      const height = panel!.getBoundingClientRect().height;
+      const expanded = panel!.classList.contains("is-drag-expanded");
+      if (expanded) {
+        panel!.style.setProperty("--filter-drag-height", `${Math.min(height, viewport())}px`);
+        panel!.style.setProperty("--filter-drag-radius", "0px");
+      } else setHeight(height);
+      setOffset(0);
+      const now = performance.now();
+      const fromHeaderControl = !!target.closest(".filter-head button");
+      drag = {
+        pointerId: event.pointerId,
+        startY: event.clientY,
+        startHeight: height,
+        startExpanded: expanded || height > collapsed + 8,
+        startMiddle: !expanded && height < collapsed - 8,
+        fromHeaderControl,
+        moved: false,
+        latestY: event.clientY,
+        lastY: event.clientY,
+        lastTime: now,
+        velocityY: 0,
+      };
+      panel!.classList.remove("is-drag-snap", "is-drag-middle");
+      panel!.classList.add("is-dragging");
+      // 초기화·X 버튼은 그냥 누르면 눌리게 둔다(끌기가 시작될 때만 클릭을 막는다).
+      if (!fromHeaderControl) {
+        try {
+          handle!.setPointerCapture(event.pointerId);
+        } catch {
+          // 이미 놓인 포인터
+        }
+        event.preventDefault();
+      }
+    }
+
+    function move(event: PointerEvent) {
+      if (!drag || event.pointerId !== drag.pointerId) return;
+      const now = performance.now();
+      const instant = (event.clientY - drag.lastY) / Math.max(1, now - drag.lastTime);
+      drag.velocityY = drag.velocityY * 0.65 + instant * 0.35;
+      drag.lastY = event.clientY;
+      drag.lastTime = now;
+      drag.latestY = event.clientY;
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(() => apply(drag?.latestY ?? event.clientY));
+      event.preventDefault();
+    }
+
+    function finish(event: PointerEvent, cancelled = false) {
+      const current = drag;
+      if (!current || event.pointerId !== current.pointerId) return;
+      cancelAnimationFrame(frame);
+      if (!cancelled) apply(event.clientY);
+      drag = null;
+      try {
+        handle!.releasePointerCapture(event.pointerId);
+      } catch {
+        // 이미 놓인 포인터
+      }
+      if (current.moved && current.fromHeaderControl) {
+        window.addEventListener("click", (click) => (click.preventDefault(), click.stopPropagation()), { capture: true, once: true });
+      }
+      const deltaY = cancelled ? 0 : event.clientY - current.startY;
+      const velocityY = cancelled ? 0 : current.velocityY;
+      const full = viewport();
+      const middle = middleHeight();
+      const collapseDistance = Math.max(0, current.startHeight - middle);
+      const middleThreshold = Math.max(50, Math.min(120, Math.round(collapseDistance * 0.25)));
+      const quickUp = velocityY < -0.45 && deltaY < -20;
+      const quickDown = velocityY > 0.45 && deltaY > 20;
+      const height = Math.min(full, Math.max(MIN, current.startHeight - deltaY));
+      const middleBoundary = (collapsed + middle) / 2;
+      const fullBoundary = (full + collapsed) / 2;
+      if (cancelled || !current.moved) return snap(current.startHeight, current.startExpanded, current.startMiddle);
+      if (deltaY > collapseDistance + 140 || (quickDown && deltaY > collapseDistance + 100)) return closeRef.current();
+      if (deltaY < -middleThreshold || quickUp) {
+        if (!current.startMiddle) return snap(full, true);
+        if (height >= fullBoundary) return snap(full, true);
+        return height >= middleBoundary ? snap(collapsed) : snap(middle, false, true);
+      }
+      if (deltaY > middleThreshold || quickDown) {
+        if (current.startExpanded && height > middleBoundary) return snap(collapsed);
+        return snap(middle, false, true);
+      }
+      snap(current.startExpanded ? full : current.startMiddle ? middle : collapsed, current.startExpanded, current.startMiddle);
+    }
+
+    const cancel = (event: PointerEvent) => finish(event, true);
+    const onResize = () => {
+      if (!panel.classList.contains("is-drag-expanded")) return;
+      panel.style.setProperty("--filter-drag-height", `${viewport()}px`);
+      panel.style.setProperty("--filter-drag-radius", "0px");
+    };
+    // 처음 높이는 열린 뒤 잰다(끌기의 "처음 높이" 기준).
+    const measure = requestAnimationFrame(() => (collapsed = panel.getBoundingClientRect().height));
+    panel.addEventListener("pointerdown", start);
+    window.addEventListener("pointermove", move, { passive: false, capture: true });
+    window.addEventListener("pointerup", finish, { capture: true });
+    window.addEventListener("pointercancel", cancel, { capture: true });
+    window.addEventListener("resize", onResize);
+    return () => {
+      cancelAnimationFrame(measure);
+      cancelAnimationFrame(frame);
+      window.clearTimeout(snapTimer);
+      panel.removeEventListener("pointerdown", start);
+      window.removeEventListener("pointermove", move, { capture: true });
+      window.removeEventListener("pointerup", finish, { capture: true });
+      window.removeEventListener("pointercancel", cancel, { capture: true });
+      window.removeEventListener("resize", onResize);
+    };
+  }, [panelRef, closeRef]);
+}
+
 /** 태블릿·모바일 필터. 고르는 동안은 초안만 바꾸고 "적용하기"를 눌러야 반영한다(시안과 같음). */
 function FilterDrawer({
   filter,
@@ -337,32 +549,62 @@ function FilterDrawer({
   onClose: () => void;
 }) {
   const [draft, setDraft] = useState(filter.filter);
+  const panel = useRef<HTMLDivElement>(null);
+  const [closing, setClosing] = useState(false);
+  // 목록을 스크롤하는 동안 아래 "적용하기"를 내렸다가 멈추고 0.4초 뒤 다시 올린다(11/23 시안 handleFilterGroupsScroll).
+  const [scrolling, setScrolling] = useState(false);
+  const scrollTimer = useRef<number>(undefined);
+  const onGroupsScroll = () => {
+    if (panel.current?.classList.contains("is-dragging")) return;
+    setScrolling(true);
+    window.clearTimeout(scrollTimer.current);
+    scrollTimer.current = window.setTimeout(() => setScrolling(false), 400);
+  };
+
+  // 닫기(X·배경·Esc·적용·아래로 끌기): 지금 높이·위치에서 아래로 내려간 뒤(0.34초) 내린다(11/23 시안 closeFilter).
+  const close = () => {
+    const element = panel.current;
+    if (!element || closing) return;
+    if (prefersReducedMotion() || !matchMedia("(max-width: 899px)").matches) return onClose();
+    const height = element.getBoundingClientRect().height;
+    element.style.setProperty("--filter-drag-height", `${height}px`);
+    element.style.setProperty("--filter-drag-offset", getComputedStyle(element).getPropertyValue("--filter-drag-offset") || "0px");
+    element.classList.remove("is-dragging", "is-drag-snap", "is-drag-expanded", "is-drag-middle");
+    setClosing(true);
+    requestAnimationFrame(() => element.classList.add("is-closing-out"));
+    window.setTimeout(onClose, 340);
+  };
+  const closeRef = useRef(close);
+  useEffect(() => {
+    closeRef.current = close;
+  });
+  useSheetDrag(panel, closeRef);
 
   useEffect(() => {
-    const onKey = (event: globalThis.KeyboardEvent) => event.key === "Escape" && onClose();
+    const onKey = (event: globalThis.KeyboardEvent) => event.key === "Escape" && closeRef.current();
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
-  }, [onClose]);
+  }, []);
 
   return (
     <>
-      <div className="modal-backdrop is-open" onClick={onClose} />
-      <div className="filter-panel is-open" role="dialog" aria-modal="true" aria-labelledby="filter-title">
-        {/* 시안도 모양만 있는 손잡이(끌기 동작 없음). */}
+      <div className={`modal-backdrop is-open${closing ? " is-closing" : ""}`} onClick={() => close()} />
+      <div ref={panel} className={`filter-panel is-open${closing ? " is-closing" : ""}`} role="dialog" aria-modal="true" aria-labelledby="filter-title">
+        {/* 11/23 시안: 손잡이·제목 줄을 끌어 높이를 바꾼다(useSheetDrag). */}
         <span className="filter-drag-handle" aria-hidden="true" />
         <div className="filter-head">
           <h2 id="filter-title">필터</h2>
           <button className="mobile-filter-reset" type="button" onClick={() => setDraft(EMPTY_FILTER)}>
             초기화
           </button>
-          <button className="close-filter" type="button" aria-label="필터 닫기" onClick={onClose}>
+          <button className="close-filter" type="button" aria-label="필터 닫기" onClick={() => close()}>
             <svg viewBox="0 0 12 12" aria-hidden="true">
               <path d="M1 1l10 10M11 1 1 11" />
             </svg>
           </button>
         </div>
-        <FilterGroups value={draft} onChange={setDraft} airlines={airlines} legs={legs} idPrefix="panel" options={options} panel />
-        <div className="filter-actions">
+        <FilterGroups value={draft} onChange={setDraft} airlines={airlines} legs={legs} idPrefix="panel" options={options} panel onScroll={onGroupsScroll} />
+        <div className={`filter-actions${scrolling ? " is-scroll-hidden" : ""}`}>
           <button className="reset-button" type="button" onClick={() => setDraft(EMPTY_FILTER)}>
             초기화
           </button>
@@ -371,7 +613,7 @@ function FilterDrawer({
             type="button"
             onClick={() => {
               filter.setFilter(draft);
-              onClose();
+              close();
             }}
           >
             적용하기
@@ -459,6 +701,7 @@ export function FlightListLayout({
     previousStage.current = stage;
     element.classList.remove("stage-revealing", "stage-return", "stage-complete");
     if (stage === "outbound") return;
+    staggerCards(element);
     void element.offsetWidth;
     element.classList.add("stage-revealing", stage === "complete" ? "stage-complete" : "stage-return");
     const timer = setTimeout(() => element.classList.remove("stage-revealing", "stage-return", "stage-complete"), 1800);
@@ -475,11 +718,24 @@ export function FlightListLayout({
     const list = layout.current?.querySelector(".flight-list");
     if (!list) return;
     list.classList.remove("filter-revealing");
+    staggerCards(list);
     void (list as HTMLElement).offsetWidth;
     list.classList.add("filter-revealing");
     const timer = setTimeout(() => list.classList.remove("filter-revealing"), 1500);
     return () => clearTimeout(timer);
   }, [filter.filter, filter.sort]);
+  // 결과가 처음 나오면 한 번만 카드·데스크톱 필터를 차례로 띄운다(11/23 시안 content-revealing, 1.6초).
+  const introDone = useRef(false);
+  const hasOptions = (options?.length ?? 0) > 0;
+  useLayoutEffect(() => {
+    const element = layout.current;
+    if (introDone.current || !hasOptions || !element) return;
+    introDone.current = true;
+    staggerCards(element);
+    element.classList.add("is-intro");
+    const timer = setTimeout(() => element.classList.remove("is-intro"), 1600);
+    return () => clearTimeout(timer);
+  }, [hasOptions]);
   const route = `${placeLabel(locations.origin)} → ${placeLabel(locations.destination)}`;
   const divider = (
     <span className="query-divider" aria-hidden="true">

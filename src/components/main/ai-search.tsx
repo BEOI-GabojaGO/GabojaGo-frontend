@@ -530,9 +530,8 @@ export function useAiSearch() {
     <div className="ai-dialog-actions">
       {labels.length > 0 && (
         <p className="ai-missing-conditions" role={live ? "status" : undefined}>
-          항공권을 보려면 다음 조건을 입력해 주세요
-          {"\n"}
-          {labels.join(" · ")}
+          {/* 11/23 시안: 한 줄 안내에 빠진 조건만 굵게("를"도 시안 그대로). */}
+          항공권을 보려면 <strong>{labels.join(" · ")}</strong>를 입력해 주세요.
         </p>
       )}
       {(ready || labels.length > 0) && (

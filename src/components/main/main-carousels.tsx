@@ -23,6 +23,9 @@ const TRAVELS: {
   { name: "푸꾸옥", country: "베트남", destination: ["AIRPORT", "PQC"], nights: 3, description: "매혹적인 자연과 자유로운 휴식", tags: ["자연", "휴양", "힐링"], image: "imgTravelImage1.webp" },
   { name: "오키나와", country: "일본", destination: ["AIRPORT", "OKA"], nights: 2, description: "가까운 거리의 이국적인 풍경과 문화", tags: ["가까운 여행", "문화", "쇼핑"], image: "imgTravelImage2.webp" },
   { name: "방콕", country: "태국", destination: ["CITY", "BKK"], nights: 3, description: "활기찬 도시와 전통이 공존하는 매력적인 도시", tags: ["도시 여행", "문화", "가성비"], image: "imgTravelImage3.webp" },
+  // 11/23 시안 추가. 메두파루(몰디브, MLE)는 백엔드 공항 시드에 없어 뺐다(AI-CHAT-BACKEND-REQUESTS.md 13번).
+  { name: "발리", country: "인도네시아", destination: ["AIRPORT", "DPS"], nights: 3, description: "아름다운 사원과 호수 풍경 속에서 즐기는 여유로운 휴양", tags: ["자연", "문화", "휴양"], image: "imgTravelImage5.webp" },
+  { name: "오사카", country: "일본", destination: ["AIRPORT", "KIX"], nights: 2, description: "화려한 거리 풍경과 다채로운 먹거리를 즐기는 도시 여행", tags: ["도시 여행", "맛집", "쇼핑"], image: "imgTravelImage7.webp" },
 ];
 
 const tripLength = (nights: number) => `${nights}박 ${nights + 1}일`;
