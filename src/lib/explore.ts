@@ -49,7 +49,10 @@ export type Country = {
   image: string;
   /** 둘러보기 나라 페이지 상단 배너 슬라이드(1111 시안). 없으면 메인 국가 카드 사진 한 장(heroImages). */
   heroes?: { src: string; alt: string }[];
+  /** 히어로 소개 문구(11/23 시안 countryDescriptions, 9개 나라 모두). */
   tagline?: string;
+  /** 제목 옆 국기(public/explore/flags, 11/23 시안). */
+  flag: string;
 };
 
 /**
@@ -58,14 +61,15 @@ export type Country = {
  * image는 메인 디자인의 국가 카드 사진(public/main)이다. 순서는 메인 디자인 캐러셀 순서를 따른다.
  */
 export const COUNTRIES: readonly Country[] = [
-  { code: "JP", nameKo: "일본", nameEn: "Japan", image: "imgCountryCard.webp" },
-  { code: "VN", nameKo: "베트남", nameEn: "Vietnam", image: "imgCountryCard1.webp" },
-  { code: "ID", nameKo: "인도네시아", nameEn: "Indonesia", image: "imgCountryCard2.webp" },
+  { code: "JP", nameKo: "일본", nameEn: "Japan", image: "imgCountryCard.webp", flag: "flag-japan.webp", tagline: "전통과 현대가 공존하는 매력적인 나라" },
+  { code: "VN", nameKo: "베트남", nameEn: "Vietnam", image: "imgCountryCard1.webp", flag: "flag-vietnam.webp", tagline: "유구한 역사와 푸른 자연, 활기 넘치는 미식의 나라" },
+  { code: "ID", nameKo: "인도네시아", nameEn: "Indonesia", image: "imgCountryCard2.webp", flag: "flag-indonesia.webp", tagline: "신들의 섬 발리부터 화산과 고대 사원까지" },
   {
     code: "SG",
     nameKo: "싱가포르",
     nameEn: "Singapore",
     image: "imgCountryCard3.webp",
+    flag: "flag-singapore.webp",
     heroes: [
       { src: "/explore/sg/singapore-hero.webp", alt: "싱가포르 마리나 베이의 도심과 수변 야경" },
       { src: "/explore/sg/singapore-marina.webp", alt: "싱가포르 마리나 베이 샌즈와 수변" },
@@ -74,11 +78,11 @@ export const COUNTRIES: readonly Country[] = [
     ],
     tagline: "아시아의 허브, 다채로운 문화와 미래 도시",
   },
-  { code: "PH", nameKo: "필리핀", nameEn: "Philippines", image: "imgCountryCard4.webp" },
-  { code: "MY", nameKo: "말레이시아", nameEn: "Malaysia", image: "imgCountryCard5.webp" },
-  { code: "TH", nameKo: "태국", nameEn: "Thailand", image: "imgCountryCard7.webp" },
-  { code: "TW", nameKo: "대만", nameEn: "Taiwan", image: "imgCountryCard8.webp" },
-  { code: "HK", nameKo: "홍콩", nameEn: "Hong Kong", image: "imgCountryCard9.webp" },
+  { code: "PH", nameKo: "필리핀", nameEn: "Philippines", image: "imgCountryCard4.webp", flag: "flag-philippines.webp", tagline: "다이빙과 액티비티를 즐기는 가까운 휴양지" },
+  { code: "MY", nameKo: "말레이시아", nameEn: "Malaysia", image: "imgCountryCard5.webp", flag: "flag-malaysia.webp", tagline: "열대의 자연과 전통·문화·미식이 어우러진 다문화" },
+  { code: "TH", nameKo: "태국", nameEn: "Thailand", image: "imgCountryCard7.webp", flag: "flag-thailand.webp", tagline: "사원과 야시장, 해변이 어우러진 여행의 정석" },
+  { code: "TW", nameKo: "대만", nameEn: "Taiwan", image: "imgCountryCard8.webp", flag: "flag-taiwan.webp", tagline: "온천, 차 문화, 자연을 짧은 일정에 담은 여행지" },
+  { code: "HK", nameKo: "홍콩", nameEn: "Hong Kong", image: "imgCountryCard9.webp", flag: "flag-hong-kong.webp", tagline: "동서양이 만난 화려한 야경과 미식의 도시" },
 ];
 
 /** 히어로 슬라이드 사진. 전용 사진이 없는 나라는 메인 국가 카드 사진(public/main)을 다시 쓴다(2026-11-12 사용자 결정). */
